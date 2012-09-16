@@ -1,0 +1,23 @@
+{
+  "name": "gnewpg",
+  "version": "0.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://gitorious.org/gnewpg/gnewpg.git"
+  },
+  "license": "BSD",
+  "description": "ERROR: No README.md file found!",
+  "dependencies": {
+    "express": "3.x",
+    "soynode": "git://github.com/cdauth/soynode.git",
+    "pg": "x.x.x",
+    "connect-pg": "x.x.x",
+    "gettext": "x.x.x",
+    "connect-i18n": "x.x.x"
+  }
+}

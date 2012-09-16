@@ -1,0 +1,4 @@
+{
+	"db" : "postgres://cdauth@localhost/cdauth",
+	"sessionTimeout" : 3600
+}
