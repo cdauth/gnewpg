@@ -47,7 +47,19 @@ public class SoyGettextModule extends AbstractModule
 		}
 
 		@Override public JsExpr computeForJsSrc(List<JsExpr> args) {
-			return new JsExpr("arguments[2]." + name + "(" + args.get(0).getText() + ")", Integer.MAX_VALUE);
+			StringBuilder ret = new StringBuilder("opt_ijData.").append(name).append("(");
+			boolean first = true;
+			for(JsExpr arg : args)
+			{
+				if(first)
+					first = false;
+				else
+					ret.append(", ");
+				ret.append(arg.getText());
+			}
+			ret.append(")");
+			
+			return new JsExpr(ret.toString(), Integer.MAX_VALUE);
 		}
 	}
 	

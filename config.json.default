@@ -1,4 +1,8 @@
 {
-	"db" : "postgres://cdauth@localhost/cdauth",
-	"sessionTimeout" : 3600
+	"db" : "postgres://gnewpg@localhost/gnewpg",
+	"sessionTimeout" : 3600,
+	"persistentSessionTimeout" : 31536000,
+	"usernameMinLength" : 4,
+	"usernameMaxLength" : 20,
+	"passwordMinLength" : 8
 }

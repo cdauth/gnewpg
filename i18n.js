@@ -19,30 +19,34 @@ function getLanguageForLocaleList(list) {
 function middleware(req, res, next) {
 	i18n_middleware(req, res, function() {
 		req.locale = getLanguageForLocaleList(req.locales);
+		
+		req.gettext = function(msg) {
+			gettext.setlocale("LC_ALL", req.locale);
+			
+			var args = [ gettext.gettext(msg) ];
+			for(var i=1; i<arguments.length; i++)
+				args.push(arguments[i]);
+			
+			return node_util.format.apply(node_util, args); // sprintf
+		};
+		
+		req.ngettext = function(msg1, msg2, n) {
+			gettext.setlocale("LC_ALL", req.locale);
+			
+			var args = [ gettext.ngettext(msg1, msg2, n) ];
+			for(var i=3; i<arguments.length; i++)
+				args.push(arguments[i]);
+			
+			return node_util.format.apply(node_util, args); // sprintf
+		};
+
 		next();
 	});
 }
 
 function injectMethods(req, toObj) {
-	toObj._ = toObj.gettext = function(msg) {
-		gettext.setlocale("LC_ALL", req.locale);
-		
-		var args = [ gettext.gettext(msg) ];
-		for(var i=1; i<arguments.length; i++)
-			args.push(arguments[i]);
-		
-		return node_util.format.apply(node_util, args); // sprintf
-	};
-	
-	toObj.ngettext = function(msg1, msg2, n) {
-		gettext.setlocale("LC_ALL", req.locale);
-		
-		var args = [ gettext.ngettext(msg1, msg2, n) ];
-		for(var i=3; i<arguments.length; i++)
-			args.push(arguments[i]);
-		
-		return node_util.format.apply(node_util, args); // sprintf
-	};
+	toObj._ = toObj.gettext = req.gettext;
+	toObj.ngettext = req.ngettext;
 
 	return toObj;
 }

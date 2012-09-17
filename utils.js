@@ -6,7 +6,7 @@ var RANDOM_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567
 */
 exports.generateRandomString = function(length) {
 	var ret = "";
-	for(var i=0; i<RANDOM_CHARS.length; i++)
+	for(var i=0; i<length; i++)
 		ret += RANDOM_CHARS.charAt(Math.floor(Math.random()*RANDOM_CHARS.length));
 	return ret;
 };

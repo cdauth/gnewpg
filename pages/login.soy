@@ -1,13 +1,28 @@
 {namespace gnewpg.pages}
 
 /**
+ * @param? username
+ * @param? stayloggedin
+ * @param? errors
 */
 {template .login}
-	{call .html}
-		{param searchengines: true /}
-		{param title}Welcome{/param}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title}{_('Login')}{/param}
+		{param login_noreferer: true /}
 		{param content}
-			Login!
+<form action="" method="post">
+	{call gnewpg.ui.errors}{param errors:$errors/}{/call}
+	<dl class="form">
+		<dt><label for="i-username">{_('Username')}</label></dt>
+		<dd><input id="i-username" name="username" type="text"{if $username} value="{$username}"{/if} /></dd>
+		
+		<dt><label for="i-password">{_('Password')}</label></dt>
+		<dd><input id="i-password" name="password" type="password" /></dd>
+	</dl>
+	<div class="checkbox"><input id="i-stayloggedin" name="stayloggedin" type="checkbox"{if $stayloggedin} checked="checked"{/if} /><label for="i-stayloggedin"> {_('Stay logged in')}</label></div>
+	<div class="submit"><input type="submit" value="{_('Login')}" /></div>
+</form>
 		{/param}
 	{/call}
 {/template}

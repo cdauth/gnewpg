@@ -1,0 +1,38 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param? username
+ * @param? email
+ * @param? errors
+ * @param? success
+*/
+{template .register}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title}{_('Register')}{/param}
+		{param login_noreferer: true /}
+		{param content}
+			{if $success}
+{call gnewpg.ui.success}{param message}{_('You have successfully registered. You can now log in.')}{/param}{/call}
+			{else}
+<form action="" method="post">
+	{call gnewpg.ui.errors}{param errors:$errors/}{/call}
+	<dl class="form">
+		<dt><label for="i-username">{_('Desired username')}</label></dt>
+		<dd><input id="i-username" name="username" type="text"{if $username} value="{$username}"{/if} /> {call gnewpg.ui.required/}</dd>
+		
+		<dt><label for="i-password">{_('Password')}</label></dt>
+		<dd><input id="i-password" name="password" type="password" autocomplete="off" /> {call gnewpg.ui.required/}</dd>
+		
+		<dt><label for="i-password-2">{_('Repeat password')}</label></dt>
+		<dd><input id="i-password-2" name="password2" type="password" autocomplete="off" /> {call gnewpg.ui.required/}</dd>
+		
+		<dt><label for="i-email">{_('E-mail address')}</label></dt>
+		<dd><input id="i-email" name="email" type="text"{if $email} value="{$email}"{/if} /></dd>
+	</dl>
+	<div class="submit"><input type="submit" value="{_('Register')}" /></div>
+</form>
+			{/if}
+		{/param}
+	{/call}
+{/template}

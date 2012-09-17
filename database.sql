@@ -6,7 +6,7 @@ CREATE TABLE "keys" (
 	"expires" TIMESTAMP,
 	"revoked" BOOLEAN NOT NULL
 	-- "primary_identity" BIGINT NOT NULL REFERENCES "identities"("id"), -- Added later, table "identities" is not defined yet here
-	-- "user" BIGINT REFERENCES "users"("id") -- Added later, table "users" is not defined yet here
+	-- "user" TEXT REFERENCES "users"("name") -- Added later, table "users" is not defined yet here
 );
 	
 CREATE TABLE "identities" (
@@ -41,10 +41,12 @@ CREATE TABLE "subkeys" (
 
 CREATE TABLE "users" (
 	"name" TEXT PRIMARY KEY,
-	"password" CHAR(64) NOT NULL,
+	"password" CHAR(44) NOT NULL,
 	"email" TEXT,
 	"openid" TEXT UNIQUE
 );
+
+CREATE INDEX "users_lower_idx" ON "users" (LOWER("name"));
 
 CREATE TABLE "keyring" (
 	"user" TEXT NOT NULL REFERENCES "users"("name"),
@@ -53,8 +55,8 @@ CREATE TABLE "keyring" (
 );
 
 CREATE TABLE "email_verification" (
-	"token" CHAR(32) PRIMARY KEY,
-	"identity" BIGINT NOT NULL REFERENCES "identities"("identity"),
+	"token" CHAR(44) PRIMARY KEY,
+	"identity" BIGINT NOT NULL REFERENCES "identities"("id"),
 	"date" TIMESTAMP
 );
 
@@ -62,7 +64,7 @@ CREATE TABLE "email_verification" (
 
 CREATE TABLE "groups" (
 	"id" BIGSERIAL PRIMARY KEY,
-	"token" CHAR(64) UNIQUE,
+	"token" CHAR(44) UNIQUE,
 	"title" TEXT,
 	"perm_searchengines" BOOLEAN NOT NULL, -- Whether the group should be findable by search engines
 	"perm_addkeys" BOOLEAN NOT NULL -- Whether all users should be allowed to add keys
@@ -76,22 +78,23 @@ CREATE TABLE "group_keyrings" (
 
 CREATE TABLE "group_users" (
 	"group" BIGINT REFERENCES "groups"("id"),
-	"user" BIGINT REFERENCES "users"("id") ON UPDATE CASCADE,
+	"user" TEXT REFERENCES "users"("name") ON UPDATE CASCADE,
 	"perm_admin" BOOLEAN NOT NULL, -- Whether the user is allowed to change the group settings
 	"perm_addkeys" BOOLEAN NOT NULL -- Whether the user is allowed to add keys to the group
 );
 
 
 CREATE TABLE "sessions" (
-	"id" CHAR(64) PRIMARY KEY,
+	"id" CHAR(44) PRIMARY KEY,
 	"user" TEXT NOT NULL REFERENCES "users"("name") ON UPDATE CASCADE ON DELETE CASCADE,
-	"last_access" TIMESTAMP NOT NULL
+	"last_access" TIMESTAMP NOT NULL,
+	"persistent" BOOLEAN
 );
 
-CREATE INDEX "sessions_time_idx" ON "sessions"("last_access");
+CREATE INDEX "sessions_time_idx" ON "sessions"("persistent", "last_access");
 
 
 
 ALTER TABLE "keys"
 	ADD COLUMN "primary_identity" BIGINT NOT NULL REFERENCES "identities"("id"),
-	ADD COLUMN "user" BIGINT REFERENCES "users"("id") ON UPDATE CASCADE ON DELETE SET DEFAULT;
+	ADD COLUMN "user" TEXT REFERENCES "users"("name") ON UPDATE CASCADE ON DELETE SET DEFAULT;

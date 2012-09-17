@@ -1,4 +1,12 @@
 {
-	"/": "index",
-	"/login": "login"
+	"get" : {
+		"/": "index",
+		"/login": "login",
+		"/register": "register"
+	},
+	"post" : {
+		"/login": "login",
+		"/register": "register",
+		"/logout": "logout"
+	}
 }

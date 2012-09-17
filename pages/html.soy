@@ -1,9 +1,10 @@
-{namespace gnewpg.pages}
+{namespace gnewpg.ui}
 
 /**
  * @param searchengines
  * @param title
  * @param content
+ * @param? login_noreferer
 */
 {template .html}
 <!DOCTYPE html>
@@ -18,20 +19,51 @@
 {/if}
 
 		<title>{$title} – gnewpg</title>
+		<link rel="stylesheet" href="/static/styles.css" type="text/css" />
 	</head>
 	<body>
 		<h1>gnewpg</h1>
 		<div id="login-bar">
-{_('Register')}
-//{if $ij.req.session.user}
-//			{$ij._('Logged in as %1', '<strong class="username">$ij.req.session.user.name</strong>')}. <a href="/logout" class="logout">{$ij._('Logout')}</a>
-//{else}
-//			{$ij._('Not logged in.')} <a href="/login" class="login">Login</a> | <a href="/register" class="register">{$ij._('Register')}</a>
-//{/if}
+{if $ij.req.session.user}
+			{_('Logged in as %s', '<strong class="username">'+$ij.req.session.user.name+'</strong>')|noAutoescape}. <form action="/logout{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" method="post" class="logout"><input type="submit" value="{_('Logout')}" /></form>
+{else}
+			{_('Not logged in.')} <a href="/login{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" class="login">Login</a> | <a href="/register" class="register">{_('Register')}</a>
+{/if}
 		</div>
 
-{$content}
+{$content|noAutoescape}
 
 </body>
 </html>
+{/template}
+
+/**
+*/
+{template .required}
+<abbr title="{_('Required')}" class="required">*</abbr>
+{/template}
+
+/**
+ * @param? errors
+*/
+{template .errors}
+	{if $errors}
+		{foreach $error in $errors}
+			{call .error}{param message:$error/}{/call}
+		{/foreach}
+	{/if}
+{/template}
+
+/**
+ * @param message
+*/
+{template .error}
+<p class="error">{$message}</p>
+{/template}
+
+/**
+ * @param message
+*/
+{template .success}
+<p class="success">{$message}</p>
 {/template}
