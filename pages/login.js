@@ -11,11 +11,19 @@ module.exports.get = function(req, res, next) {
 module.exports.post = function(req, res, next) {
 	req.params.username = req.body.username;
 
-	users.getUser(req.body.username || "", function(user) {
-		if(user != null && users.checkPassword(user, req.body.password || ""))
+	users.getUser(req.body.username || "", function(err, user) {
+		if(err)
+			next(err);
+		else if(user != null && users.checkPassword(user, req.body.password || ""))
 		{
-			sessions.startSession(req, res, user, req.body.stayloggedin != null, function() {
-				res.redirect(303, req.query.referer || "/");
+			sessions.startSession(req, res, user, req.body.stayloggedin != null, function(err) {
+				if(err)
+					next(err);
+				else
+				{
+					res.redirect(303, req.query.referer || "/");
+					next();
+				}
 			});
 		}
 		else

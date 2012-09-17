@@ -7,7 +7,28 @@
 		{param searchengines: true /}
 		{param title}Welcome{/param}
 		{param content}
-			Welcome!
+<div class="index-links {if $ij.req.session.user == null}not{/if}loggedin">
+	<div class="search">
+		<h3>{_('Search for a key')}</h3>
+		<form action="search" method="get">
+			<input type="text" name="q" /> <input type="submit" value="{_('Submit')}" />
+		</form>
+	</div>
+	<div class="upload">
+		<a href="upload">{_('Upload a key')}</a>
+		<p>{_('To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it.')}</p>
+	</div>
+			{if $ij.req.session.user}
+	<div class="ownkeys">
+		<a href="ownkeys">{_('Your own keys')}</a>
+	</div>
+	<div class="keyring">
+		<a href="keyring">{_('Your keyring')}</a>
+	</div>
+	<div class="settings">
+		<a href="settings">{_('Your account')}</a>
+	</div>
+			{/if}
 		{/param}
 	{/call}
 {/template}
