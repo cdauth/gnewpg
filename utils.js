@@ -23,97 +23,16 @@ function extend(obj1, obj2) {
 	return obj1;
 };
 
-function removeDirRecursively(dir, callback) {
-	fs.readdir(dir, function(err, files) {
-		if(err)
-			callback && callback(err);
-		else
-		{
-			var handleFile = function(i) {
-				if(i < files.length)
-				{
-					var fname = dir+"/"+files[i];
-					fs.stat(fname, function(err, stats) {
-						if(err)
-							callback && callback(err);
-						else if(stats.isDirectory())
-						{
-							removeDirRecursively(fname, function(err) {
-								if(err)
-									callback && callback(err);
-								else
-									handleFile(i+1);
-							});
-						}
-						else
-						{
-							fs.unlink(fname, function(err) {
-								if(err)
-									callback && callback(err)
-								else
-									handleFile(i+1);
-							});
-						}
-					});
-				}
-				else
-				{
-					fs.rmdir(fname, function(err) {
-						callback && callback(err);
-					});
-				}
-			};
-		}
-	});
-};
-
-function makeTempDir(callback) {
-	var mkdir = function() {
-		var dir = config.tempDir+"/"+generateRandomString(16);
-		fs.exists(dir, function(exists) {
-			if(exists)
-				mkdir();
-			else
-			{
-				fs.mkdir(dir, 0700, function(err) {
-					if(err)
-						callback(err);
-					else
-					{
-						callback(null, dir, function() {
-							removeDirRecursively(dir, function(err) {
-								if(err)
-									console.log("Error removing temporary directory", err);
-							});
-						});
-					}
-				});
-			}
-		});
-	};
-
-	fs.exists(config.tempDir, function(exists) {
-		if(exists)
-			mkdir();
-		else
-		{
-			fs.mkdir(dir, 0700, function(err) {
-				if(err)
-					callback(err);
-				else
-					mkdir();
-			});
-		}
-	});
-};
-
 /**
  * Buffers the output of a readable stream and makes it readable in a predictable manner.
  * 
  * This function returns a method of the type function(bytes, callback). The callback function is called as soon as
- * the specified number of bytes is available, receiving a Buffer object (with the exact amount of bytes specified)
- * only argument. If the bytes parameter is set to -1, the callback function will only be called when the readable
- * stream has reached its end, then passing the full content to the function.
+ * the specified number of bytes is available, receiving a possible error message as first argument or a Buffer object
+ * with the exact specified amount of bytes as second argument. If the bytes parameter is set to -1, the callback
+ * function will only be called when the readable stream has reached its end, then passing the full content to the function.
+ * 
+ * If the stream ends before the requested number of bytes is available, the callback function will be called with an error
+ * message.
  * 
  * As some methods of the PGP implementation take this function as an argument, instead of the stream you can also
  * pass a Buffer object if that is more convenient to you.
@@ -131,14 +50,16 @@ function bufferReadableStream(stream) {
 		{
 			if(wantToRead[i].bytes == -1 && ended)
 			{
-				wantToRead[i].callback(buffer);
-				break;
+				wantToRead[i].callback(null, buffer);
+				buffer = new Buffer(0);
 			}
 			else if(wantToRead[i].bytes != -1 && buffer.length >= wantToRead[i].bytes)
 			{
-				wantToRead[i].callback(buffer.slice(0, wantToRead[i].bytes));
+				wantToRead[i].callback(null, buffer.slice(0, wantToRead[i].bytes));
 				buffer = buffer.slice(wantToRead[i].bytes);
 			}
+			else if(ended)
+				callback(new Error("Stream has ended before the requested number of bytes was sent."));
 			else
 				break;
 		}

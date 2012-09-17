@@ -3,16 +3,42 @@ var config = import("./config");
 var utils = import("./utils");
 var fs = import("fs");
 
-var SAMPLE_KEY = "\x99\x01\xa2\x04PW7\x9c\x11\x04\x00\x93\:\xb9\xdf\x110A\xc9\x89\xcc\x88\x84_\xd0\xd3\x14\xec9\xa7\xaf  ;6\xbd\
-[J\x9c\xeb{\x80\xf9qy\xd4\x8f\xc6\x06\xa8\xfe\x10\x97g\"\x11J\xbd\xb9&r\x0b\xdc\x7f4\x98\x85\xff\x8e\x86N\xf9\xc0F\xb0\xb0\xb9]B\
-R\x9c\xb4\xd4\x10\x18'(\xa1Q\x0a\xa1\xc2fM=\xc7ds\xd4R\xf2\xcft\xf1\xbdt\xc6s\xd4\xb5.p2\xaej6!I\x14\xcf\xcc\xa4m?\x9eaO\xc1N\x91\
-\xfb\x1d\xca\xcf\xd2c|\x1f\x00\xa0\xcf\x19\xab\x82\x0ar\x85\xa91\x0cq\xdb|\xb8\x0c\x00\xd64\xa9\x97\x04\x00\x84M&9\xf8\xa4\x008\"d\
-\xf3<x-\xeb\xbd\x89\x12_\xd1\xfb\x1a,..\x0a\xe4\x1e\xf0a\xbeM9\x19+{\x92\xbf\xb6*;\xc8\x82M\x19\xaf\x96\xcaCf\xcf\xb1\x84\x0c\xa2\
-\xfd\xa3\xd4\x9f\x89~\xb8\xad\xeb9\xf7\xbe\x0c\xf70\xd4\xfe\xe0\x19\x01^q\x92\xb2\xbb\xaa_\xc1[\x17\xd1\xfe\xdc&\x97C\xa8\xee\xcb\
-\x97\x88>M/\xd71\xe0~\xb6\xc6i\x0a\x03\x89\x14vLE\x14\x14\xb0\xfd\xaa\xba\x0ev\xcd\xffh\xd6\xad\xac\x00\x03\xfd\x12\x0c\xb4\xb0\xb8\
-\xf3\xc2\xf2M\xef\xedQ(\xf3\xf2C\xac\x07\xcb\x83\x0eK\xd3\x9ax\xbb\xe3H\x041,Mq\xe6\x1aL|\xe3\xe0n>\x83\xd6i\x0c=\x9b\xeba,\xa1\xc9\
-J\xdelF\xb9VI\xdfxfr;\xd9E\xa4\xad{Q\xc9gS)02\xbc\x82\x82\xfe\x1a\x1c\xeb\xdcB{\x1dk\xd3[#\xb1\xb8s\x90,\xe1\xe6\x9d\xcb\x91\xbc\x91\
-\x17\xfc\x07\xb1^\x11v\xf8\xd4\x07@\x8a\x97;\x82'\xe0|\x02\xc6\x15\xc1\x0fp,";
+var TAG_PUBLIC_KEY = 6;
+var TAG_SIGNATURE = 2;
+var TAG_IDENTITY = 13;
+var TAG_PUBLIC_SUBKEY = 14;
+var TAG_ATTRIBUTE = 17;
+
+var SIG_CERT_0 = 0x10;
+var SIG_CERT_1 = 0x11;
+var SIG_CERT_2 = 0x12;
+var SIG_CERT_3 = 0x13;
+var SIG_SUBKEY = 0x18;
+var SIG_KEY_BY_SUBKEY = 0x19;
+var SIG_KEY = 0x1F;
+var SIG_KEY_REVOK = 0x20;
+var SIG_SUBKEY_REVOK = 0x28;
+var SIG_CERT_REVOK = 0x30;
+
+var SIGSUB_SIG_CREATION = 2;
+var SIGSUB_SIG_EXPIRATION = 3;
+var SIGSUB_SIG_EXPORTABLE = 4;
+var SIGSUB_SIG_TRUST = 5;
+var SIGSUB_SIG_TRUST_REGEXP = 6;
+var SIGSUB_KEY_EXPIRATION = 9;
+var SIGSUB_SIG_ISSUER = 16;
+var SIGSUB_ID_PRIMARY = 25;
+var SIGSUB_SIG_POLICY = 26;
+var SIGSUB_KEY_FLAGS = 27;
+var SIGSUB_SIG_KEY = 28;
+var SIGSUB_SIG_REVOK_REASON = 29;
+
+// Key flags (specified in self-signature)
+var FLAG_CERTIFY = 0x01;
+var FLAG_SIGN = 0x02;
+var FLAG_ENCRYPT_COMM = 0x04;
+var FLAG_ENCRYPT_FILES = 0x08;
+var FLAG_AUTH = 0x20;
 
 function decodeKeyFormat(keyBinary, callback) {
 	var gpg = child_process.spawn(config.gpg, [ '--dearmor' ]);
@@ -69,7 +95,10 @@ function read125OctetNumber(read, callback)
 {
 	read(1, function(err, data1) {
 		if(err)
+		{
+			err.NOFIRSTBYTE = true;
 			callback(err);
+		}
 		else
 		{
 			binary = data1;
@@ -85,7 +114,7 @@ function read125OctetNumber(read, callback)
 					else
 					{
 						binary = Buffer.concat([ binary, data2 ]);
-						callback(((byte1 - 192) << 8) + data2.readUInt8(0) + 192, binary);
+						callback(null, ((byte1 - 192) << 8) + data2.readUInt8(0) + 192, binary);
 					}
 				});
 			}
@@ -99,7 +128,7 @@ function read125OctetNumber(read, callback)
 					else
 					{
 						binary = Buffer.concat([ binary, data2 ]);
-						callback(data2.readUInt32(0), binary);
+						callback(null, data2.readUInt32BE(0), binary);
 					}
 				});
 			}
@@ -145,7 +174,10 @@ function getHeaderInfo(read, callback)
 {
 	read(1, function(err, data1) {
 		if(err)
+		{
+			err.NOFIRSTBYTE = true;
 			callback(err);
+		}
 		else
 		{
 			var header = data1;
@@ -191,8 +223,8 @@ function getHeaderInfo(read, callback)
 							var packetLength;
 							switch(headerLength) {
 								case 2: packetLength = data2.readUInt8(); break;
-								case 3: packetLength = data2.readUInt16(); break;
-								case 4: packetLength = data2.readUInt32(); break;
+								case 3: packetLength = data2.readUInt16BE(); break;
+								case 4: packetLength = data2.readUInt32BE(); break;
 							}
 							callback(null, tag, packetLength, header);
 						}
@@ -214,60 +246,63 @@ function generateHeader(tag, packetLength)
 /**
  * Splits an OpenPGP message into its packets. If any of the packets contains partial body length headers, it will be converted to a package with a fixed length.
  * 
- * @param keyBinaryStream {Readable Stream}
- * @param callback {Function} function(error, tag, header, body), where tag is the packet type, header the binary
- *                            data of the header and body the binary body data.
+ * @param keyBinaryStream {Function} A function as returned by utils.bufferReadableStream
+ * @param callback {Function} function(error, tag, header, body, next), where tag is the packet type, header the binary
+ *                            data of the header and body the binary body data. The callback function will be called
+ *                            once for each packet. It will only proceed to the next package when the next() function is called.
+ *                            This is important, as the order of the packets is important and one should be able to use asynchronous
+ *                            code in the callback function.
+ * @param callbackEnd {Function} THis function is called when the callback function for the last packet calls next()
 */
-function gpgsplit(keyBinaryStream, callback) {
-	var read = utils.bufferReadableStream(keyBinaryStream);
-
+function gpgsplit(keyBinaryStream, callback, callbackEnd) {
 	var readPacket = function() {
-		getHeaderInfo(read, function(err, tag, packetLength, header) {
+		getHeaderInfo(keyBinaryStream, function(err, tag, packetLength, header) {
 			if(err)
-				callback(err);
-			
-			if(packetLength < 0) // Partial body length
 			{
-				read(-packetLength, function(err, body) {
-					var readon = function() {
-						read125OctetNumber(read, function(err, length) {
-							if(err)
-								callback(err);
-							else
-							{
-								read(Math.abs(length), function(err, part) {
-									if(err)
-										callback(err);
-									else
-									{
-										body = Buffer.concat(body, part);
-										if(length < 0)
-											readon();
-										else
-										{
-											header = generateHeader(tag, body.length);
-											callback(null, tag, header, body);
-										}
-									}
-								});
-							}
-						});
-					};
-					readon();
-				});
+				if(!err.NOFIRSTBYTE) // If NOFIRSTBYTE is true, we have reached the end of the stream
+					callback(err);
 			}
 			else
 			{
-				read(packetLength === null ? -1 : packetLength, function(err, body) {
-					if(err)
-						callback(err);
-					else
-					{
-						callback(null, tag, header, body);
-
-						readPacket();
-					}
-				});
+				if(packetLength < 0) // Partial body length
+				{
+					keyBinaryStream(-packetLength, function(err, body) {
+						var readon = function() {
+							read125OctetNumber(keyBinaryStream, function(err, length) {
+								if(err)
+									callback(err);
+								else
+								{
+									keyBinaryStream(Math.abs(length), function(err, part) {
+										if(err)
+											callback(err);
+										else
+										{
+											body = Buffer.concat(body, part);
+											if(length < 0)
+												readon();
+											else
+											{
+												header = generateHeader(tag, body.length);
+												callback(null, tag, header, body, readPacket);
+											}
+										}
+									});
+								}
+							});
+						};
+						readon();
+					});
+				}
+				else
+				{
+					keyBinaryStream(packetLength === null ? -1 : packetLength, function(err, body) {
+						if(err)
+							callback(err);
+						else
+							callback(null, tag, header, body, readPacket);
+					});
+				}
 			}
 		});
 	};
@@ -275,73 +310,112 @@ function gpgsplit(keyBinaryStream, callback) {
 	readPacket();
 }
 
-function getKeyInfo(keyBinaryStream) {
-	
-}
+function getKeyInfo(binaryStream, callback) {
+	var keys = { };
+	var lastKey = null;
+	var lastSubobject = null; // Subkey, identity or attribute
+	var lastSubobjectType = null;
 
-function getKeyInfo(keyBinary, callback) {
-	utils.makeTempDir(function(err, dir, remove) {
-		if(err)
-			callback(err);
-		else
+	var errors = false;
+
+	gpgsplit(binaryStream, function(err, tag, header, body, next) {
+		if(err) { callback(err); return; }
+		
+		switch(tag)
 		{
-			var end = function(err) {
-				remove();
-				callback(err);
-			};
-			
-			child_process.exec(config.gpgsplit, [ ], function(err, stdout, stderr) {
-				if(err)
-					end(err);
-				
-				fs.readdir(dir, function(err, files) {
-					if(err)
-						end(err);
+			case TAG_PUBLIC_KEY:
+				lastKey = lastSubobject = null;
+				extractKeyInfo(body, function(err, info) {
+					if(err) { errors = true; return }
+
+					if(!keys[info.id])
+						keys[info.id] = info;
+					lastkey = keys[info.id];
+
+					next();
+				});
+				break;
+			case TAG_PUBLIC_SUBKEY:
+				lastSubobject = null;
+				if(lastKey == null)
+					errors = true;
+				else
+				{
+					extractSubkeyInfo(body, function(err, info) {
+						if(err) { errors = true; return; }
 					
-					var keys = { };
-					var lastKey = null;
-					var lastIdentity = null;
-					var lastAttribute = null;
-					var lastSubkey = null;
+						if(!lastKey.subkeys[info.id])
+							lastKey.subkeys[info.id] = info;
+						lastSubobject = lastKey.subkeys[info.id];
+						lastSUbobjectType = "subkey";
+						
+						next();
+					});
+				}
+				break;
+			case TAG_IDENTITY:
+				lastSubobject = null;
+				if(lastKey == null)
+					errors = true;
+				else
+				{
+					extractIdentityInfo(body, function(err, info) {
+						if(err) { errors = true; return; }
 					
-					files.sort();
-					files.forEach(function(it) {
-						var m = it.match(/^\d{6}-(\d{3})\..*$/, it);
-						if(m)
-						{
-							fs.readFile(dir+"/"+it, function(err, data) {
-								if(err)
-									; // TODO
-								else
-								{
-									switch(m[1])
-									{
-										case "006": // Public key
-											var key = extractPublicKeyInfo(
-										case "013": // User ID
+						if(!lastKey.identities[info.id])
+							lastKey.identities[info.id] = info;
+						lastSubobject = lastKey.identities[info.id];
+						lastSubobjectType = "identity";
+						
+						next();
+					});
+				}
+				break;
+			case TAG_ATTRIBUTE:
+				lastSubobject = null;
+				if(lastKey == null)
+					errors = true;
+				else
+				{
+					extractAttributeInfo(body, function(err, info) {
+						if(err) { errors = true; return; }
+					
+						if(!lastKey.attributes[info.id])
+							lastKey.attributes[info.id] = info;
+						lastSubobject = lastKey.attributes[info.id];
+						lastSubobjectType = "attribute";
+						
+						next();
+					});
+				}
+				break;
+			case TAG_SIGNATURE:
+				var obj = lastSubobject || lastKey;
+				if(obj == null)
+					errors = true;
+				else
+				{
+					extractSignatureInfo(body, function(err, info) {
+						if(err
+							|| (lastSubobject == null && [ SIG_KEY, SIG_KEY_BY_SUBKEY, SIG_KEY_REVOK ].indexOf(info.type) == -1)
+							|| (lastSubobjectType == "subkey" && [ SIG_SUBKEY, SIG_SUBKEY_REVOK ].indexOf(info.type) == -1)
+							|| ([ "identity", "attribute" ].indexOf(lastSubobjectType) != -1 && [ SIG_CERT_1, SIG_CERT_2, SIG_CERT_3, SIG_CERT_REVOK ].indexOf(info.type == -1)))
+						{ // Error on unmatching signature type
+							errors = true;
+							return;
+						}
 
-										case "014": // Public subkey
-
-										case "017": // Attribute / Photo
-										
-										case "002": // Signature
+						if(!obj.signatures[info.id])
+							obj.signatures[info.id] = info;
+						
+						next();
+					});
+				}
+				break;
+	}, function() {
+		// All packets have beend handled
+		callback(null, keys, errors);
 	});
-}
-
-function listPackets(dataPiece, callback)
-{
-	var gpg = child_process.exec(config.gpg, [ "--list-packets" ], function(err, stdout, stderr) {
-		if(err)
-			callback(err);
-		// Strip the info of the sample key
-		var output = stdout.split(/^:/m);
-		callback(null, output[2]);
-	});
-	
-	// Write sample key first, as some data packets can only be analysed by gpg when a public key precedes them (no matter which one it is)
-	gpg.stdin.write(SAMPLE_KEY);
-	gpg.stdin.write(dataPiece);
-	gpg.stdin.end();
 }
 
 function extractKeyInfo(data, callback)
@@ -353,10 +427,11 @@ function extractKeyInfo(data, callback)
 		{
 			var key = {
 				id: null,
-				binary: data,
+				subkeys: { },
 				attributes: { },
 				signatures: { },
-				identities: { }
+				identities: { },
+				binary : data
 			};
 			var m = info.match(/^\s*keyid: (.*)\s*$/m);
 			if(m)
@@ -367,7 +442,7 @@ function extractKeyInfo(data, callback)
 	});
 }
 
-function extractUserIdInfo(data, callback)
+function extractIdentityInfo(data, callback)
 {
 	callback(null, data.substring(2));
 }
@@ -383,29 +458,150 @@ function extractAttributeInfo(data, callback)
 
 function extractSignatureInfo(data, callback)
 {
-	listPackets(data, function(err, info) {
-		if(err)
-			callback(err);
+	var byte1 = data.readUInt8(0);
+	if(byte1 == 3)
+	{ // Version 3 signature
+		if(data.readUInt8(1) != 5)
+			callback(new Error("Invalid signature data."));
 		else
 		{
-			var signature = {
-				bykey: null,
-				date: null,
-				sigclass: null,
-				binary: data
-			};
-			
-			var m = info.match(/^\s*subpkt \d+ len \d+ \(issuer key ID (.*)\)\s*$/m);
-			if(m)
-				signature.bykey = m[1];
-			m = info.match(/^\s*version \d+, created (\d+), md5len \d+, sigclass 0x([0-9a-f]+)\s*/m);
-			if(m)
-			{
-				signature.date = new Date(m[1]*1000);
-				signature.sigclass = parseInt(m[2], 16);
-			}
-			
-			callback(signature);
+			callback(null, {
+				type : data.readUInt8(2),
+				date : new Date(data.readUInt32BE(3)),
+				bykey : data.toString("hex", 7, 15);
+				pkalgo : data.readUInt8(16),
+				hashalgo : data.readUInt8(17)
+				version : 3,
+				binary : data,
+				verified : false
+			});
 		}
-	});
+	}
+	else if(byte1 == 4)
+	{ // Version 4 signature
+		var ret = {
+			type : data.readUInt8(1),
+			date : null,
+			pkalgo : data.readUInt8(2),
+			hashalgo : data.readUInt8(3),
+			version : 4,
+			binary : data,
+			verified : false
+		};
+		
+		extractSignatureSubPackets(data, function(err, info) {
+			if(err) { callback(err); return; }
+			
+			callback(null, utils.extend(ret, info));
+		});
+	}
+	else
+		callback(new Error("Unknown signature version "+byte1+"."));
 }
+
+function extractSignatureSubPackets(data, callback)
+{
+	var sublength = data.readUInt16BE(4);
+	var read = utils.bufferReadableStream(data.slice(4, sublength-4));
+	
+	var info = {
+		date: null,
+		expiration: null,
+		exportable: true,
+		trustlevel: null,
+		trustamount: null,
+		trustregexp: null,
+		bykey: null,
+		keyExpiration: null,
+		primaryId: null,
+		policy: null,
+		flags: null,
+		revokationReasonType: null,
+		revokationReasonExplanation: null
+	};
+	
+	var readon = function() {
+		read125OctetNumber(read, function(err, number) {
+			if(err) { callback(err); return; }
+			
+			read(number, function(err, data2) {
+				if(err)
+				{
+					if(err.NOFIRSTBYTE)
+						callback(info);
+					else
+						callback(err);
+					return;
+				}
+				
+				var type = data2.readUInt8(0);
+				var critical = !!(type | 0x80);
+				type = type & 0x7F;
+				
+				switch(type) {
+					case SIGSUB_SIG_CREATION:
+						info.date = new Date(data2.readUInt32BE(1)*1000);
+						break;
+					case SIGSUB_SIG_EXPIRATION:
+						info.expiration = data2.readUInt16BE(1);
+						break;
+					case SIGSUB_SIG_EXPORTABLE:
+						info.exportable = !!data2.readUInt8(1);
+						break;
+					case SIGSUB_SIG_TRUST:
+						var trustlevel = data2.readUInt8(1);
+						if(trustlevel > 0)
+						{
+							info.trustlevel = trustlevel;
+							info.trustamount = data2.readUInt8(2);
+						}
+						break;
+					case SIGSUB_SIG_TRUSTREGEXP:
+						var regexp = data2.toString("utf8", 1, data2.length);
+						var idx = regexp.indexOf("\0");
+						info.trustregexp = (idx == -1 ? regexp : regexp.substr(0, idx));
+						break;
+					case SIGSUB_KEY_EXPIRATION:
+						info.keyExpiration = data2.readUInt16BE(1);
+						break;
+					case SIGSUB_SIG_ISSUER:
+						info.bykey = data2.toString("hex", 1, 9);
+						break;
+					case SIGSUB_ID_PRIMARY:
+						info.primaryId = !!data2.readUInt8(1);
+						break;
+					case SIGSUB_SIG_POLICY:
+						info.policy = data2.toString("utf8", 1);
+						break;
+					case SIGSUB_KEY_FLAGS:
+						info.flags = data2.readUInt8(1);
+						break;
+					case SIGSUB_SIG_REVOK_REASON:
+						info.revokationReasonType = data2.readUInt8(1);
+						info.revokationReasonExplanation = data2.toString("utf8", 2);
+						break;
+					default:
+						if(critical)
+						{
+							callback(new Error("Unimplemented critical signature subpacket type "+type+"."));
+							return;
+						}
+				}
+				
+				readon();
+			});
+		})
+	};
+}
+
+var SIGSUB_SIG_CREATION = 2;
+var SIGSUB_SIG_EXPIRATION = 3;
+var SIGSUB_SIG_EXPORTABLE = 4;
+var SIGSUB_SIG_TRUST = 5;
+var SIGSUB_SIG_TRUST_REGEXP = 6;
+var SIGSUB_KEY_EXPIRATION = 9;
+var SIGSUB_SIG_ISSUER = 16;
+var SIGSUB_ID_PRIMARY = 25;
+var SIGSUB_SIG_POLICY = 26;
+var SIGSUB_KEY_FLAGS = 27;
+var SIGSUB_SIG_REVOK_REASON = 29;
