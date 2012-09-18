@@ -10,8 +10,8 @@ CREATE TABLE "keys" (
 );
 
 CREATE TABLE "keys_signatures" (
-	"id" BIGSERIAL PRIMARY KEY,
-	"key" BIGINT NOT NULL CHECK ("key" > 0),
+	"id" BIGINT PRIMARY KEY,
+	"key" BIGINT NOT NULL REFERENCES "keys"("id"),
 	"issuer" BIGINT CHECK ("issuer" > 0), -- Long ID of the key that made the signature. Not a foreign key as the key might be a subkey or unknown
 	"date" TIMESTAMP NOT NULL,
 	"binary" bytea NOT NULL,
@@ -22,60 +22,70 @@ CREATE TABLE "keys_signatures" (
 );
 	
 CREATE TABLE "keys_identities" (
-	"id" BIGSERIAL PRIMARY KEY,
+	"id" TEXT NOT NULL, -- The ID is simply the text of the identity, thus only unique per key
 	"key" BIGINT NOT NULL REFERENCES "keys"("id"),
-	"binary" BYTEA NOT NULL,
 	"name" TEXT NOT NULL,
 	"email" TEXT NOT NULL,
 	"perm_public" BOOLEAN NOT NULL, -- Identity is visible to people who do not know about it yet
 	"perm_namesearch" BOOLEAN NOT NULL, -- The key can be found by searching for the name stated in this identity
 	"perm_emailsearch" BOOLEAN NOT NULL, -- The key can be found by searching for the e-mail address stated in this identity
 	"email_blacklisted" TIMESTAMP, -- If a date is set, the recipient of an e-mail verification mail stated that the key does not belong to them
-	"revokedby" BIGINT REFERENCES "keys_identities_signatures"("id")
+	"revokedby" BIGINT REFERENCES "keys_identities_signatures"("id"),
+
+	PRIMARY KEY("id", "key")
 );
 
 CREATE TABLE "keys_identities_signatures" (
-	"id" BIGSERIAL PRIMARY KEY,
-	"identity" BIGINT NOT NULL REFERENCES "keys_identities"("id"),
+	"id" BIGINT PRIMARY KEY,
+	"identity" TEXT NOT NULL,
+	"key" BIGINT NOT NULL,
 	"issuer" BIGINT CHECK ("issuer" > 0), -- Long ID of the key that made the signature. Not a foreign key as the key might be unknown
 	"date" TIMESTAMP NOT NULL,
 	"binary" bytea NOT NULL,
 	"verified" BOOLEAN NOT NULL,
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (0x10, 0x11, 0x12, 0x13, 0x30)),
 	"expires" TIMESTAMP,
-	"revokedby" BIGINT REFERENCES "keys_identities_signatures" ("id")
+	"revokedby" BIGINT REFERENCES "keys_identities_signatures" ("id"),
+
+	FOREIGN KEY ("identity", "key") REFERENCES "keys_identities" ( "id", "key" )
 );
 
 CREATE TABLE "keys_attributes" (
-	"id" BIGSERIAL PRIMARY KEY,
+	"id" BIGINT NOT NULL, -- The ID is the sha1sum of the content, thus only unique per key
 	"key" BIGINT NOT NULL REFERENCES "keys"("id"),
 	"binary" BYTEA NOT NULL,
 	"perm_public" BOOLEAN NOT NULL, -- Identity is visible to people who do not know about it yet
-	"revokedby" BIGINT REFERENCES "keys_attributes_signatures"("id")
+	"revokedby" BIGINT REFERENCES "keys_attributes_signatures"("id"),
+
+	PRIMARY KEY("id", "key")
 );
 
 CREATE TABLE "keys_attributes_signatures" (
-	"id" BIGSERIAL PRIMARY KEY,
-	"identity" BIGINT NOT NULL REFERENCES "keys_attributes"("id"),
+	"id" BIGINT PRIMARY KEY,
+	"attribute" BIGINT NOT NULL,
+	"key" BIGINT NOT NULL,
 	"issuer" BIGINT CHECK ("issuer" > 0), -- Long ID of the key that made the signature. Not a foreign key as the key might be unknown
 	"date" TIMESTAMP NOT NULL,
 	"binary" bytea NOT NULL,
 	"verified" BOOLEAN NOT NULL,
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (0x10, 0x11, 0x12, 0x13, 0x30)),
 	"expires" TIMESTAMP,
-	"revokedby" BIGINT REFERENCES "keys_attributes_signatures" ("id")
+	"revokedby" BIGINT REFERENCES "keys_attributes_signatures" ("id"),
+	
+	FOREIGN KEY ("attribute", "key") REFERENCES "keys_attributes"("id", "key")
 );
 
 CREATE TABLE "keys_subkeys" (
-	"id" BIGINT PRIMARY KEY CHECK ("id" > 0),
+	"id" BIGINT NOT NULL CHECK ("id" > 0),
 	"parentkey" BIGINT NOT NULL REFERENCES "keys"("id"),
 	"expires" TIMESTAMP NOT NULL,
-	"revokedby" BIGINT REFERENCES "keys_subkeys_signatures"("id")
+	"revokedby" BIGINT REFERENCES "keys_subkeys_signatures"("id"),
+	PRIMARY KEY("id", "parentkey")
 );
 
 CREATE TABLE "keys_subkeys_signatures" (
-	"id" BIGSERIAL PRIMARY KEY,
-	"key" BIGINT NOT NULL CHECK ("key" > 0),
+	"id" BIGINT PRIMARY KEY,
+	"key" BIGINT NOT NULL REFERENCES "keys_subkeys"("id"),
 	"issuer" BIGINT CHECK ("issuer" > 0), -- Long ID of the key that made the signature. Not a foreign key as the key might be unknown
 	"date" TIMESTAMP NOT NULL,
 	"binary" bytea NOT NULL,

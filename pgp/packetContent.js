@@ -1,15 +1,16 @@
-var basicTypes = require("./basicTypes")
-var BufferedStream = require("./bufferedStream")
-var consts = require("./consts")
+var basicTypes = require("./basicTypes");
+var BufferedStream = require("./bufferedStream");
+var consts = require("./consts");
+var utils = require("./utils");
 
 function getPacketInfo(tag, body, callback) {
 	switch(tag)
 	{
 		case consts.PKT.PUBLIC_KEY:
-			getKeyPacketInfo(body, callback);
+			getPublicKeyPacketInfo(body, callback);
 			break;
 		case consts.PKT.PUBLIC_SUBKEY:
-			getSubkeyPacketInfo(body, callback);
+			getPublicSubkeyPacketInfo(body, callback);
 			break;
 		case consts.PKT.USER_ID:
 			getIdentityPacketInfo(body, callback);
@@ -25,32 +26,158 @@ function getPacketInfo(tag, body, callback) {
 	}
 }
 
-function getKeyPacketInfo(body, callback)
+function getPublicKeyPacketInfo(body, callback)
 {
-	callback(null, {
+	var ret = {
 		pkt: consts.PKT.PUBLIC_KEY,
 		id: null,
 		subkeys: { },
 		attributes: { },
 		signatures: { },
 		identities: { },
-		binary : body
+		binary : body,
+		version : body.readUInt8(0),
+		expires : null,
+		date : null,
+		pkalgo : null,
+		keyParts : null,
+		fingerprint : null
+	};
+	
+	if(ret.version == 3)
+	{
+		ret.date = new Date(body.readUInt32BE(1)*1000);
+		
+		var expires = body.readUInt16BE(5);
+		if(expires)
+			ret.expires = ret.date.getTime() + expires*86400000;
+		
+		ret.pkalgo = body.readUInt8(7);
+		ret.key = body.slice(8);
+		
+		var keyParts = basicTypes.splitMPIs(ret.key);
+		ret.keyParts = { n : keyParts[0], e : keyParts[1] };
+
+		ret.id = n.toString("hex", n.length-8).toUpperCase();
+		ret.fingerprint = hash(Buffer.concat([ keyParts.n.slice(2), keyParts.e.slice(2) ]), "md5", "hex").toUpperCase();
+	}
+	else if(ret.version == 4)
+	{
+		ret.date = new Date(body.readUInt32BE(1)*1000);
+		ret.pkalgo = body.readUInt8(5);
+		ret.key = body.slice(6);
+		
+		var keyParts = basicTypes.splitMPIs(ret.key);
+		if(ret.pkalgo == consts.PKALGO.RSA_ES || ret.pkalgo == consts.PKALGO.RSA_E || ret.pkalgo == consts.PKALGO.RSA_S)
+			ret.keyParts = { n : keyParts[0], e : keyParts[1] };
+		else if(ret.pkalgo == consts.PKALGO.ELGAMAL_E)
+			ret.keyParts = { p : keyParts[0], g : keyParts[1], y : keyParts[2] };
+		else if(ret.pkalgo == consts.PKALGO.DSA)
+			ret.keyParts = { p : keyParts[0], q : keyParts[1], g : keyParts[2], y : keyParts[3] };
+		
+		var fingerprintData = new Buffer(body.length + 3);
+		fingerprintData.writeUInt8(0x99, 0);
+		fingerprintData.writeUInt16BE(body.length, 1);
+		body.copy(fingerprintData, 3);
+		ret.fingerprint = utils.hash(fingerprintData, "sha1", "hex").toUpperCase();
+		ret.id = ret.fingerprint.substring(ret.fingerprint.length-16);
+	}
+	else
+	{
+		callback(new Error("Unknown key version "+ret.version+"."));
+		return;
+	}
+	
+	callback(null, ret);
+}
+
+function getPublicSubkeyPacketInfo(body, callback)
+{
+	extractPublicKeyInfo(body, function(err, info) {
+		if(err) { callback(err); return; }
+		
+		info.pkt = consts.PKT.PUBLIC_SUBKEY;
+		callback(null, info);
 	});
 }
 
 function getIdentityPacketInfo(body, callback)
 {
-	callback(null, body.substring(2));
-}
+	var content = body.toString("utf8")
+	var name = content;
+	var email = null;
+	var comment = null;
+	var m = name.match(/^(.*) <(.*)>$/);
+	if(m)
+	{
+		name = m[1];
+		email = m[2];
+	}
+	m = name.match(/^(.*) \((.*)\)$/);
+	if(m)
+	{
+		name = m[1];
+		comment = m[2];
+	}
 
-function getSubkeyPacketInfo(body, callback)
-{
-	extractPublicKeyInfo(body, callback);
+	callback(null, {
+		pkt: consts.PKT.USER_ID,
+		name : name,
+		email : email,
+		comment : comment,
+		binary : body,
+		id : content,
+		signatures : [ ]
+	});
 }
 
 function getAttributePacketInfo(body, callback)
 {
-	callback(null, { pkt: consts.PKT.ATTRIBUTE });
+	var ret = {
+		pkt : consts.PKT.ATTRIBUTE,
+		id : utils.hash(body, "sha1", "hex").toUpperCase(),
+		signatures : [ ],
+		subPackets : [ ],
+		binary : body
+	};
+
+	var stream = new BufferedStream(body);
+	
+	var readon = function() {
+		basicTypes.read125OctetNumber(stream, function(err, subPacketLength) {
+			if(err)
+			{
+				if(err.NOFIRSTBYTE)
+					callback(null, ret);
+				else
+					callback(err);
+				return;
+			}
+			
+			stream.read(subPacketLength, function(err, subPacket) {
+				if(err) { callback(err); return; }
+				
+				ret.subPackets.push(getAttributeSubPacketInfo(subPacket.readUInt8(0), subPacket.slice(1)));
+				readon();
+			})
+		});
+	};
+	readon();
+}
+
+function getAttributeSubPacketInfo(type, body) {
+	var ret = { binary: body, type: type };
+	if(type == consts.ATTRSUBPKT.IMAGE)
+	{
+		var headerLength = body.readUInt16LE(0); // This has to be Little Endian!
+		var header = body.slice(2, 2+headerLength);
+		ret.image = body.slice(2+headerLength);
+
+		var headerVersion = header.readUInt8(0);
+		if(headerVersion == 1)
+			ret.imageType = body.readUInt8(1);
+	}
+	return ret;
 }
 
 function getSignaturePacketInfo(body, callback)
@@ -68,24 +195,32 @@ function getSignaturePacketInfo(body, callback)
 		hashedSubPackets : { },
 		unhashedSubPackets : { },
 		exportable : true,
-		expiration : null
+		expires : null,
+		hashedPart : null, // The part of the signature that is concatenated to the data that is to be signed when creating the hash
+		first2HashBytes : null, // The first two bytes of the hash as 16-bit unsigned integer
+		signature : null // The signature as buffer object
 	};
 
 	var byte1 = body.readUInt8(0);
 	if(byte1 == 3)
 	{ // Version 3 signature
-		if(body.readUInt8(1) != 5)
-			callback(new Error("Invalid signature data."));
-		else
-		{
-			ret.type = body.readUInt8(2);
-			ret.date = new Date(body.readUInt32BE(3));
-			ret.issuer = body.toString("hex", 7, 15).toUpperCase();
-			ret.pkalgo = body.readUInt8(16);
-			ret.hashalgo = body.readUInt8(17);
-			ret.version = 3;
-			callback(null, ret);
-		}
+		var hashedLength = body.readUInt8(1); // Must be 5 according to spec
+		ret.hashedPart = body.slice(2, 2+hashedLength);
+
+		ret.type = ret.hashedPart.readUInt8(0);
+		ret.date = new Date(ret.hashedPart.readUInt32BE(1));
+		
+		var rest = body.slice(2+hashedLength);
+
+		ret.issuer = rest.toString("hex", 0, 8).toUpperCase();
+		ret.pkalgo = rest.readUInt8(8);
+		ret.hashalgo = rest.readUInt8(9);
+		ret.version = 3;
+
+		ret.first2HashBytes = rest.readUInt16BE(10);
+		ret.signature = rest.slice(12);
+
+		callback(null, ret);
 	}
 	else if(byte1 == 4)
 	{ // Version 4 signature
@@ -95,9 +230,14 @@ function getSignaturePacketInfo(body, callback)
 		ret.version = 4;
 		
 		var hashedSubPacketsLength = body.readUInt16BE(4);
-		var hashedSubPackets = body.slice(6, hashedSubPacketsLength+6);
-		var unhashedSubPacketsLength = body.readUInt16BE(hashedSubPacketsLength+6);
-		var unhashedSubPackets = body.slice(hashedSubPacketsLength+8, hashedSubPacketsLength+8+unhashedSubPacketsLength);
+		var hashedSubPackets = body.slice(6, 6+hashedSubPacketsLength);
+		var unhashedSubPacketsLength = body.readUInt16BE(6+hashedSubPacketsLength);
+		var unhashedSubPackets = body.slice(8+hashedSubPacketsLength, 8+hashedSubPacketsLength+unhashedSubPacketsLength);
+		
+		ret.hashedPart = body.slice(0, 6+hashedSubPacketsLength);
+		ret.first2HashBytes = body.readUInt16BE(8+hashedSubPacketsLength+unhashedSubPacketsLength);
+		ret.signature = body.slice(10+hashedSubPacketsLength+unhashedSubPacketsLength);
+		
 		extractSignatureSubPackets(hashedSubPackets, function(err, info1) {
 			if(err) { callback(err); return; }
 			
@@ -123,6 +263,8 @@ function getSignaturePacketInfo(body, callback)
 							ret.exportable = false;
 					});
 				}
+				if(ret.hashedSubPackets[consts.SIGSUBPKT.SIG_EXPIRE] && ret.date)
+					ret.expires = ret.date.getTime() + (ret.hashedSubPackets[consts.SIGSUBPKT.SIG_EXPIRE][0].value*1000);
 
 				callback(null, ret);
 			});
@@ -244,121 +386,12 @@ function getValueForSignatureSubPacket(type, binary) {
 				ret[consts.FORMATS[i]] = !!(byte1 & consts.FORMATS[i]);
 			return ret;
 		//case consts.SIGSUBPKT.SIGNATURE:
-};
-}
-
-function getKeyInfo(binaryStream, callback) {
-	var keys = { };
-	var lastKey = null;
-	var lastSubobject = null; // Subkey, identity or attribute
-	var lastSubobjectType = null;
-
-	var errors = false;
-
-	gpgsplit(binaryStream, function(err, tag, header, body, next) {
-		if(err) { callback(err); return; }
-		
-		switch(tag)
-		{
-			case consts.PKT.PUBLIC_KEY:
-				lastKey = lastSubobject = null;
-				extractKeyInfo(body, function(err, info) {
-					if(err) { errors = true; return }
-
-					if(!keys[info.id])
-						keys[info.id] = info;
-					lastkey = keys[info.id];
-
-					next();
-				});
-				break;
-			case consts.PKT.PUBLIC_SUBKEY:
-				lastSubobject = null;
-				if(lastKey == null)
-					errors = true;
-				else
-				{
-					extractSubkeyInfo(body, function(err, info) {
-						if(err) { errors = true; return; }
-					
-						if(!lastKey.subkeys[info.id])
-							lastKey.subkeys[info.id] = info;
-						lastSubobject = lastKey.subkeys[info.id];
-						lastSubobjectType = "subkey";
-						
-						next();
-					});
-				}
-				break;
-			case consts.PKT.USER_ID:
-				lastSubobject = null;
-				if(lastKey == null)
-					errors = true;
-				else
-				{
-					extractIdentityInfo(body, function(err, info) {
-						if(err) { errors = true; return; }
-					
-						if(!lastKey.identities[info.id])
-							lastKey.identities[info.id] = info;
-						lastSubobject = lastKey.identities[info.id];
-						lastSubobjectType = "identity";
-						
-						next();
-					});
-				}
-				break;
-			case consts.PKT.ATTRIBUTE:
-				lastSubobject = null;
-				if(lastKey == null)
-					errors = true;
-				else
-				{
-					extractAttributeInfo(body, function(err, info) {
-						if(err) { errors = true; return; }
-					
-						if(!lastKey.attributes[info.id])
-							lastKey.attributes[info.id] = info;
-						lastSubobject = lastKey.attributes[info.id];
-						lastSubobjectType = "attribute";
-						
-						next();
-					});
-				}
-				break;
-			case consts.PKT.SIGNATURE:
-				var obj = lastSubobject || lastKey;
-				if(obj == null)
-					errors = true;
-				else
-				{
-					extractSignatureInfo(body, function(err, info) {
-						if(err
-							|| (lastSubobject == null && [ SIG_KEY, SIG_KEY_BY_SUBKEY, SIG_KEY_REVOK ].indexOf(info.type) == -1)
-							|| (lastSubobjectType == "subkey" && [ SIG_SUBKEY, SIG_SUBKEY_REVOK ].indexOf(info.type) == -1)
-							|| ([ "identity", "attribute" ].indexOf(lastSubobjectType) != -1 && [ SIG_CERT_1, SIG_CERT_2, SIG_CERT_3, SIG_CERT_REVOK ].indexOf(info.type == -1)))
-						{ // Error on unmatching signature type
-							errors = true;
-							return;
-						}
-
-						if(!obj.signatures[info.id])
-							obj.signatures[info.id] = info;
-						
-						next();
-					});
-				}
-				break;
-		}
-	}, function() {
-		// All packets have beend handled
-		callback(null, keys, errors);
-	});
+	}
 }
 
 exports.getPacketInfo = getPacketInfo;
-exports.getKeyPacketInfo = getKeyPacketInfo;
-exports.getSubkeyPacketInfo = getSubkeyPacketInfo;
+exports.getPublicKeyPacketInfo = getPublicKeyPacketInfo;
+exports.getPublicSubkeyPacketInfo = getPublicSubkeyPacketInfo;
 exports.getAttributePacketInfo = getAttributePacketInfo;
 exports.getIdentityPacketInfo = getIdentityPacketInfo;
 exports.getSignaturePacketInfo = getSignaturePacketInfo;

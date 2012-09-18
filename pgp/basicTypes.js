@@ -79,5 +79,19 @@ function encode125OctetNumber(number)
 	}
 }
 
+function splitMPIs(data)
+{
+	var ret = [ ];
+	var i = 0;
+	while(i < data.length)
+	{
+		var length = Math.floor((data.readUInt16BE(i)+7) / 8);
+		ret.push(data.slice(i, 2+i+length));
+		i += 2+length;
+	}
+	return ret;
+}
+
 exports.read125OctetNumber = read125OctetNumber;
 exports.encode125OctetNumber = encode125OctetNumber;
+exports.splitMPIs = splitMPIs;

@@ -88,3 +88,33 @@ exports.KEYFLAG = {
 exports.FEATURES = {
 	MOD_DETECT    : 0x01, /* Modification Detection (packets 18 and 19) */
 };
+
+// Attribute subpacket types
+exports.ATTRSUBPKT = {
+	IMAGE         : 1
+};
+
+// Attribute subpacket image types
+exports.IMAGETYPES = {
+	JPEG          : 1
+};
+
+// Public key algorithms
+exports.PKALGO = {
+	RSA_ES        : 1, /* RSA (Encrypt or Sign) */
+	RSA_E         : 2, /* RSA Encrypt-Only */
+	RSA_S         : 3, /* RSA Sign-Only */
+	ELGAMAL_E     : 16, /* Elgamal (Encrypt-Only) */
+	DSA           : 17 /* DSA (Digital Signature Algorithm) */
+};
+
+// Hash algorithms
+exports.HASHALGO = {
+	MD5           : 1,
+	SHA1          : 2,
+	RIPEMD160     : 3,
+	SHA256        : 8,
+	SHA384        : 9,
+	SHA512        : 10,
+	SHA224        : 11
+};

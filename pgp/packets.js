@@ -114,10 +114,10 @@ function generateNewHeader(tag, packetLength)
 	return ret;
 }
 
-function encodePacket(tag, body, useOldHeader)
+function generatePacket(tag, body, useOldHeader)
 {
 	var header = (useOldHeader ? generateOldHeader : generateNewHeader)(tag, body.length);
-	var ret = new Buffer(header.length, body.length);
+	var ret = new Buffer(header.length+body.length);
 	header.copy(ret);
 	body.copy(ret, header.length);
 	return ret;
@@ -198,4 +198,5 @@ function gpgsplit(data, callback, callbackEnd) {
 exports.getHeaderInfo = getHeaderInfo;
 exports.generateOldHeader = generateOldHeader;
 exports.generateNewHeader = generateNewHeader;
+exports.generatePacket = generatePacket;
 exports.gpgsplit = gpgsplit;

@@ -1,5 +1,6 @@
 var config = require("./config");
 var fs = require("fs");
+var crypto = require("crypto");
 
 function getTempFilename(callback)
 {
@@ -23,4 +24,12 @@ function getTempFilename(callback)
 	});
 }
 
+function hash(data, algo, toFormat)
+{
+	var ret = crypto.createHash(algo);
+	ret.update(data);
+	return ret.digest(toFormat);
+}
+
 exports.getTempFilename = getTempFilename;
+exports.hash = hash;

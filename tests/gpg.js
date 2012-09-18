@@ -13,7 +13,7 @@ fM=\xc7ds\xd4R\xf2\xcft\xf1\xbdt\xc6s\xd4\xb5.p2\xaej6!I\x14\xcf\xcc\xa4m?\x9eaO
 \x0c\xb4\xb0\xb8\xf3\xc2\xf2M\xef\xedQ(\xf3\xf2C\xac\x07\xcb\x83\x0eK\xd3\x9ax\xbb\xe3H\x041,Mq\xe6\
 \x1aL|\xe3\xe0n>\x83\xd6i\x0c=\x9b\xeba,\xa1\xc9J\xdelF\xb9VI\xdfxfr;\xd9E\xa4\xad{Q\xc9gS)02\xbc\x82\
 \x82\xfe\x1a\x1c\xeb\xdcB{\x1dk\xd3[#\xb1\xb8s\x90,\xe1\xe6\x9d\xcb\x91\xbc\x91\x17\xfc\x07\xb1^\x11v\
-\xf8\xd4\x07@\x8a\x97;\x82'\xe0|\x02\xc6\x15\xc1\x0fp,\xb4\x1bblabaabla <bla@example.com>\x88h\x04\x13\
+\xf8\xd4\x07@\x8a\x97;\x82'\xe0|\x02\xc6\x15\xc1\x0fp,\xb4\x1bblablabla <bla@example.com>\x88h\x04\x13\
 \x11\x02\x00(\x02\x1b\x03\x06\x0b\x09\x08\x07\x03\x02\x06\x15\x08\x02\x09\x0a\x0b\x04\x16\x02\x03\x01\
 \x02\x1e\x01\x02\x17\x80\x05\x02PW\x9f$\x05\x09\x00\x0a\xf3\x88\x00\x0a\x09\x10;C\x85\xadw\x12FA\x08\
 \xdc\x00\xa0\x9786!r\x08\xc2^R\x904\x90Q\x9a C\xf96pc\x00\x9c\x0a+_{{h\x82\xd6\xc0\x0e\x06I\xfd U\xa0\
@@ -406,7 +406,7 @@ exports.newHeaders = function(test) {
 };
 
 exports.key1 = function(test) {
-	test.expect(12);
+	test.expect(28);
 	
 	var key = null, id = null, sig = null;
 
@@ -422,23 +422,50 @@ exports.key1 = function(test) {
 
 		next();
 	}, function() {
-		test.equals(id.toString(), "blabaabla <bla@example.com>");
+		pgp.packetContent.getPublicKeyPacketInfo(key, function(err, info) {
+			test.ifError(err);
 
-		pgp.packetContent.getSignaturePacketInfo(sig, function(err, info) {
-			test.equals(info.date.getTime(), 1347919652000);
-			test.equals(info.pkalgo, 17);
 			test.equals(info.version, 4);
-			test.equals(info.hashalgo, 2);
-			test.ok(info.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_FLAGS][0].value[pgp.consts.KEYFLAG.CERT]);
-			test.ok(info.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_FLAGS][0].value[pgp.consts.KEYFLAG.SIGN]);
-			test.equals(info.issuer, "3B4385AD77124641");
-			test.equals(info.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE][0].value, 717704);
+			test.equals(info.pkalgo, 17);
+			test.equals(info.date.getTime(), 1347893148000);
+			test.equals(info.expires, null);
+			test.equals(info.id, "3B4385AD77124641");
 			
-			test.done();
-			
-			pgp.signing.verifyIdentitySignature(key, id, sig, function(err) {
-				///test.ifError(err);
+			pgp.packetContent.getIdentityPacketInfo(id, function(err, info) {
+				test.ifError(err);
 				
+				test.equals(info.name, "blablabla");
+				test.equals(info.id, "blablabla <bla@example.com>");
+				test.equals(info.comment, null);
+				test.equals(info.email, "bla@example.com");
+
+				pgp.packetContent.getSignaturePacketInfo(sig, function(err, info) {
+					test.ifError(err);
+
+					test.equals(info.date.getTime(), 1347919652000);
+					test.equals(info.pkalgo, 17);
+					test.equals(info.version, 4);
+					test.equals(info.hashalgo, 2);
+					test.ok(info.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_FLAGS][0].value[pgp.consts.KEYFLAG.CERT]);
+					test.ok(info.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_FLAGS][0].value[pgp.consts.KEYFLAG.SIGN]);
+					test.equals(info.issuer, "3B4385AD77124641");
+					test.equals(info.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE][0].value, 717704);
+					
+					pgp.signing.verifyIdentitySignature(key, id, sig, null, function(err, valid) {
+						test.ifError(err);
+						test.ok(valid);
+						
+						var forgedId = new Buffer(id.length);
+						id.copy(forgedId);
+						forgedId.writeUInt8(90, 0);
+						pgp.signing.verifyIdentitySignature(key, forgedId, sig, null, function(err, valid) {
+							test.ifError(err);
+							test.ok(!valid);
+
+							test.done();
+						});
+					});
+				});
 			});
 		});
 	});
