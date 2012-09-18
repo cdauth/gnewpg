@@ -26,6 +26,8 @@ soynode.compileTemplates(__dirname+"/pages", function(err) {
 	app.listen(8888);
 	
 	console.log("Server started");
+	
+	require("./gpg").test();
 });
 
 function request(method, template) {
