@@ -75,18 +75,10 @@ function getKeys(filter, callback, justOne, con) {
 		filter, [ "id" ], callback, justOne, con);
 }
 
-function getParentKeys(id, callback, con) {
-	getKeySignatures({ "key" : id, "sigtype" : pgp.consts.SIG.SUBKEY, "verified" : true }, function(err, sigRecords) {
-		if(err) { callback(err); return; }
-		
-		var ret = [ ];
-		sigRecords.forEach(function(it) {
-			ret.push(it.issuer);
-		});
-		callback(null, ret);
-	}, con);
+function getSubkeys(filter, callback, justOne, con) {
+	_getWithFilter('SELECT upper(to_hex("id")), "binary", upper(to_hex("parentkey")), "expires", "revokedby" FROM "keys_subkeys"',
+		filter, [ "id" "parentkey" ], callback, justOne, con);
 }
-
 
 function identityExists(id, parentId, callback, con) {
 	_xExists("keys_identities", { "id" : id, "key" : encodeKeyId(parentId) }, callback, con);
@@ -133,6 +125,10 @@ function attributeSignatureExists(id, attrId, callback, con) {
 	_xExists("keys_attributes_signatures", { "id" : id, "attribute" : attrId }, callback, con);
 }
 
+function getAllSignatures(filter, callback, justOne, con) {
+	_getWithFilter('SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby", "table", "objectcol" FROM "keys_signatures_all"',
+		filter, [ "key", "issuer" ], callback, justOne, con);
+}
 
 function getKeySignatures(filter, callback, justOne, con) {
 	_getWithFilter('SELECT "id", upper(to_hex("key")), upper(to_hex("issuer")), "date", "binary", "verified", "sigtype", "expires", "revokedby" FROM "keys_signatures"',
@@ -160,6 +156,7 @@ exports.identitySignatureExists = identitySignatureExists;
 exports.attributeSignatureExists = attributeSignatureExists;
 
 exports.getKey = getKey;
+exports.getSubKeys = getSubKeys;
 exports.getParentKeys = getParentKeys;
 exports.getIdentity = getIdentity;
 exports.getAttribute = getAttribute;
@@ -168,5 +165,6 @@ exports.getKeys = getKeys;
 exports.getIdentities = getIdentities;
 exports.getAttributes = getAttributes;
 exports.getKeySignatures = getKeySignatures;
+exports.getAllSignatures = getAllSignatures;
 exports.getIdentitySignatures = getIdentitySignatures;
 exports.getAttributeSignatures = getAttributeSignatures;

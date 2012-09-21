@@ -51,5 +51,14 @@ function injectMethods(req, toObj) {
 	return toObj;
 }
 
+function I18nError(msgId) {
+	this.args = arguments;
+	
+	this.translate = function(gettext) {
+		return gettext.apply(null, arguments);
+	};
+}
+
 exports.middleware = middleware;
 exports.injectMethods = injectMethods;
+exports.Error = I18nError;

@@ -45,7 +45,7 @@ function uploadKey(key, callback, con) {
 					if(err) { callback(err, uploaded); return; }
 
 					var func = null;
-					switch(info.pkt) {
+					pktswitch: switch(info.pkt) {
 						case pgp.consts.PKT.PUBLIC_KEY:
 							_uploadKey(con, info, function(err) {
 								if(err) { uploaded.failed.push({ type: type, id: info.id, err: err }); return; }
@@ -102,19 +102,40 @@ function uploadKey(key, callback, con) {
 							});
 							break;
 						case pgp.consts.PKT.SIGNATURE:
-							if(!info.issuer || !info.date)
+							switch(info.sigtype)
 							{
-								uploaded.failed.push({ type : type, id: info.id, err:  });
-								break;
+								case pgp.consts.SIG.CERT_0:
+								case pgp.consts.SIG.CERT_1:
+								case pgp.consts.SIG.CERT_2:
+								case pgp.consts.SIG.CERT_3:
+								case pgp.consts.SIG.CERT_REVOK:
+									if(lastId == null && lastAttr == null)
+									{
+										uploaded.failed.push({ type: type, id: info.id, issuer: info.issuer, date: info.date, err: new i18n.Error("Signature type %x is only acceptable on identities and attributes.", info.sigtype) });
+										break pktswitch;
+									}
+									break;
+								case pgp.consts.SIG.SUBKEY:
+								case pgp.consts.SIG.SUBKEY_REVOK:
+									if(lastSubkey == null)
+									{
+										uploaded.failed.push({ type: type, id: info.id, issuer: info.issuer, date: info.date, err: new i18n.Error("Signature type %x is only acceptable on subkeys.", info.sigtype) });
+										break pktswitch;
+									}
+									break;
+								case pgp.consts.SIG.KEY:
+								case pgp.consts.SIG.KEY_BY_SUBKEY:
+								case pgp.consts.SIG.KEY_REVOK:
+									lastSubkey = lastId = lastAttr = null;
+									break;
+								default:
+									uploaded.failed.push({ type: type, id: info.id, issuer: info.issuer, date: info.date, err: new i18n.Error("Unsupported signature type %x.", info.sigtype) });
+									break pktswitch;
 							}
-							
-							// TODO: Some signatures may only be self-signatures. Check this.
 							
 							var func = null;
 							var obj = null;
 							var objUpl = null;
-							
-							info.key = lastKey.id;
 
 							if(lastSubkey != null)
 							{
@@ -145,7 +166,7 @@ function uploadKey(key, callback, con) {
 							}
 							else
 							{
-								uploaded.failed.push({ type : type, id: info.id, issuer: info.issuer, date: info.date, err: new Error(_("No associated object for signature.")) });
+								uploaded.failed.push({ type : type, id: info.id, issuer: info.issuer, date: info.date, err: new i18n.Error("No associated object for signature.") });
 								break;
 							}
 							
@@ -233,7 +254,7 @@ function _uploadKeySignature(con, info, objInfo, keyInfo, _, callback) { // keyI
 				else
 					con.query('INSERT INTO "keys_signatures" ( "id", "key", "issuer", "date", "binary", "sigtype", "expires", "verified" ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )', [ info.id, pgpBasic._encodeId(objInfo.id), info.issuer, info.date, info.binary, info.sigtype, info.expires, !!verified ], callback);
 			}, con);
-			
+		}
 	});
 }
 

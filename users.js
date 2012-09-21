@@ -50,7 +50,7 @@ function getUser(name, callback) {
 function encodePassword(password) {
 	var sha = crypto.createHash("sha256");
 	sha.update(password);
-	return sha.digest("base64");
+	return sha.digest("base64").substring(0, 27);
 }
 
 function checkPassword(user, password) {
