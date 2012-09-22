@@ -23,5 +23,13 @@ function extend(obj1, obj2) {
 	return obj1;
 };
 
+function toProperArray(arr) {
+	var ret = [ ];
+	for(var i=0; i<arr.length; i++)
+		ret.push(arr[i]);
+	return ret;
+}
+
 exports.generateRandomString = generateRandomString;
 exports.extend = extend;
+exports.toProperArray = toProperArray;

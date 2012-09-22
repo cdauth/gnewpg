@@ -1,6 +1,7 @@
 var pgp = require("node-pgp");
 var pgpBasic = require("./pgpBasic");
 var i18n = require("./i18n");
+var db = require("./database");
 
 /*
  * These are the security relations that need to be calculated:
@@ -44,19 +45,15 @@ var i18n = require("./i18n");
  * 6. Check the primary identity of a key. This is set by the SIGSUBPKT.PRIMARY_UID subpacket in a self-signature of an identity. The one from the
  *    most recent self-signature counts. This check needs to be performed when:
  *     a) a self-signature is verified (check 1) that sets the primary ID.
+ * 7. TODO: Check if there are any signatures that contain the sub packet consts.SIGSUBPKT.REV_KEY where the sensitive flag is set to true. These
+ *    signatures may only be made public if there is a revocation signature by the key specified there.
+ *     a) a signature with such a sensitive sub-packet is _uploaded_. If there are no revocation signatures issued by the specified authorised revoker on
+ *        the key itself, its subkeys, its identities and its attributes, mark the signature as sensitive.
+ *     b) a key is revoked by check 2 or 3 [or 4]. Check if the revoker has been authorised using a sensitive revocation authorisation signature, if so
+ *        mark it as non-sensitive.
 */
 
-function _basicChecks(keyID, signatureInfo, callback)
-{
-	if(!signatureInfo.issuer || !signatureInfo.date)
-		callback(new i18n.Error("Signatures without issuer or date information are unacceptable."));
-	else
-		callback(null);
-	
-	// TODO: Some signatures may only be self-signatures. Check this.
-}
-
-function _handleVerifiedSignature(keyId, signatureInfo, signatureTable, objectColumn, callback, con)
+function _handleVerifiedSignature(keyId, signatureInfo, callback, con)
 {
 	var checks = [ ];
 	var i = 0;
@@ -182,14 +179,14 @@ function _checkRevocationStatus(keyId, callback, con) {
 	// Revoke the key
 	function revoke(signatureId, isSubkey, issuerId) {
 		if(isSubkey) // Check 3: revoke the subkey binding signatures
-			pgpBasic.query('UPDATE "keys_signatures" SET "revokedby" = $1 WHERE "sigtype" = $2 AND "key" = $3 AND "issuer" = $4', [ signatureId, pgp.consts.SIG.SUBKEY_REVOK, pgpBasic.encodeKeyId(keyId), pgpBasic.encodeKeyId(issuerId) ], callback, con);
+			db.query('UPDATE "keys_signatures" SET "revokedby" = $1 WHERE "sigtype" = $2 AND "key" = $3 AND "issuer" = $4', [ signatureId, pgp.consts.SIG.SUBKEY_REVOK, pgpBasic.encodeKeyId(keyId), pgpBasic.encodeKeyId(issuerId) ], callback, con);
 		else // Check 2: revoke the key
-			pgpBasic.query('UPDATE "keys" SET "revokedby" = $1 WHERE "id" = $2', [ signatureId, pgpBasic.encodeKeyId(keyId) ], callback, con);
+			db.query('UPDATE "keys" SET "revokedby" = $1 WHERE "id" = $2', [ signatureId, pgpBasic.encodeKeyId(keyId) ], callback, con);
 	}
 }
 
 function _isAuthorisedRevoker(keyId, issuerKeyInfo, callback, con) {
-	pgpBasic.getAllSignatures({ "key" : keyId, "sigtype" : [ pgp.consts.SIG.KEY, pgp.consts.SIG.CERT_0, pgp.consts.SIG_CERT_1, pgp.consts.SIG_CERT_2, pgp.consts.SIG_CERT_3 ], function(err, fifo) {
+	pgpBasic.getAllSignatures({ "key" : keyId, "sigtype" : [ pgp.consts.SIG.KEY, pgp.consts.SIG.CERT_0, pgp.consts.SIG_CERT_1, pgp.consts.SIG_CERT_2, pgp.consts.SIG_CERT_3 ]}, function(err, fifo) {
 		if(err) { callback(err); return; }
 
 		next();
@@ -261,7 +258,7 @@ function _checkSignatureRevocationStatus(keyId, callback, con) {
 
 					if(!sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.REVOCABLE] || !sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.REVOCABLE][0].value)
 					{
-						pgpBasic.query('UPDATE "'+sigRecord.table+'" SET "revokedby" = $1 WHERE "id" = $2', [ sigRecord.revokedby, sigRecord.id ], function(err) {
+						db.query('UPDATE "'+sigRecord.table+'" SET "revokedby" = $1 WHERE "id" = $2', [ sigRecord.revokedby, sigRecord.id ], function(err) {
 							if(err) { callback(err); return; }
 							
 							next();
@@ -321,7 +318,7 @@ function _checkSelfSignatures(keyId, callback, con) {
 					updates.push('"primary_identity" = $'+(i++));
 					args.push(primary);
 				}
-				pgpBasic.query('UPDATE "keys" SET '+updates.join(', ')+' WHERE id = $1', args, callback, con);
+				db.query('UPDATE "keys" SET '+updates.join(', ')+' WHERE id = $1', args, callback, con);
 			}
 			else
 				callback(null);
@@ -364,126 +361,219 @@ function _checkSubkeyExpiration(keyId, callback, con) {
 				args.push(expires);
 			}
 			
-			pgpBasic.query(query, args, callback, con);
+			db.query(query, args, callback, con);
 		}
 	});
 }
 
 /**
  * Verifies that a key or subkey signature has been made by the given issuer. Fetches the issuer information from the database, but does not
- * write anything to the database.
+ * write the verified status to the database.
  * 
- * @param keyId {String} The ID of the key being signed
- * @param keyBinary {Buffer} The body of the key being signed
- * @param signatureInfo {Object} info object as returned by pgp.packetContent.getSignaturePacketInfo()
+ * @param signatureId {String}
  * @param callback {Function} function(err, verified), where verified can be a boolean or null if the issuer key was not found
- * @param con {Object|null} A database connection
+ * @param con {pg.Connection|null} A database connection
 */
 
-function verifyKeySignature(keyId, keyBinary, signatureInfo, callback, con) {
-	_basicChecks(keyId, signatureInfo, function(err) {
+function verifyKeySignature(signatureId, callback, con) {
+	pgpBasic.getKeySignature(signatureId, function(err, sigRecord) {
 		if(err) { callback(err); return; }
-		
-		pgpBasic.getKey(signatureInfo.issuer, function(err, issuerInfo) {
+
+		pgpBasic.getKey(sigRecord.key, function(err, keyRecord) {
 			if(err) { callback(err); return; }
-			if(issuerInfo == null) { callback(null, null); return; }
 			
-			if(signatureInfo.sigtype == pg.consts.SIG.SUBKEY)
-				pgp.signing.verifySubkeySignature(issuerInfo.binary, keyBinary, signatureInfo.binary, issuerInfo.binary, handleVerified);
+			if(sigRecord.key == sigRecord.issuer)
+				getIssuer(null, keyRecord);
 			else
-				pgp.signing.verifyKeySignature(keyBinary, signatureInfo.binary, issuerInfo.binary, handleVerified);
+				pgpBasic.getKey(sigRecord.issuer, getIssuer, con);
 			
-			function handleVerified(err, verified)
-			{
+			function getIssuer(err, issuerRecord) {
 				if(err) { callback(err); return; }
-				if(!verified) { callback(null, false); return; }
+				if(issuerRecord == null) { callback(null, null); }
+					
+				pgp.signing.verifyKeySignature(keyRecord.binary, sigRecord.binary, issuerRecord.binary, function(err, verified) {
+					if(err)
+						callback(err);
+					else if(!verified)
+					{
+						db.query('DELETE FROM "keys_signatures" WHERE "id" = $1', [ signatureId ], function(err) {
+							if(err) { callback(err); return; }
+							
+							callback(null, false);
+						}, con);
+					}
+					else
+					{
+						pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
+							if(err) { callback(err); return; }
+
+							_handleVerifiedSignature(keyId, sigInfo, function(err) {
+								if(err) { callback(err); return; }
+								
+								db.query('UPDATE "keys_signatures" SET "verified" = true WHERE "id" = $1', [ signatureId ], function(err) {
+									if(err) { callback(err); return; }
+									callback(null, true);
+								}, con);
+							}, con);
+						});
+					}
+				});
+			}
+		}, con);
+	}, con);
+}
+
+
+/**
+ * Verifies that an identity signature has been made by the given issuer. Fetches the issuer information from the database, but does not
+ * write the verified status to the database.
+ * 
+ * @param signatureId {String}
+ * @param callback {Function} function(err, verified), where verified can be a boolean or null if the issuer key was not found
+ * @param con {pg.Connection|null} A database connection
+*/
+
+function verifyIdentitySignature(signatureId, callback, con) {
+	pgpBasic.getIdentitySignature(signatureId, function(err, sigRecord) {
+		if(err) { callback(err); return; }
+
+		pgpBasic.getKey(sigRecord.key, function(err, keyRecord) {
+			if(err) { callback(err); return; }
+			
+			if(sigRecord.key == sigRecord.issuer)
+				getIssuer(null, keyRecord);
+			else
+				pgpBasic.getKey(sigRecord.issuer, getIssuer, con);
+			
+			function getIssuer(err, issuerRecord) {
+				if(err) { callback(err); return; }
+				if(issuerRecord == null) { callback(null, null); }
+					
+				pgp.signing.verifyIdentitySignature(keyRecord.binary, new Buffer(sigRecord.identity, "utf8"), sigRecord.binary, issuerRecord.binary, function(err, verified) {
+					if(err)
+						callback(err);
+					else if(!verified)
+					{
+						db.query('DELETE FROM "keys_identities_signatures" WHERE "id" = $1', [ signatureId ], function(err) {
+							if(err) { callback(err); return; }
+							
+							callback(null, false);
+						}, con);
+					}
+					else
+					{
+						pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
+							if(err) { callback(err); return; }
+
+							_handleVerifiedSignature(keyId, sigInfo, function(err) {
+								if(err) { callback(err); return; }
+								
+								db.query('UPDATE "keys_identities_signatures" SET "verified" = true WHERE "id" = $1', [ signatureId ], function(err) {
+									if(err) { callback(err); return; }
+									callback(null, true);
+								}, con);
+							}, con);
+						});
+					}
+				});
+			}
+		}, con);
+	}, con);
+}
+
+
+/**
+ * Verifies that an identity signature has been made by the given issuer. Fetches the issuer information from the database, but does not
+ * write the verified status to the database.
+ * 
+ * @param signatureId {String}
+ * @param callback {Function} function(err, verified), where verified can be a boolean or null if the issuer key was not found
+ * @param con {pg.Connection|null} A database connection
+*/
+
+function verifyAttributeSignature(signatureId, callback, con) {
+	pgpBasic.getAttributeSignature(signatureId, function(err, sigRecord) {
+		if(err) { callback(err); return; }
+			
+		pgpBasic.getKey(sigRecord.key, function(err, keyRecord) {
+			if(err) { callback(err); return; }
+			
+			pgpBasic.getAttribute(sigRecord.attribute, function(err, attributeRecord) {
+				if(err) { callback(err); return; }
+			
+				if(sigRecord.key == sigRecord.issuer)
+					getIssuer(null, keyRecord);
+				else
+					pgpBasic.getKey(sigRecord.issuer, getIssuer, con);
 				
-				_handleVerifiedSignature(keyId, signatureInfo, "keys_signatures", null, function(err) { callback(err, true); }, con);
-			}
-		}, con);
-	});
-}
+				function getIssuer(err, issuerRecord) {
+					if(err) { callback(err); return; }
+					if(issuerRecord == null) { callback(null, null); }
+						
+					pgp.signing.verifyAttributeSignature(keyRecord.binary, attributeRecord.binary, sigRecord.binary, issuerRecord.binary, function(err, verified) {
+						if(err)
+							callback(err);
+						else if(!verified)
+						{
+							db.query('DELETE FROM "keys_attributes_signatures" WHERE "id" = $1', [ signatureId ], function(err) {
+								if(err) { callback(err); return; }
+								
+								callback(null, false);
+							}, con);
+						}
+						else
+						{
+							pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
+								if(err) { callback(err); return; }
 
-
-/**
- * Verifies that an identity signature has been made by the given issuer. Fetches the issuer information from the database, but does not
- * write anything to the database.
- * 
- * @param keyId {String} The ID of the key being signed
- * @param keyBinary {Buffer} The body of the key being signed
- * @param identity {String} The identity being signed
- * @param signatureInfo {Object} info object as returned by pgp.packetContent.getSignaturePacketInfo()
- * @param callback {Function} function(err, verified), where verified can be a boolean or null if the issuer key was not found
- * @param con {Object|null} A database connection
-*/
-
-function verifyIdentitySignature(keyId, keyBinary, identity, signatureInfo, callback, con) {
-	_basicChecks(keyId, signatureInfo, function(err) {
-		if(err) { callback(err); return; }
-		
-		pgpBasic.getKey(signatureInfo.issuer, function(err, issuerInfo) {
-			if(err)
-				callback(err);
-			else if(issuerInfo == null)
-				callback(null, null);
-			else
-			{
-				pgp.signing.verifyIdentitySignature(key, new Buffer(identity, "utf8"), signature, issuer, function(err, verified) {
-					if(err)
-						callback(err);
-					else if(!verified)
-						callback(null, false);
-					else
-						_handleVerifiedSignature(keyId, signatureInfo, "keys_identities_signatures", "identity", function(err) { callback(err, true); }, con);
-				});
-			}
+								_handleVerifiedSignature(keyId, sigInfo, function(err) {
+									if(err) { callback(err); return; }
+									
+									db.query('UPDATE "keys_attributes_signatures" SET "verified" = true WHERE "id" = $1', [ signatureId ], function(err) {
+										if(err) { callback(err); return; }
+										callback(null, true);
+									}, con);
+								}, con);
+							});
+						}
+					});
+				}
+			}, con);
 		}, con);
 	}, con);
 }
 
 
 /**
- * Verifies that an identity signature has been made by the given issuer. Fetches the issuer information from the database, but does not
- * write anything to the database.
+ * Verifies all unverified signatures made by the given key. Writes the verified status to the database.
  * 
- * @param keyId {String} The ID of the key being signed
- * @param keyBinary {Buffer} The body of the key being signed
- * @param attribute {Buffer} The body of the attribute to be signed
- * @param signatureInfo {Object} info object as returned by pgp.packetContent.getSignaturePacketInfo()
- * @param callback {Function} function(err, verified), where verified can be a boolean or null if the issuer key was not found
- * @param con {Object|null} A database connection
+ * @param keyId {String} The ID of the key
+ * @param callback {Function} function(err)
+ * @param con {pg.Connection|null) A database connection
 */
 
-function verifyAttributeSignature(keyId, keyBinary, attribute, signatureInfo, callback, con)
-	_basicChecks(keyId, signatureInfo, function(err) {
+function handleKeyUpload(keyId, callback, con) {
+	pgpBasic.getAllSignatures({ issuer: keyId, verified: false }, function(err, sigRecords) {
 		if(err) { callback(err); return; }
 		
-		pgpBasic.getKey(signatureInfo.issuer, function(err, issuerInfo) {
-			if(err)
-				callback(err);
-			else if(issuerInfo == null)
-				callback(null, null);
-			else
-			{
-				pgp.signing.verifyAttributeSignature(key, attribute, signature, issuer, function(err, verified) {
-					if(err)
-						callback(err);
-					else if(!verified)
-						callback(null, false);
-					else
-						_handleVerifiedSignature(keyId, signatureInfo, "keys_attributes_signatures", "attribute", function(err) { callback(err, true); }, con);
-				});
-			}
-		}, con);
+		next();
+		function next() {
+			keySigRecords.next(function(err, sigRecord) {
+				if(err) { callback(err); return; }
+				if(sigRecord == null) { callback(null); return; }
+				
+				if(sigRecord.table == "keys_identities_signatures")
+					verifyIdentitySignature(sigRecord.id, next, con);
+				else if(sigRecord.table == "keys_attributes_signatures")
+					verifyIdentitySignature(sigRecord.id, next, con);
+				else
+					verifyKeySignature(sigRecord.id, next, con);
+			});
+		}
 	}, con);
-}
-
-
-
-function verifySignaturesMadeByKey(keyInfo) {
-	
 }
 
 exports.verifyKeySignature = verifyKeySignature;
 exports.verifyIdentitySignature = verifyIdentitySignature;
 exports.verifyAttributeSignature = verifyAttributeSignature;
+exports.handleKeyUpload = handleKeyUpload;

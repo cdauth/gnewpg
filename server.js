@@ -4,11 +4,18 @@ var utils = require("./utils");
 var sessions = require("./sessions");
 var urlmap = require("./urlmap");
 var i18n = require("./i18n");
+var config = require("./config");
+var fs = require("fs");
+
+if(!fs.existsSync(config.tmpDir))
+	fs.mkdirSync(config.tmpDir, 0700);
+if(!fs.existsSync(config.tmpDir+"/upload"))
+	fs.mkdirSync(config.tmpDir+"/upload", 0700);
 
 var app = express();
 
 sessions.scheduleInactiveSessionCleaning();
-app.use(express.bodyParser()); // For POST requests
+app.use(express.bodyParser({ uploadDir: config.tmpDir+"/upload" })); // For POST requests
 app.use(express.cookieParser());
 app.use(sessions.sessionMiddleware);
 app.use("/static", express.static(__dirname+"/static"));
@@ -26,18 +33,18 @@ soynode.compileTemplates(__dirname+"/pages", function(err) {
 	app.listen(8888);
 	
 	console.log("Server started");
-	
-	require("./gpg").test();
 });
 
 function request(method, template) {
 	var module = null;
 	try {
-		module = require("./pages/"+template);
+		module = require.resolve("./pages/"+template);
 	} catch(e) {
 		if(e.code != "MODULE_NOT_FOUND")
 			throw e;
 	}
+	if(module)
+		module = require(module);
 	
 	return function(req, res) {
 		var send = function() {

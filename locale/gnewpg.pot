@@ -3,12 +3,13 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+#: ../pages/upload.soy:62
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-16 17:19+0200\n"
+"POT-Creation-Date: 2012-09-22 07:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,19 +17,268 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../pages/html.soy:26
-msgid "Logged in as %1"
+#: fixedStrings.tmp.js:1
+msgid "[SIG_16]"
 msgstr ""
 
-#: ../pages/html.soy:26
-msgid "Logout"
+#: fixedStrings.tmp.js:2
+msgid "[SIG_17]"
 msgstr ""
 
-#: ../pages/html.soy:28
+#: fixedStrings.tmp.js:3
+msgid "[SIG_18]"
+msgstr ""
+
+#: fixedStrings.tmp.js:4
+msgid "[SIG_19]"
+msgstr ""
+
+#: fixedStrings.tmp.js:5
+msgid "[SIG_24]"
+msgstr ""
+
+#: fixedStrings.tmp.js:6
+msgid "[SIG_25]"
+msgstr ""
+
+#: fixedStrings.tmp.js:7
+msgid "[SIG_31]"
+msgstr ""
+
+#: fixedStrings.tmp.js:8
+msgid "[SIG_32]"
+msgstr ""
+
+#: fixedStrings.tmp.js:9
+msgid "[SIG_40]"
+msgstr ""
+
+#: fixedStrings.tmp.js:10
+msgid "[SIG_48]"
+msgstr ""
+
+#: ../i18n.js:13
+msgid "isoUtcDateTime"
+msgstr ""
+
+#: ../pgpUpload.js:89 ../pgpUpload.js:105
+msgid "No associated key."
+msgstr ""
+
+#: ../pgpUpload.js:122
+msgid "Signatures without issuer or date information are unacceptable."
+msgstr ""
+
+#: ../pgpUpload.js:128
+msgid "Signature is not exportable."
+msgstr ""
+
+#: ../pgpUpload.js:142
+#, python-format
+msgid "Signature type %s is only acceptable on identities and attributes."
+msgstr ""
+
+#: ../pgpUpload.js:151
+#, python-format
+msgid "Signature type %s is only acceptable on subkeys."
+msgstr ""
+
+#: ../pgpUpload.js:162
+#, python-format
+msgid "Unsupported signature type %s."
+msgstr ""
+
+#: ../pgpUpload.js:197
+msgid "No associated object for signature."
+msgstr ""
+
+#: ../pgpUpload.js:210
+msgid "Unknown packet."
+msgstr ""
+
+#: ../pgpUpload.js:247
+msgid "Subkey without signatures."
+msgstr ""
+
+#: ../pgpUpload.js:262
+msgid "Identity without signatures."
+msgstr ""
+
+#: ../pgpUpload.js:277
+msgid "Attribute without signatures."
+msgstr ""
+
+#: ../pgpUpload.js:290
+msgid "Key without signatures, subkeys, identities or attributes."
+msgstr ""
+
+#: ../pgpUpload.js:360 ../pgpUpload.js:382 ../pgpUpload.js:404
+msgid "Bad signature."
+msgstr ""
+
+#: ../pages/login.js:31
+msgid "Login failed."
+msgstr ""
+
+#: ../pages/register.js:13
+#, python-format
+msgid "The username has to be at least %d character long."
+msgid_plural "The username has to be at least %d characters long."
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../pages/register.js:15
+#, python-format
+msgid "The username may be at most %d character long."
+msgid_plural "The username may be at most %d characters long."
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../pages/register.js:23
+msgid "This username is already taken."
+msgstr ""
+
+#: ../pages/register.js:25
+#, python-format
+msgid "The password has to be at least %d character long."
+msgid_plural "The password has to be at least %d characters long."
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../pages/register.js:27
+msgid "The two passwords do not match."
+msgstr ""
+
+#: ../pages/index.soy:12
+msgid "Search for a key"
+msgstr ""
+
+#: ../pages/index.soy:18 ../pages/upload.soy:11
+msgid "Upload a key"
+msgstr ""
+
+#: ../pages/index.soy:19
+msgid ""
+"To receive new signatures for a key that is not publicly searchable, upload "
+"the public key to prove that you posess it."
+msgstr ""
+
+#: ../pages/index.soy:23
+msgid "Your own keys"
+msgstr ""
+
+#: ../pages/index.soy:26
+msgid "Your keyring"
+msgstr ""
+
+#: ../pages/index.soy:29
+msgid "Your account"
+msgstr ""
+
+#: ../pages/login.soy:11
+msgid "Login"
+msgstr ""
+
+#: ../pages/login.soy:17
+msgid "Username"
+msgstr ""
+
+#: ../pages/login.soy:20 ../pages/register.soy:24
+msgid "Password"
+msgstr ""
+
+#: ../pages/login.soy:23
+msgid "Stay logged in"
+msgstr ""
+
+#: ../pages/register.soy:12 ../pages/ui.soy:30
+msgid "Register"
+msgstr ""
+
+#: ../pages/register.soy:16
+msgid "You have successfully registered. You can now log in."
+msgstr ""
+
+#: ../pages/register.soy:21
+msgid "Desired username"
+msgstr ""
+
+#: ../pages/register.soy:27
+msgid "Repeat password"
+msgstr ""
+
+#: ../pages/register.soy:30
+msgid "E-mail address"
+msgstr ""
+
+#: ../pages/ui.soy:28
+#, python-format
+msgid "Logged in as %s"
+msgstr ""
+
+#: ../pages/ui.soy:30
 msgid "Not logged in."
 msgstr ""
 
-#: ../pages/html.soy:28
-msgid "Register"
+#: ../pages/upload.soy:15
+msgid "Internal errors occurred while uploading the keys."
+msgstr ""
+
+#: ../pages/upload.soy:18
+msgid "The following keys were successfully uploaded:"
+msgstr ""
+
+#: ../pages/upload.soy:25
+msgid "No keys were successfully uploaded."
+msgstr ""
+
+#: ../pages/upload.soy:28
+msgid "The following errors occurred:"
+msgstr ""
+
+#: ../pages/upload.soy:39
+msgid "Upload a file"
+msgstr ""
+
+#: ../pages/upload.soy:42
+msgid "or paste a key"
+msgstr ""
+
+#: ../pages/upload.soy:45
+msgid ""
+"If the key does not exist on the keyserver yet, it will be added to the "
+"keyserver with the highest privacy settings, so it will only be visible to "
+"people who already posess it in order to receive new signatures."
+msgstr ""
+
+#: ../pages/upload.soy:46
+msgid ""
+"New signatures in the uploaded key will be saved on the server and will be "
+"available to everyone who has access to the key."
+msgstr ""
+
+#: ../pages/upload.soy:47
+msgid "Do not publish uploaded signatures on the server"
+msgstr ""
+
+#: ../pages/upload.soy:65
+msgid "Public key"
+msgstr ""
+
+#: ../pages/upload.soy:81
+msgid "User ID"
+msgstr ""
+
+#: ../pages/upload.soy:88
+msgid "Public subkey"
+msgstr ""
+
+#: ../pages/upload.soy:95
+msgid "Attribute"
+msgstr ""
+
+#: ../pages/upload.soy:102
+msgid "Unknown packet"
 msgstr ""

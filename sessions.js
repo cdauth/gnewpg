@@ -93,8 +93,7 @@ function cleanInactivePersistentSessions() {
 }
 
 function scheduleInactiveSessionCleaning() {
-	setInterval(cleanInactiveSessions, Math.ceil(config.sessionTimeout*100));
-	setInterval(cleanInactivePersistentSessions, Math.ceil(config.persistentSessionTimeout*100));
+	setInterval(function() { cleanInactiveSessions(); cleanInactivePersistentSessions(); }, Math.ceil(config.sessionTimeout*100));
 }
 
 function sessionMiddleware(req, res, next) {

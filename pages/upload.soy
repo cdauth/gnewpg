@@ -1,6 +1,8 @@
 {namespace gnewpg.pages}
 
 /**
+ * @param? uploadedKeys
+ * @param? failed
  * @param? errors
 */
 {template .upload}
@@ -8,10 +10,34 @@
 		{param searchengines: false /}
 		{param title}{_('Upload a key')}{/param}
 		{param content}
-<form action="" method="post" class="upload">
+			{if $uploadedKeys}
+				{if $errors.length > 0}
+{call gnewpg.ui.error}{param message:_('Internal errors occurred while uploading the keys.') /}{/call}
+				{/if}
+				{if $uploadedKeys.length > 0}
+{call gnewpg.ui.success}{param message:_('The following keys were successfully uploaded:') /}{/call}
+<ul>
+					{foreach $key in $uploadedKeys}
+{call .printObj}{param obj:$key /}{/call}
+					{/foreach}
+</ul>
+				{else}
+{call gnewpg.ui.error}{param message:_('No keys were successfully uploaded.') /}{/call}
+				{/if}
+				{if $failed.length > 0}
+{call gnewpg.ui.error}{param message:_('The following errors occurred:') /}{/call}
+<ul>
+					{foreach $obj in $failed}
+{call .printObj}{param obj:$obj /}{/call}
+					{/foreach}
+</ul>
+				{/if}
+			{else}
+<form action="" method="post" class="upload" enctype="multipart/form-data">
+	{call gnewpg.ui.errors}{param errors:$errors/}{/call}
 	<dl class="form">
 		<dt><label for="i-file">{_('Upload a file')}</label></dt>
-		<dd><input id="i-file" name="file" type="file" /></dd>
+		<dd><input id="i-file" name="file" type="file" multiple="multiple" /></dd>
 		
 		<dt><label for="i-paste">{_('or paste a key')}</label></dt>
 		<dd><textarea id="i-paste" name="paste"></textarea></dd>
@@ -21,6 +47,59 @@
 	<div class="checkbox"><input id="i-donotpublish" name="donotpublish" type="checkbox" /><label for="i-donotpublish"> {_('Do not publish uploaded signatures on the server')}</label></div>
 	<div class="submit"><input type="submit" value="{_('Upload')}" /> <input type="submit" name="downloadupdated" value="{_('Upload and download with updated signatures')}" /></div>
 </form>
+			{/if}
 		{/param}
 	{/call}
+{/template}
+
+/**
+ * @param obj
+*/
+{template .printObj}
+	{switch $obj.type}
+
+		{case 2}
+<li>{_(''+'[SIG_'+$obj.sigtype+']')} by <em>{$obj.issuer}</em> on <em>{_($obj.date)}</em>{if $obj.err}: {_($obj.err)}{/if}</li>
+
+		{case 6}
+<li>{_('Public key')} <em>{$obj.id}</em>{if $obj.err}: {_($obj.err)}{/if}<ul>
+			{foreach $sig in $obj.signatures}
+				{call .printObj}{param obj:$sig /}{/call}
+			{/foreach}
+			{foreach $subkey in $obj.subkeys}
+				{call .printObj}{param obj:$subkey /}{/call}
+			{/foreach}
+			{foreach $id in $obj.identities}
+				{call .printObj}{param obj:$id /}{/call}
+			{/foreach}
+			{foreach $attr in $obj.attributes}
+				{call .printObj}{param obj:$attr /}{/call}
+			{/foreach}
+</ul></li>
+
+		{case 13}
+<li>{_('User ID')} <em>{$obj.id}</em>{if $obj.err}: {_($obj.err)}{/if}<ul>
+			{foreach $sig in $obj.signatures}
+				{call .printObj}{param obj:$sig /}{/call}
+			{/foreach}
+</ul></li>
+
+		{case 14}
+<li>{_('Public subkey')} <em>{$obj.id}</em>{if $obj.err}: {_($obj.err)}{/if}<ul>
+			{foreach $sig in $obj.signatures}
+				{call .printObj}{param obj:$sig /}{/call}
+			{/foreach}
+</ul></li>
+
+		{case 17}
+<li>{_('Attribute')}{if $obj.err}: {_($obj.err)}{/if}<ul>
+			{foreach $sig in $obj.signatures}
+				{call .printObj}{param obj:$sig /}{/call}
+			{/foreach}
+</ul></li>
+
+		{default}
+<li>{_('Unknown packet')}{if $obj.err}: {_($obj.err)}{/if}</li>
+
+	{/switch}
 {/template}

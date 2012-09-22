@@ -6,7 +6,7 @@ function encodeKeyId(id) {
 }
 
 function _xExists(table, idAttrs, callback, con) {
-	var query = 'SELECT COUNT(*) AS n FROM "'+table+'" WHERE ";
+	var query = 'SELECT COUNT(*) AS n FROM "'+table+'" WHERE ';
 	var i = 1;
 	var args = [ ];
 	for(var j in idAttrs)
@@ -77,7 +77,7 @@ function getKeys(filter, callback, justOne, con) {
 
 function getSubkeys(filter, callback, justOne, con) {
 	_getWithFilter('SELECT upper(to_hex("id")), "binary", upper(to_hex("parentkey")), "expires", "revokedby" FROM "keys_subkeys"',
-		filter, [ "id" "parentkey" ], callback, justOne, con);
+		filter, [ "id", "parentkey" ], callback, justOne, con);
 }
 
 function identityExists(id, parentId, callback, con) {
@@ -145,6 +145,72 @@ function getAttributeSignatures(filter, callback, justOne, con) {
 		filter, [ "key", "issuer" ], callback, justOne, con);
 }
 
+function removeEmptyKey(keyId, callback, con) {
+	getKeySignatures({ key: keyId }, function(err, one) {
+		if(err) callback(err);
+		else if(one) callback(null, false);
+		else
+		{
+			getIdentities({ key: keyId }, function(err, one) {
+				if(err) callback(err);
+				else if(one) callback(null, false);
+				else
+				{
+					getAttributes({ key: keyId }, function(err, one) {
+						if(err) callback(err);
+						else if(one) callback(null, false);
+						else
+						{
+							db.query('DELETE FROM "keys" WHERE "id" = $1', [ keyId ], function(err) {
+								if(err)
+									callback(err);
+								else
+									callback(null, true);
+							}, con);
+						}
+					}, true, con);
+				}
+			}, true, con);
+		}
+	}, true, con);
+}
+
+function removeEmptyIdentity(keyId, id, callback, con) {
+	getIdentitySignatures({ key: keyId, identity: id }, function(err, one) {
+		if(err)
+			callback(err);
+		else if(one)
+			callback(null, false);
+		else
+		{
+			db.query('DELETE FROM "identities" WHERE "key" = $1 AND "identity" = $2', [ keyId, id ], function(err) {
+				if(err)
+					callback(err);
+				else
+					callback(null, true);
+			}, con);
+		}
+	}, true, con);
+}
+
+function removeEmptyAttribute(keyId, attrId, callback, con) {
+	getAttributeSignatures({ key: keyId, attribute: attrId }, function(err, one) {
+		if(err)
+			callback(err);
+		else if(one)
+			callback(null, false);
+		else
+		{
+			db.query('DELETE FROM "keys_attributes" WHERE "key" = $1 AND "attribute" = $2', [ keyId, attrId ], function(err) {
+				if(err)
+					callback(err);
+				else
+					callback(null, true);
+			}, con);
+		}
+	}, true, con);
+}
+
 
 exports._encodeKeyId = encodeKeyId;
 
@@ -156,8 +222,7 @@ exports.identitySignatureExists = identitySignatureExists;
 exports.attributeSignatureExists = attributeSignatureExists;
 
 exports.getKey = getKey;
-exports.getSubKeys = getSubKeys;
-exports.getParentKeys = getParentKeys;
+exports.getSubkeys = getSubkeys;
 exports.getIdentity = getIdentity;
 exports.getAttribute = getAttribute;
 

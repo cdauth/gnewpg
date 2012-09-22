@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnewpg\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-16 17:19+0200\n"
-"PO-Revision-Date: 2012-09-16 17:21+0100\n"
+"POT-Creation-Date: 2012-09-22 07:34+0200\n"
+"PO-Revision-Date: 2012-09-22 07:34+0100\n"
 "Last-Translator: Candid Dauth <cdauth@cdauth.eu>\n"
 "Language-Team: \n"
 "Language: \n"
@@ -17,19 +17,274 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: en\n"
 
-#: ../pages/html.soy:26
-msgid "Logged in as %1"
-msgstr "Logged in as %1"
+#: fixedStrings.tmp.js:1
+msgid "[SIG_16]"
+msgstr "Generic certification"
 
-#: ../pages/html.soy:26
-msgid "Logout"
-msgstr "Logout"
+#: fixedStrings.tmp.js:2
+msgid "[SIG_17]"
+msgstr "Persona certification (level 1)"
 
-#: ../pages/html.soy:28
-msgid "Not logged in."
-msgstr "Not logged in."
+#: fixedStrings.tmp.js:3
+msgid "[SIG_18]"
+msgstr "Casual certification (level 2)"
 
-#: ../pages/html.soy:28
+#: fixedStrings.tmp.js:4
+msgid "[SIG_19]"
+msgstr "Positive certification (level 3)"
+
+#: fixedStrings.tmp.js:5
+msgid "[SIG_24]"
+msgstr "Subkey binding signature"
+
+#: fixedStrings.tmp.js:6
+msgid "[SIG_25]"
+msgstr "Primary key binding signature"
+
+#: fixedStrings.tmp.js:7
+msgid "[SIG_31]"
+msgstr "Key signature"
+
+#: fixedStrings.tmp.js:8
+msgid "[SIG_32]"
+msgstr "Key revocation signature"
+
+#: fixedStrings.tmp.js:9
+msgid "[SIG_40]"
+msgstr "Subkey revocation signature"
+
+#: fixedStrings.tmp.js:10
+msgid "[SIG_48]"
+msgstr "Certification revocation signature"
+
+#: ../i18n.js:13
+msgid "isoUtcDateTime"
+msgstr "isoUtcDateTime"
+
+#: ../pgpUpload.js:89
+#: ../pgpUpload.js:105
+msgid "No associated key."
+msgstr "No associated key."
+
+#: ../pgpUpload.js:122
+msgid "Signatures without issuer or date information are unacceptable."
+msgstr "Signatures without issuer or date information are unacceptable."
+
+#: ../pgpUpload.js:128
+msgid "Signature is not exportable."
+msgstr "Signature is not exportable."
+
+#: ../pgpUpload.js:142
+#, python-format
+msgid "Signature type %s is only acceptable on identities and attributes."
+msgstr "Signature type %s is only acceptable on identities and attributes."
+
+#: ../pgpUpload.js:151
+#, python-format
+msgid "Signature type %s is only acceptable on subkeys."
+msgstr "Signature type %s is only acceptable on subkeys."
+
+#: ../pgpUpload.js:162
+#, python-format
+msgid "Unsupported signature type %s."
+msgstr "Unsupported signature type %s."
+
+#: ../pgpUpload.js:197
+msgid "No associated object for signature."
+msgstr "No associated object for signature."
+
+#: ../pgpUpload.js:210
+msgid "Unknown packet."
+msgstr "Unknown packet."
+
+#: ../pgpUpload.js:247
+msgid "Subkey without signatures."
+msgstr "Subkey without signatures."
+
+#: ../pgpUpload.js:262
+msgid "Identity without signatures."
+msgstr "Identity without signatures."
+
+#: ../pgpUpload.js:277
+msgid "Attribute without signatures."
+msgstr "Attribute without signatures."
+
+#: ../pgpUpload.js:290
+msgid "Key without signatures, subkeys, identities or attributes."
+msgstr "Key without signatures, subkeys, identities or attributes."
+
+#: ../pgpUpload.js:360
+#: ../pgpUpload.js:382
+#: ../pgpUpload.js:404
+msgid "Bad signature."
+msgstr "Bad signature."
+
+#: ../pages/login.js:31
+msgid "Login failed."
+msgstr "Login failed."
+
+#: ../pages/register.js:13
+#, python-format
+msgid "The username has to be at least %d character long."
+msgid_plural "The username has to be at least %d characters long."
+msgstr[0] "The username has to be at least %d character long."
+msgstr[1] "The username has to be at least %d characters long."
+
+#: ../pages/register.js:15
+#, python-format
+msgid "The username may be at most %d character long."
+msgid_plural "The username may be at most %d characters long."
+msgstr[0] "The username may be at most %d character long."
+msgstr[1] "The username may be at most %d characters long."
+
+#: ../pages/register.js:23
+msgid "This username is already taken."
+msgstr "This username is already taken."
+
+#: ../pages/register.js:25
+#, python-format
+msgid "The password has to be at least %d character long."
+msgid_plural "The password has to be at least %d characters long."
+msgstr[0] "The password has to be at least %d character long."
+msgstr[1] "The password has to be at least %d characters long."
+
+#: ../pages/register.js:27
+msgid "The two passwords do not match."
+msgstr "The two passwords do not match."
+
+#: ../pages/index.soy:12
+msgid "Search for a key"
+msgstr "Search for a key"
+
+#: ../pages/index.soy:18
+#: ../pages/upload.soy:11
+msgid "Upload a key"
+msgstr "Upload a key"
+
+#: ../pages/index.soy:19
+msgid "To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it."
+msgstr "To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it."
+
+#: ../pages/index.soy:23
+msgid "Your own keys"
+msgstr "Your own keys"
+
+#: ../pages/index.soy:26
+msgid "Your keyring"
+msgstr "Your keyring"
+
+#: ../pages/index.soy:29
+msgid "Your account"
+msgstr "Your account"
+
+#: ../pages/login.soy:11
+msgid "Login"
+msgstr "Login"
+
+#: ../pages/login.soy:17
+msgid "Username"
+msgstr "Username"
+
+#: ../pages/login.soy:20
+#: ../pages/register.soy:24
+msgid "Password"
+msgstr "Password"
+
+#: ../pages/login.soy:23
+msgid "Stay logged in"
+msgstr "Stay logged in"
+
+#: ../pages/register.soy:12
+#: ../pages/ui.soy:30
 msgid "Register"
 msgstr "Register"
 
+#: ../pages/register.soy:16
+msgid "You have successfully registered. You can now log in."
+msgstr "You have successfully registered. You can now log in."
+
+#: ../pages/register.soy:21
+msgid "Desired username"
+msgstr "Desired username"
+
+#: ../pages/register.soy:27
+msgid "Repeat password"
+msgstr "Repeat password"
+
+#: ../pages/register.soy:30
+msgid "E-mail address"
+msgstr "E-mail address"
+
+#: ../pages/ui.soy:28
+#, python-format
+msgid "Logged in as %s"
+msgstr "Logged in as %s"
+
+#: ../pages/ui.soy:30
+msgid "Not logged in."
+msgstr "Not logged in."
+
+#: ../pages/upload.soy:15
+msgid "Internal errors occurred while uploading the keys."
+msgstr "Internal errors occurred while uploading the keys."
+
+#: ../pages/upload.soy:18
+msgid "The following keys were successfully uploaded:"
+msgstr "The following keys were successfully uploaded:"
+
+#: ../pages/upload.soy:25
+msgid "No keys were successfully uploaded."
+msgstr "No keys were successfully uploaded."
+
+#: ../pages/upload.soy:28
+msgid "The following errors occurred:"
+msgstr "The following errors occurred:"
+
+#: ../pages/upload.soy:39
+msgid "Upload a file"
+msgstr "Upload a file"
+
+#: ../pages/upload.soy:42
+msgid "or paste a key"
+msgstr "or paste a key"
+
+#: ../pages/upload.soy:45
+msgid "If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so it will only be visible to people who already posess it in order to receive new signatures."
+msgstr "If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so it will only be visible to people who already posess it in order to receive new signatures."
+
+#: ../pages/upload.soy:46
+msgid "New signatures in the uploaded key will be saved on the server and will be available to everyone who has access to the key."
+msgstr "New signatures in the uploaded key will be saved on the server and will be available to everyone who has access to the key."
+
+#: ../pages/upload.soy:47
+msgid "Do not publish uploaded signatures on the server"
+msgstr "Do not publish uploaded signatures on the server"
+
+#: ../pages/upload.soy:65
+msgid "Public key"
+msgstr "Public key"
+
+#: ../pages/upload.soy:81
+msgid "User ID"
+msgstr "User ID"
+
+#: ../pages/upload.soy:88
+msgid "Public subkey"
+msgstr "Public subkey"
+
+#: ../pages/upload.soy:95
+msgid "Attribute"
+msgstr "Attribute"
+
+#: ../pages/upload.soy:102
+msgid "Unknown packet"
+msgstr "Unknown packet"
+
+#~ msgid "Upload"
+#~ msgstr "Upload"
+
+#~ msgid "Upload and download with updated signatures"
+#~ msgstr "Upload and download with updated signatures"
+
+#~ msgid "Logout"
+#~ msgstr "Logout"

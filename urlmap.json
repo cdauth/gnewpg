@@ -2,11 +2,13 @@
 	"get" : {
 		"/": "index",
 		"/login": "login",
-		"/register": "register"
+		"/register": "register",
+		"/upload": "upload"
 	},
 	"post" : {
 		"/login": "login",
 		"/register": "register",
-		"/logout": "logout"
+		"/logout": "logout",
+		"/upload": "upload"
 	}
 }

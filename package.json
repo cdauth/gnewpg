@@ -19,6 +19,7 @@
     "connect-pg": "x.x.x",
     "gettext": "x.x.x",
     "connect-i18n": "x.x.x",
-    "node-pgp": "git://github.com/cdauth/node-pgp.git"
+    "node-pgp": "git://github.com/cdauth/node-pgp.git",
+    "dateformat": "x.x.x"
   }
 }
