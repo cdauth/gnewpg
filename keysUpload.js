@@ -1,7 +1,7 @@
 var pgp = require("node-pgp");
 var db = require("./database");
-var pgpBasic = require("./pgpBasic");
-var pgpTrust = require("./pgpTrust");
+var keys = require("./keys");
+var keysTrust = require("./keysTrust");
 var users = require("./users");
 var groups = require("./groups");
 var i18n = require("./i18n");
@@ -280,7 +280,7 @@ function uploadKey(key, callback, userId, groupId) {
 					function loopSubkeys(j) {
 						if(j == it.subkeys.length) { loopIdentities(0); return; }
 						
-						pgpBasic.removeEmptyKey(it.subkeys[j].id, function(err, removed) {
+						keys.removeEmptyKey(it.subkeys[j].id, function(err, removed) {
 							if(err) { rollback(err); return; }
 
 							if(removed)
@@ -296,7 +296,7 @@ function uploadKey(key, callback, userId, groupId) {
 					function loopIdentities(j) {
 						if(j == it.identities.length) { loopAttributes(0); return; }
 						
-						pgpBasic.removeEmptyIdentity(it.id, it.identities[j].id, function(err, removed) {
+						keys.removeEmptyIdentity(it.id, it.identities[j].id, function(err, removed) {
 							if(err) { rollback(err); return; }
 							
 							if(removed)
@@ -339,7 +339,7 @@ function uploadKey(key, callback, userId, groupId) {
 					function loopAttributes(j) {
 						if(j == it.attributes.length) { after(); return; }
 						
-						pgpBasic.removeEmptyAttribute(it.id, it.attributes[j].id, function(err, removed) {
+						keys.removeEmptyAttribute(it.id, it.attributes[j].id, function(err, removed) {
 							if(err) { rollback(err); return; }
 							
 							if(removed)
@@ -380,7 +380,7 @@ function uploadKey(key, callback, userId, groupId) {
 					}
 					
 					function after() {
-						pgpBasic.removeEmptyKey(it.id, function(err, removed) {
+						keys.removeEmptyKey(it.id, function(err, removed) {
 							if(err) { rollback(err); return; }
 							
 							if(removed)
@@ -399,7 +399,7 @@ function uploadKey(key, callback, userId, groupId) {
 }
 
 function _uploadKey(con, info, callback) {
-	pgpBasic.keyExists(info.id, function(err, exists) {
+	keys.keyExists(info.id, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
@@ -413,7 +413,7 @@ function _uploadKey(con, info, callback) {
 				con.query('INSERT INTO "keys" ( "id", "date", "binary" ) VALUES ( $1, $2, $3 )', [ info.id, info.date, info.binary ], function(err) {
 					if(err) { callback(err); return; }
 					
-					pgpTrust.handleKeyUpload(info.id, function(err) {
+					keysTrust.handleKeyUpload(info.id, function(err) {
 						if(err) {
 							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
 								if(err2) { console.warn("Error rolling back key transaction", err2); }
@@ -430,7 +430,7 @@ function _uploadKey(con, info, callback) {
 }
 
 function _uploadIdentity(con, info, keyInfo, callback) {
-	pgpBasic.identityExists(info.id, keyInfo.id, function(err, exists) {
+	keys.identityExists(info.id, keyInfo.id, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
@@ -441,7 +441,7 @@ function _uploadIdentity(con, info, keyInfo, callback) {
 }
 
 function _uploadAttribute(con, info, keyInfo, callback) {
-	pgpBasic.attributeExists(info.id, keyInfo.id, function(err, exists) {
+	keys.attributeExists(info.id, keyInfo.id, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
@@ -452,7 +452,7 @@ function _uploadAttribute(con, info, keyInfo, callback) {
 }
 
 function _uploadKeySignature(con, info, objInfo, keyInfo, callback) { // keyInfo == objInfo in this case
-	pgpBasic.keySignatureExists(info.id, function(err, exists) {
+	keys.keySignatureExists(info.id, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
@@ -466,7 +466,7 @@ function _uploadKeySignature(con, info, objInfo, keyInfo, callback) { // keyInfo
 				con.query('INSERT INTO "keys_signatures" ( "id", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7 )', [ info.id, objInfo.id, info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
 					if(err) { callback(err); return; }
 					
-					pgpTrust.verifyKeySignature(info.id, function(err, verified) {
+					keysTrust.verifyKeySignature(info.id, function(err, verified) {
 						if(err) {
 							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
 								if(err2) { console.warn("Error rolling back key signature transaction", err2); }
@@ -485,7 +485,7 @@ function _uploadKeySignature(con, info, objInfo, keyInfo, callback) { // keyInfo
 }
 
 function _uploadIdentitySignature(con, info, objInfo, keyInfo, callback) {
-	pgpBasic.identitySignatureExists(info.id, function(err, exists) {
+	keys.identitySignatureExists(info.id, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
@@ -497,7 +497,7 @@ function _uploadIdentitySignature(con, info, objInfo, keyInfo, callback) {
 				if(err) { callback(err); return; }
 				
 				con.query('INSERT INTO "keys_identities_signatures" ( "id", "identity", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )', [ info.id, objInfo.id, keyInfo.id, info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
-					pgpTrust.verifyIdentitySignature(info.id, function(err, verified) {
+					keysTrust.verifyIdentitySignature(info.id, function(err, verified) {
 						if(err) {
 							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
 								if(err2) { console.warn("Error rolling back identity signature transaction", err2); }
@@ -516,7 +516,7 @@ function _uploadIdentitySignature(con, info, objInfo, keyInfo, callback) {
 }
 
 function _uploadAttributeSignature(con, info, objInfo, keyInfo, callback) {
-	pgpBasic.attributeSignatureExists(info.id, function(err, exists) {
+	keys.attributeSignatureExists(info.id, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
@@ -528,7 +528,7 @@ function _uploadAttributeSignature(con, info, objInfo, keyInfo, callback) {
 				if(err) { callback(err); return; }
 				
 				con.query('INSERT INTO "keys_attributes_signatures" ( "id", "attribute", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )', [ info.id, objInfo.id, keyInfo.id, info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
-					pgpTrust.verifyAttributeSignature(info.id, function(err, verified) {
+					keysTrust.verifyAttributeSignature(info.id, function(err, verified) {
 						if(err) {
 							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
 								if(err2) { console.warn("Error rolling back attribute signature transaction", err2); }

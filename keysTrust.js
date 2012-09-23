@@ -1,5 +1,5 @@
 var pgp = require("node-pgp");
-var pgpBasic = require("./pgpBasic");
+var keys = require("./keys");
 var i18n = require("./i18n");
 var db = require("./database");
 
@@ -74,7 +74,7 @@ function _handleVerifiedSignature(keyId, sigInfo, callback, con)
 	{
 		checks.push(function() { _checkRevocationStatus(keyId, nextCheck, con); });
 		checks.push(function() {
-			pgpBasic.getKeySubkeys({ "parentkey" : keyId }, function(subkeyRecords) {
+			keys.getKeySubkeys({ "parentkey" : keyId }, function(subkeyRecords) {
 				if(err) { callback(err); return; }
 				
 				next();
@@ -115,7 +115,7 @@ function _handleVerifiedSignature(keyId, sigInfo, callback, con)
 function _checkRevocationStatus(keyId, callback, con) {
 	var authorisedKeys = [ ];
 	
-	pgpBasic.getKeySignatures({ "sigtype": [ pgp.consts.SIG.REVOK, pgp.consts.SIG.SUBKEY_REVOK ], "verified" : true }, function(err, sigRecords) {
+	keys.getKeySignatures({ "sigtype": [ pgp.consts.SIG.REVOK, pgp.consts.SIG.SUBKEY_REVOK ], "verified" : true }, function(err, sigRecords) {
 		if(err) { callback(err); return; }
 		
 		next();
@@ -129,7 +129,7 @@ function _checkRevocationStatus(keyId, callback, con) {
 					callback(err);
 				else if(sigRecord.sigtype == pgp.consts.SIG.SUBKEY_REVOK)
 				{ // If this is a subkey revokation, check the parent key(s) and see if any of them authorises the issuer of the revocation
-					pgpBasic.getSubkeys({ "id" : keyId }, function(err, subkeysFifo) {
+					keys.getSubkeys({ "id" : keyId }, function(err, subkeysFifo) {
 						if(err) { callback(err); return; }
 						
 						checkParentKey();
@@ -158,7 +158,7 @@ function _checkRevocationStatus(keyId, callback, con) {
 			revoke();
 		else
 		{
-			pgpBasic.getKey(issuerId, function(err, issuerRecord) {
+			keys.getKey(issuerId, function(err, issuerRecord) {
 				if(err) { callback(err); return; }
 				
 				pgp.packetContent.getPublicKeyPacketInfo(issuerRecord.binary, function(err, issuerInfo) {
@@ -187,7 +187,7 @@ function _checkRevocationStatus(keyId, callback, con) {
 }
 
 function _isAuthorisedRevoker(keyId, issuerKeyInfo, callback, con) {
-	pgpBasic.getAllSignatures({ "key" : keyId, "sigtype" : [ pgp.consts.SIG.KEY, pgp.consts.SIG.CERT_0, pgp.consts.SIG_CERT_1, pgp.consts.SIG_CERT_2, pgp.consts.SIG_CERT_3 ]}, function(err, fifo) {
+	keys.getAllSignatures({ "key" : keyId, "sigtype" : [ pgp.consts.SIG.KEY, pgp.consts.SIG.CERT_0, pgp.consts.SIG_CERT_1, pgp.consts.SIG_CERT_2, pgp.consts.SIG_CERT_3 ]}, function(err, fifo) {
 		if(err) { callback(err); return; }
 
 		next();
@@ -312,7 +312,7 @@ function _checkSelfSignatures(keyId, callback, con) {
 				}
 				if(primary != null)
 				{
-					pgpBasic.getIdentitySignature(primary, function(err, sigRecord) {
+					keys.getIdentitySignature(primary, function(err, sigRecord) {
 						if(err) { callback(err); return; }
 						
 						updates.push('"primary_identity" = $'+(i++));
@@ -383,16 +383,16 @@ function _checkSubkeyExpiration(keyId, callback, con) {
 */
 
 function verifyKeySignature(signatureId, callback, con) {
-	pgpBasic.getKeySignature(signatureId, function(err, sigRecord) {
+	keys.getKeySignature(signatureId, function(err, sigRecord) {
 		if(err) { callback(err); return; }
 
-		pgpBasic.getKey(sigRecord.key, function(err, keyRecord) {
+		keys.getKey(sigRecord.key, function(err, keyRecord) {
 			if(err) { callback(err); return; }
 			
 			if(sigRecord.key == sigRecord.issuer)
 				getIssuer(null, keyRecord);
 			else
-				pgpBasic.getKey(sigRecord.issuer, getIssuer, con);
+				keys.getKey(sigRecord.issuer, getIssuer, con);
 			
 			function getIssuer(err, issuerRecord) {
 				if(err) { callback(err); return; }
@@ -446,16 +446,16 @@ function verifyKeySignature(signatureId, callback, con) {
 */
 
 function verifyIdentitySignature(signatureId, callback, con) {
-	pgpBasic.getIdentitySignature(signatureId, function(err, sigRecord) {
+	keys.getIdentitySignature(signatureId, function(err, sigRecord) {
 		if(err) { callback(err); return; }
 
-		pgpBasic.getKey(sigRecord.key, function(err, keyRecord) {
+		keys.getKey(sigRecord.key, function(err, keyRecord) {
 			if(err) { callback(err); return; }
 			
 			if(sigRecord.key == sigRecord.issuer)
 				getIssuer(null, keyRecord);
 			else
-				pgpBasic.getKey(sigRecord.issuer, getIssuer, con);
+				keys.getKey(sigRecord.issuer, getIssuer, con);
 			
 			function getIssuer(err, issuerRecord) {
 				if(err) { callback(err); return; }
@@ -504,19 +504,19 @@ function verifyIdentitySignature(signatureId, callback, con) {
 */
 
 function verifyAttributeSignature(signatureId, callback, con) {
-	pgpBasic.getAttributeSignature(signatureId, function(err, sigRecord) {
+	keys.getAttributeSignature(signatureId, function(err, sigRecord) {
 		if(err) { callback(err); return; }
 			
-		pgpBasic.getKey(sigRecord.key, function(err, keyRecord) {
+		keys.getKey(sigRecord.key, function(err, keyRecord) {
 			if(err) { callback(err); return; }
 			
-			pgpBasic.getAttribute(sigRecord.attribute, sigRecord.key, function(err, attributeRecord) {
+			keys.getAttribute(sigRecord.attribute, sigRecord.key, function(err, attributeRecord) {
 				if(err) { callback(err); return; }
 			
 				if(sigRecord.key == sigRecord.issuer)
 					getIssuer(null, keyRecord);
 				else
-					pgpBasic.getKey(sigRecord.issuer, getIssuer, con);
+					keys.getKey(sigRecord.issuer, getIssuer, con);
 				
 				function getIssuer(err, issuerRecord) {
 					if(err) { callback(err); return; }
@@ -565,7 +565,7 @@ function verifyAttributeSignature(signatureId, callback, con) {
 */
 
 function handleKeyUpload(keyId, callback, con) {
-	pgpBasic.getAllSignatures({ issuer: keyId, verified: false }, function(err, sigRecords) {
+	keys.getAllSignatures({ issuer: keyId, verified: false }, function(err, sigRecords) {
 		if(err) { callback(err); return; }
 		
 		next();

@@ -1,4 +1,4 @@
-var pgpUpload = require("../pgpUpload");
+var keysUpload = require("../keysUpload");
 var fs = require("fs");
 
 module.exports.post = function(req, res, next) {
@@ -20,7 +20,7 @@ module.exports.post = function(req, res, next) {
 			return;
 		}
 		
-		pgpUpload.uploadKey(fs.createReadStream(f[i].path), function(err, uploaded) {
+		keysUpload.uploadKey(fs.createReadStream(f[i].path), function(err, uploaded) {
 			if(err)
 			{
 				console.warn("Error while uploading key", err);
@@ -44,7 +44,7 @@ module.exports.post = function(req, res, next) {
 	}
 	
 	function end() {
-		pgpUpload.uploadKey(req.body.paste || "", function(err, uploaded) {
+		keysUpload.uploadKey(req.body.paste || "", function(err, uploaded) {
 			if(err)
 			{
 				console.warn("Error while uploading key", err);
