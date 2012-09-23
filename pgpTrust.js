@@ -115,7 +115,7 @@ function _handleVerifiedSignature(keyId, sigInfo, callback, con)
 function _checkRevocationStatus(keyId, callback, con) {
 	var authorisedKeys = [ ];
 	
-	pgpBasic.getKeySignatures({ "sigtype": [ pgp.consts.SIG.REVOK, pgp.consts.SIG.SUBKEY_REVOK ], "verified" : true }, function(sigRecords) {
+	pgpBasic.getKeySignatures({ "sigtype": [ pgp.consts.SIG.REVOK, pgp.consts.SIG.SUBKEY_REVOK ], "verified" : true }, function(err, sigRecords) {
 		if(err) { callback(err); return; }
 		
 		next();
@@ -271,7 +271,7 @@ function _checkSignatureRevocationStatus(keyId, callback, con) {
 
 // Check 5a, 6: Check self-signatures for expiration date and primary id
 function _checkSelfSignatures(keyId, callback, con) {
-	db.fifoQuery('SELECT "binary" FROM "keys_signatures_all" WHERE "key" = $1 AND "issuer" = $1 AND "verified" = true AND "sigtype" IN ( $2, $3, $4, $5, $6 ) ORDER BY "date" ASC',
+	db.fifoQuery('SELECT "id", "binary", "table" FROM "keys_signatures_all" WHERE "key" = $1 AND "issuer" = $1 AND "verified" = true AND "sigtype" IN ( $2, $3, $4, $5, $6 ) ORDER BY "date" ASC',
 		[ keyId, pgp.consts.SIG.KEY, pgp.consts.SIG.CERT_0, pgp.consts.SIG.CERT_1, pgp.consts.SIG.CERT_2, pgp.consts.SIG.CERT_3 ], function(err, sigRecords) {
 		if(err) { callback(err); return; }
 		
@@ -289,8 +289,8 @@ function _checkSelfSignatures(keyId, callback, con) {
 					
 					if(sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE])
 						expire = sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE][0].value;
-					if(sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.PRIMARY_UID])
-						primary = sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.PRIMARY_UID][0].value;
+					if(sigRecord.table == "keys_identities_signatures" && sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.PRIMARY_UID] && sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.PRIMARY_UID][0].value)
+						primary = sigRecord.id;
 					
 					next();
 				});
@@ -312,10 +312,20 @@ function _checkSelfSignatures(keyId, callback, con) {
 				}
 				if(primary != null)
 				{
-					updates.push('"primary_identity" = $'+(i++));
-					args.push(primary);
+					pgpBasic.getIdentitySignature(primary, function(err, sigRecord) {
+						if(err) { callback(err); return; }
+						
+						updates.push('"primary_identity" = $'+(i++));
+						args.push(sigRecord.identity);
+						update();
+					}, con);
 				}
-				db.query('UPDATE "keys" SET '+updates.join(', ')+' WHERE id = $1', args, callback, con);
+				else
+					update();
+				
+				function update() {
+					db.query('UPDATE "keys" SET '+updates.join(', ')+' WHERE id = $1', args, callback, con);
+				}
 			}
 			else
 				callback(null);
@@ -387,8 +397,13 @@ function verifyKeySignature(signatureId, callback, con) {
 			function getIssuer(err, issuerRecord) {
 				if(err) { callback(err); return; }
 				if(issuerRecord == null) { callback(null, null); }
-					
-				pgp.signing.verifyKeySignature(keyRecord.binary, sigRecord.binary, issuerRecord.binary, function(err, verified) {
+				
+				if(sigRecord.sigtype == pgp.consts.SIG.SUBKEY || sigRecord.sigtype == pgp.consts.SIG.SUBKEY_REVOK)
+					pgp.signing.verifySubkeySignature(issuerRecord.binary, keyRecord.binary, sigRecord.binary, issuerRecord.binary, verifyCallback);
+				else
+					pgp.signing.verifyKeySignature(keyRecord.binary, sigRecord.binary, issuerRecord.binary, verifyCallback);
+
+				function verifyCallback(err, verified) {
 					if(err)
 						callback(err);
 					else if(!verified)
@@ -414,7 +429,7 @@ function verifyKeySignature(signatureId, callback, con) {
 							}, con);
 						});
 					}
-				});
+				}
 			}
 		}, con);
 	}, con);
@@ -495,7 +510,7 @@ function verifyAttributeSignature(signatureId, callback, con) {
 		pgpBasic.getKey(sigRecord.key, function(err, keyRecord) {
 			if(err) { callback(err); return; }
 			
-			pgpBasic.getAttribute(sigRecord.attribute, function(err, attributeRecord) {
+			pgpBasic.getAttribute(sigRecord.attribute, sigRecord.key, function(err, attributeRecord) {
 				if(err) { callback(err); return; }
 			
 				if(sigRecord.key == sigRecord.issuer)
@@ -505,7 +520,7 @@ function verifyAttributeSignature(signatureId, callback, con) {
 				
 				function getIssuer(err, issuerRecord) {
 					if(err) { callback(err); return; }
-					if(issuerRecord == null) { callback(null, null); }
+					if(issuerRecord == null) { callback(null, null); return; }
 						
 					pgp.signing.verifyAttributeSignature(keyRecord.binary, attributeRecord.binary, sigRecord.binary, issuerRecord.binary, function(err, verified) {
 						if(err)

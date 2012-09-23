@@ -1,6 +1,7 @@
 CREATE TABLE "keys" (
 	"id" CHAR(16) PRIMARY KEY, -- Long ID of the key
 	"binary" bytea NOT NULL,
+	"date" TIMESTAMP NOT NULL,
 	"perm_idsearch" BOOLEAN NOT NULL DEFAULT false, -- Key should be findable by searching for its ID
 	"perm_searchengines" BOOLEAN NOT NULL DEFAULT false, -- Key might be listed in search engines
 	"expires" TIMESTAMP DEFAULT NULL,
@@ -111,15 +112,15 @@ CREATE VIEW "keys_signatures_all" AS
 
 CREATE TABLE "users" (
 	"id" TEXT PRIMARY KEY,
-	"password" CHAR(27) NOT NULL,
+	"password" CHAR(43) NOT NULL,
 	"email" TEXT,
 	"openid" TEXT UNIQUE,
-	"secret" CHAR(44) NOT NULL UNIQUE -- A secret string for the personal keyserver URL
+	"secret" CHAR(43) NOT NULL UNIQUE -- A secret string for the personal keyserver URL
 );
 
 CREATE INDEX "users_lower_idx" ON "users" (LOWER("id"));
 
-CREATE TABLE "keyring_identities" (
+CREATE TABLE "users_keyrings_identities" (
 	"user" TEXT REFERENCES "users"("id"),
 	"identity" TEXT,
 	"identityKey" CHAR(16),
@@ -127,7 +128,7 @@ CREATE TABLE "keyring_identities" (
 	FOREIGN KEY ( "identity", "identityKey" ) REFERENCES "keys_identities" ( "id", "key" )
 );
 
-CREATE TABLE "keyring_attributes" (
+CREATE TABLE "users_keyrings_attributes" (
 	"user" TEXT REFERENCES "users"("id"),
 	"attribute" CHAR(27),
 	"attributeKey" CHAR(16),
@@ -135,8 +136,8 @@ CREATE TABLE "keyring_attributes" (
 	FOREIGN KEY ( "attribute", "attributeKey" ) REFERENCES "keys_attributes" ( "id", "key" )
 );
 
-CREATE TABLE "email_verification" (
-	"token" CHAR(44) PRIMARY KEY,
+CREATE TABLE "users_email_verification" (
+	"token" CHAR(43) PRIMARY KEY,
 	"identity" TEXT NOT NULL,
 	"identityKey" CHAR(16) NOT NULL,
 	"date" TIMESTAMP,
@@ -151,13 +152,13 @@ CREATE TABLE "email_verification" (
 
 CREATE TABLE "groups" (
 	"id" BIGSERIAL PRIMARY KEY,
-	"token" CHAR(44) UNIQUE,
+	"token" CHAR(43) UNIQUE,
 	"title" TEXT,
 	"perm_searchengines" BOOLEAN NOT NULL, -- Whether the group should be findable by search engines
 	"perm_addkeys" BOOLEAN NOT NULL -- Whether all users should be allowed to add keys
 );
 
-CREATE TABLE "group_keyrings_identities" (
+CREATE TABLE "groups_keyrings_identities" (
 	"group" BIGINT REFERENCES "groups"("id"),
 	"identity" TEXT,
 	"identityKey" CHAR(16),
@@ -165,7 +166,7 @@ CREATE TABLE "group_keyrings_identities" (
 	FOREIGN KEY ( "identity", "identityKey" ) REFERENCES "keys_identities" ( "id", "key" )
 );
 
-CREATE TABLE "group_keyrings_attributes" (
+CREATE TABLE "groups_keyrings_attributes" (
 	"group" BIGINT REFERENCES "groups"("id"),
 	"attribute" CHAR(27),
 	"attributeKey" CHAR(16),
@@ -173,7 +174,7 @@ CREATE TABLE "group_keyrings_attributes" (
 	FOREIGN KEY ( "attribute", "attributeKey" ) REFERENCES "keys_attributes" ( "id", "key" )
 );
 
-CREATE TABLE "group_users" (
+CREATE TABLE "groups_users" (
 	"group" BIGINT REFERENCES "groups"("id"),
 	"user" TEXT REFERENCES "users"("id") ON UPDATE CASCADE,
 	"perm_admin" BOOLEAN NOT NULL, -- Whether the user is allowed to change the group settings
@@ -187,7 +188,7 @@ CREATE TABLE "group_users" (
 
 
 CREATE TABLE "sessions" (
-	"id" CHAR(44) PRIMARY KEY,
+	"id" CHAR(43) PRIMARY KEY,
 	"user" TEXT NOT NULL REFERENCES "users"("id") ON UPDATE CASCADE ON DELETE CASCADE,
 	"last_access" TIMESTAMP NOT NULL,
 	"persistent" BOOLEAN

@@ -4,6 +4,7 @@ var node_util = require("util");
 var dateformat = require("dateformat");
 var utils = require("./utils");
 var markdown = require("node-markdown").Markdown;
+var sprintf = require("sprintf").sprintf;
 
 gettextModule.loadLocaleDirectory(__dirname+"/locale");
 
@@ -19,8 +20,7 @@ function gettext(msg, locale) {
 		var args = [ gettextModule.gettext(msg) ];
 		for(var i=2; i<arguments.length; i++)
 			args.push(arguments[i]);
-		
-		return node_util.format.apply(node_util, args); // sprintf
+		return sprintf.apply(null, args);
 	}
 	else
 		return msg;
@@ -32,8 +32,7 @@ function ngettext(msg1, msg2, n, locale) {
 	var args = [ gettextModule.ngettext(msg1, msg2, n) ];
 	for(var i=4; i<arguments.length; i++)
 		args.push(arguments[i]);
-	
-	return node_util.format.apply(node_util, args); // sprintf
+	return sprintf.apply(null, args);
 }
 
 function mdgettext(msg, locale) {

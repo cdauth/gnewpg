@@ -100,7 +100,7 @@
 </ul></li>
 
 		{default}
-<li>{_('Unknown packet')}{if $obj.err}: {_($obj.err)}{/if}</li>
+<li>{_('Packet type %d', $obj.type)}{if $obj.err}: {_($obj.err)}{/if}</li>
 
 	{/switch}
 {/template}

@@ -1,69 +1,8 @@
 var pgp = require("node-pgp");
 var db = require("./database");
 
-function _xExists(table, idAttrs, callback, con) {
-	var query = 'SELECT COUNT(*) AS n FROM "'+table+'" WHERE ';
-	var i = 1;
-	var args = [ ];
-	for(var j in idAttrs)
-	{
-		if(i > 1) query += ' AND ';
-		query += '"'+j+'" = $'+(i++);
-		args.push(idAttrs[j]);
-	}
-	
-	db.query1(query, args, function(err, res) {
-		if(err)
-			callback(err);
-		else
-			callback(null, !!res.n);
-	}, con);
-}
-
-function _getWithFilter(query, filter, callback, justOne, con) {
-	var args = [ ];
-
-	if(filter && Object.keys(filter).length > 0)
-	{
-		query += ' WHERE ';
-		var first = true;
-		var i = args.length+1;
-		for(var j in filter)
-		{
-			if(first)
-				first = false;
-			else
-				query += ' AND ';
-
-			if(Array.isArray(filter[j]))
-			{
-				query += '"'+j+'" IN (';
-				filter[j].forEach(function(it) {
-					query += '$'+(i++);
-					args.push(it);
-				});
-				query += ')';
-			}
-			else
-			{
-				query += '"'+j+'" = $'+(i++);
-				args.push(filter[j]);
-			}
-		}
-	}
-	
-	if(justOne)
-	{
-		query += ' LIMIT 1';
-		db.query1(query, args, callback, con);
-	}
-	else
-		db.fifoQuery(query, args, callback, con);
-	
-}
-
 function keyExists(id, callback, con) {
-	_xExists("keys", { "id" : id }, callback, con);
+	db.xExists("keys", { "id" : id }, callback, con);
 }
 
 function getKey(id, callback, con) {
@@ -71,17 +10,17 @@ function getKey(id, callback, con) {
 }
 
 function getKeys(filter, callback, justOne, con) {
-	_getWithFilter('SELECT "id", "binary", "perm_idsearch", "perm_searchengines", "expires", "revokedby", "primary_identity", "user" FROM "keys"',
+	db.getWithFilter('SELECT "id", "binary", "perm_idsearch", "perm_searchengines", "expires", "revokedby", "primary_identity", "user" FROM "keys"',
 		filter, callback, justOne, con);
 }
 
 function getSubkeys(filter, callback, justOne, con) {
-	_getWithFilter('SELECT "id", "binary", "parentkey", "expires", "revokedby" FROM "keys_subkeys"',
+	db.getWithFilter('SELECT "id", "binary", "parentkey", "expires", "revokedby" FROM "keys_subkeys"',
 		filter, callback, justOne, con);
 }
 
 function identityExists(id, parentId, callback, con) {
-	_xExists("keys_identities", { "id" : id, "key" : parentId }, callback, con);
+	db.xExists("keys_identities", { "id" : id, "key" : parentId }, callback, con);
 }
 
 function getIdentity(id, parentId, callback, con) {
@@ -90,13 +29,13 @@ function getIdentity(id, parentId, callback, con) {
 
 function getIdentities(filter, callback, justOne, con)
 {
-	_getWithFilter('SELECT "id", "key", "name", "email", "perm_public", "perm_namesearch", "perm_emailsearch", "email_blacklisted" FROM "keys_identities"',
+	db.getWithFilter('SELECT "id", "key", "name", "email", "perm_public", "perm_namesearch", "perm_emailsearch", "email_blacklisted" FROM "keys_identities"',
 		filter, callback, justOne, con);
 }
 
 
 function attributeExists(id, parentId, callback, con) {
-	_xExists("keys_attributes", { "id" : id, "key" : parentId }, callback, con);
+	db.xExists("keys_attributes", { "id" : id, "key" : parentId }, callback, con);
 }
 
 function getAttribute(id, parentId, callback, con) {
@@ -104,21 +43,21 @@ function getAttribute(id, parentId, callback, con) {
 }
 
 function getAttributes(filter, callback, justOne, con) {
-	_getWithFilter('SELECT "id", "key", "binary", "perm_public" FROM "keys_attributes"',
+	db.getWithFilter('SELECT "id", "key", "binary", "perm_public" FROM "keys_attributes"',
 		filter, callback, justOne, con);
 }
 
 
 function keySignatureExists(id, callback, con) {
-	_xExists("keys_signatures", { "id" : id }, callback, con);
+	db.xExists("keys_signatures", { "id" : id }, callback, con);
 }
 
 function identitySignatureExists(id, callback, con) {
-	_xExists("keys_identities_signatures", { "id" : id }, callback, con);
+	db.xExists("keys_identities_signatures", { "id" : id }, callback, con);
 }
 
 function attributeSignatureExists(id, callback, con) {
-	_xExists("keys_attributes_signatures", { "id" : id }, callback, con);
+	db.xExists("keys_attributes_signatures", { "id" : id }, callback, con);
 }
 
 function getSignature(id, callback, con) {
@@ -126,7 +65,7 @@ function getSignature(id, callback, con) {
 }
 
 function getAllSignatures(filter, callback, justOne, con) {
-	_getWithFilter('SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby", "table", "objectcol" FROM "keys_signatures_all"',
+	db.getWithFilter('SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby", "table", "objectcol" FROM "keys_signatures_all"',
 		filter, callback, justOne, con);
 }
 
@@ -135,7 +74,7 @@ function getKeySignature(id, callback, con) {
 }
 	
 function getKeySignatures(filter, callback, justOne, con) {
-	_getWithFilter('SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby" FROM "keys_signatures"',
+	db.getWithFilter('SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby" FROM "keys_signatures"',
 		filter, callback, justOne, con);
 }
 
@@ -144,7 +83,7 @@ function getIdentitySignature(id, callback, con) {
 }
 
 function getIdentitySignatures(filter, callback, justOne, con) {
-	_getWithFilter('SELECT "id", "identity", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby" FROM "keys_identities_signatures"',
+	db.getWithFilter('SELECT "id", "identity", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby" FROM "keys_identities_signatures"',
 		filter, callback, justOne, con);
 }
 
@@ -153,7 +92,7 @@ function getAttributeSignature(id, callback, con) {
 }
 
 function getAttributeSignatures(filter, callback, justOne, con) {
-	_getWithFilter('SELECT "id", "attribute", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby" FROM "keys_attributes_signatures"',
+	db.getWithFilter('SELECT "id", "attribute", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby" FROM "keys_attributes_signatures"',
 		filter, callback, justOne, con);
 }
 

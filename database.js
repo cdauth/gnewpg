@@ -18,7 +18,7 @@ pgUtils.prepareValue = function(val) {
 			else if(char.length == 2)
 				esc += "\\0"+char;
 			else
-				escp += "\\"+char;
+				esc += "\\"+char;
 		}
 		return esc;
 	}
@@ -107,9 +107,64 @@ function getQueryFifo(queryObj) {
 	return ret;
 }
 
+function xExists(table, idAttrs, callback, con) {
+	getWithFilter('SELECT COUNT(*) AS n FROM "'+table+'"', idAttrs, function(err, res) {
+		if(err)
+			callback(err);
+		else
+			callback(null, !!res.n);
+	}, true, con);
+}
+
+function getWithFilter(query, filter, callback, justOne, con) {
+	var args = [ ];
+
+	if(filter && Object.keys(filter).length > 0)
+	{
+		query += ' WHERE ';
+		var first = true;
+		var i = args.length+1;
+		for(var j in filter)
+		{
+			if(first)
+				first = false;
+			else
+				query += ' AND ';
+
+			if(Array.isArray(filter[j]))
+			{
+				query += '"'+j+'" IN (';
+				filter[j].forEach(function(it, k) {
+					if(k > 0)
+						query += ', ';
+					query += '$'+(i++);
+					args.push(it);
+				});
+				query += ')';
+			}
+			else
+			{
+				query += '"'+j+'" = $'+(i++);
+				args.push(filter[j]);
+			}
+		}
+	}
+	
+	if(justOne)
+	{
+		query += ' LIMIT 1';
+		query1(query, args, callback, con);
+	}
+	else
+		fifoQuery(query, args, callback, con);
+	
+}
+
 exports.getConnection = getConnection;
 exports.query = query;
 exports.getUniqueRandomString = getUniqueRandomString;
 exports.getQueryFifo = getQueryFifo;
 exports.query1 = query1;
 exports.fifoQuery = fifoQuery;
+exports.xExists = xExists;
+exports.getWithFilter = getWithFilter;

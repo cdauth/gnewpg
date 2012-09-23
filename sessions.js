@@ -16,13 +16,13 @@ function createSession(user, persistent, callback) {
 			callback(err);
 		else
 		{
-			db.getUniqueRandomString(44, "sessions", "id", function(err, id) {
+			db.getUniqueRandomString(43, "sessions", "id", function(err, id) {
 				if(err)
 					callback(err);
 				else
 				{
 					var ret = new Session(id, user);
-					con.query('INSERT INTO "sessions" ( "id", "user", "last_access", "persistent" ) VALUES ( $1, $2, $3, $4 )', [ ret.id, ret.user.name, new Date(), persistent ], function(err) {
+					con.query('INSERT INTO "sessions" ( "id", "user", "last_access", "persistent" ) VALUES ( $1, $2, $3, $4 )', [ ret.id, ret.user.id, new Date(), persistent ], function(err) {
 						if(err)
 							callback(err);
 						else

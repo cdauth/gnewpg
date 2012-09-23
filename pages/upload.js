@@ -40,7 +40,7 @@ module.exports.post = function(req, res, next) {
 				}
 				handleNext(++i);
 			});
-		});
+		}, req.session.user ? req.session.user.id : null);
 	}
 	
 	function end() {
@@ -61,6 +61,6 @@ module.exports.post = function(req, res, next) {
 			req.params.errors = errors;
 			
 			next();
-		});
+		}, req.session.user ? req.session.user.id : null);
 	}
 }
