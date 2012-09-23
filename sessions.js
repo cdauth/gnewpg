@@ -77,7 +77,7 @@ function getSession(id, callback) {
 function cleanInactiveSessions() {
 	db.getConnection(function(err, con) {
 		if(err)
-			console.log("Error cleaning inactive sessions", err);
+			console.warn("Error cleaning inactive sessions", err);
 		else
 			con.query('DELETE FROM "sessions" WHERE NOT "persistent" AND $1 - "last_access" > $2', [ new Date(), config.sessionTimeout ]);
 	});
@@ -86,7 +86,7 @@ function cleanInactiveSessions() {
 function cleanInactivePersistentSessions() {
 	db.getConnection(function(err, con) {
 		if(err)
-			console.log("Error cleaning inactive permanent sessions", err);
+			console.warn("Error cleaning inactive permanent sessions", err);
 		else
 			con.query('DELETE FROM "sessions" WHERE "persistent" AND $1 - "last_access" > $2', [ new Date(), config.persistentSessionTimeout ]);
 	});

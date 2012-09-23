@@ -30,6 +30,7 @@ public class SoyGettextModule extends AbstractModule
 		soyFunctionsSetBinder.addBinding().to(gettext.class);
 		soyFunctionsSetBinder.addBinding().to(_.class);
 		soyFunctionsSetBinder.addBinding().to(ngettext.class);
+		soyFunctionsSetBinder.addBinding().to(mdgettext.class);
 	}
 
 	public static class gettext implements SoyJsSrcFunction
@@ -71,5 +72,10 @@ public class SoyGettextModule extends AbstractModule
 	public static class ngettext extends gettext
 	{
 		{ name = "ngettext"; }
+	}
+	
+	public static class mdgettext extends gettext
+	{
+		{ name = "mdgettext"; }
 	}
 }

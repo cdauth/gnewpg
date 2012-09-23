@@ -6,7 +6,7 @@ module.exports.post = function(req, res, next) {
 	if(!f)
 		f = [ ];
 	else if(!Array.isArray(f))
-		f = [ /*f*/ ];
+		f = [ f ];
 	
 	var uploadedKeys = [ ];
 	var errors = [ ];
@@ -23,7 +23,7 @@ module.exports.post = function(req, res, next) {
 		pgpUpload.uploadKey(fs.createReadStream(f[i].path), function(err, uploaded) {
 			if(err)
 			{
-				console.log("Error while uploading key", err);
+				console.warn("Error while uploading key", err);
 				errors.push(err);
 			}
 			else
@@ -32,7 +32,14 @@ module.exports.post = function(req, res, next) {
 				failed = failed.concat(uploaded.failed);
 			}
 			
-			handleNext(++i);
+			fs.unlink(f[i].path, function(err) {
+				if(err)
+				{
+					console.warn("Error removing uploaded key file", err);
+					errors.push(err);
+				}
+				handleNext(++i);
+			});
 		});
 	}
 	
@@ -40,7 +47,7 @@ module.exports.post = function(req, res, next) {
 		pgpUpload.uploadKey(req.body.paste || "", function(err, uploaded) {
 			if(err)
 			{
-				console.log("Error while uploading key", err);
+				console.warn("Error while uploading key", err);
 				errors.push(err);
 			}
 			else

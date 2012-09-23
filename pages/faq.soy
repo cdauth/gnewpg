@@ -1,0 +1,17 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param no
+*/
+{template .faq}
+	{call gnewpg.ui.html}
+		{param searchengines: true /}
+		{param title}{_('FAQ')}: {_(''+'[FAQ_'+$no+'_TITLE]')}{/param}
+		{param content}
+<div class="faq">
+	<h2>{_(''+'[FAQ_'+$no+'_TITLE]')}</h2>
+	{mdgettext(''+'[FAQ_'+$no+']')|noAutoescape}
+</div>
+		{/param}
+	{/call}
+{/template}

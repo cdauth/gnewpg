@@ -42,6 +42,7 @@
 		<dt><label for="i-paste">{_('or paste a key')}</label></dt>
 		<dd><textarea id="i-paste" name="paste"></textarea></dd>
 	</dl>
+	<p>{call gnewpg.ui.faq}{param no:1/}{param showTitle:true/}{/call}</p>
 	<p>{_('If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so it will only be visible to people who already posess it in order to receive new signatures.')}</p>
 	<p>{_('New signatures in the uploaded key will be saved on the server and will be available to everyone who has access to the key.')}</p>
 	<div class="checkbox"><input id="i-donotpublish" name="donotpublish" type="checkbox" /><label for="i-donotpublish"> {_('Do not publish uploaded signatures on the server')}</label></div>

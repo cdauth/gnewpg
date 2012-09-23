@@ -1,5 +1,7 @@
 cd "$(dirname "$0")"
 
+FAQNUMBER=1
+
 cat << EOF | xargs -n1 -I{} echo '_("[{}]");' >> fixedStrings.tmp.js
 SIG_16
 SIG_17
@@ -12,6 +14,11 @@ SIG_32
 SIG_40
 SIG_48
 EOF
+
+for((i=1; $i<=$FAQNUMBER; i++)); do
+	echo '_("[FAQ_'$i']");' >> fixedStrings.tmp.js
+	echo '_("[FAQ_'$i'_TITLE]");' >> fixedStrings.tmp.js
+done
 
 ( echo fixedStrings.tmp.js; ls -1 ../*.js; ls -1 ../pages/*.js; ls -1 ../pages/*.soy ) | xgettext -f- -dgnewpg -ognewpg.pot -LPython --from-code=UTF-8 --add-comments="I18N:" -k_ -kError_
 

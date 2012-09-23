@@ -5,6 +5,8 @@ var pgpTrust = require("./pgpTrust");
 var i18n = require("./i18n");
 var utils = require("./utils");
 
+var intErr = new i18n.Error_("Internal error");
+
 /**
  * Stores keys into the database.
  * @param key {Buffer|Readable Stream|String|pgp.BufferedStream} The key(s) in binary format.
@@ -57,7 +59,12 @@ function uploadKey(key, callback) {
 							case pgp.consts.PKT.PUBLIC_KEY:
 								var upl = { type: type, id: info.id, signatures: [ ], subkeys: [ ], identities: [ ], attributes: [ ] };
 								_uploadKey(con, info, function(err) {
-									if(err) { uploaded.failed.push(utils.extend(upl, { err: err })); readNextPacket(); return; }
+									if(err) {
+										console.warn("Error uploading key", err);
+										uploaded.failed.push(utils.extend(upl, { err: intErr }));
+										readNextPacket();
+										return;
+									}
 									
 									lastKey = info;
 									lastKeyUpl = upl;
@@ -70,7 +77,12 @@ function uploadKey(key, callback) {
 							case pgp.consts.PKT.PUBLIC_SUBKEY:
 								var upl = { type: type, id: info.id, signatures: [ ], subkeys: [ ], identities: [ ], attributes: [ ] };
 								_uploadKey(con, info, function(err) {
-									if(err) { uploaded.failed.push(utils.extend(upl, { err: err })); readNextPacket(); return; }
+									if(err) {
+										console.warn("Error uploading subkey", err);
+										uploaded.failed.push(utils.extend(upl, { err: intErr }));
+										readNextPacket();
+										return;
+									}
 									
 									lastSubkey = info;
 									lastSubkeyUpl = upl;
@@ -89,7 +101,12 @@ function uploadKey(key, callback) {
 								if(lastKey == null) { uploaded.failed.push(utils.extend(upl, { err: new i18n.Error_("No associated key.") })); readNextPacket(); break; }
 								
 								_uploadIdentity(con, info, lastKey, function(err) {
-									if(err) { uploaded.failed.push(utils.extend(upl, { err: err })); readNextPacket(); return; }
+									if(err) {
+										console.warn("Error uploading identity", err);
+										uploaded.failed.push(utils.extend(upl, { err: intErr }));
+										readNextPacket();
+										return;
+									}
 									
 									lastId = info;
 									lastIdUpl = upl;
@@ -105,7 +122,12 @@ function uploadKey(key, callback) {
 								if(lastKey == null) { uploaded.failed.push(utils.extend(upl, { err: new i18n.Error_("No associated key.") })); readNextPacket(); break; }
 								
 								_uploadAttribute(con, info, lastKey, function(err) {
-									if(err) { uploaded.failed.push(utils.extend(upl, { err: err })); readNextPacket(); return; }
+									if(err) {
+										console.warn("Error uploading attribute", err);
+										uploaded.failed.push(utils.extend(upl, { err: intErr }));
+										readNextPacket();
+										return;
+									}
 									
 									lastAttr = info;
 									lastAttrUpl = upl;
@@ -200,9 +222,14 @@ function uploadKey(key, callback) {
 								}
 								
 								func(con, info, obj, lastKey, function(err) {
-									if(err) { uploaded.failed.push(utils.extend(upl, { err: err })); return; }
+									if(err) {
+										console.warn("Error uploading signature", err);
+										uploaded.failed.push(utils.extend(upl, { err: intErr }));
+										readNextPacket();
+										return;
+									}
 									
-									obj.signatures.push(upl);
+									objUpl.signatures.push(upl);
 									readNextPacket();
 								});
 								break;
@@ -235,6 +262,8 @@ function uploadKey(key, callback) {
 					}
 
 					var it = uploaded.uploadedKeys[i];
+					
+					loopSubkeys(0);
 
 					function loopSubkeys(j) {
 						if(j == it.subkeys.length) { loopIdentities(0); return; }
@@ -254,13 +283,14 @@ function uploadKey(key, callback) {
 					function loopIdentities(j) {
 						if(j == it.identities.length) { loopAttributes(0); return; }
 						
-						pgpBasic.removeEmptyIdentity(it.identities[j], function(err, removed) {
+						pgpBasic.removeEmptyIdentity(it.id, it.identities[j].id, function(err, removed) {
 							if(err) { rollback(err); return; }
 							
 							if(removed)
 							{
 								uploaded.failed.push(utils.extend(it.identities[j], { err: new i18n.Error_("Identity without signatures.") }));
 								it.identities = it.identities.slice(0, j).concat(it.identities.slice(j+1));
+								j--;
 							}
 							loopIdentities(++j);
 						}, con);
@@ -269,13 +299,14 @@ function uploadKey(key, callback) {
 					function loopAttributes(j) {
 						if(j == it.attributes.length) { after(); return; }
 						
-						pgpBasic.removeEmptyAttributes(it.attributes[j], function(err, removed) {
+						pgpBasic.removeEmptyAttributes(it.id, it.attributes[j].id, function(err, removed) {
 							if(err) { rollback(err); return; }
 							
 							if(removed)
 							{
 								uploaded.failed.push(utils.extend(it.attributes[j], { err: new i18n.Error_("Attribute without signatures.") }));
 								it.attributes = it.attributes.slice(0, j).concat(it.attributes.slice(j+1));
+								j--;
 							}
 							loopAttributes(++j);
 						}, con);
@@ -289,6 +320,7 @@ function uploadKey(key, callback) {
 							{
 								uploaded.failed.push(utils.extend(it, { err: new i18n.Error_("Key without signatures, subkeys, identities or attributes.") }));
 								uploaded.uploadedKeys = uploaded.uploadedKeys.slice(0, i).concat(uploaded.uploadedKeys.slice(i+1));
+								i--;
 							}
 							loopKeys(++i);
 						}, con);
@@ -307,15 +339,25 @@ function _uploadKey(con, info, callback) {
 			callback(null);
 		else
 		{
-			con.query('INSERT INTO "keys" ( "id", "binary" ) VALUES ( $1, $2 )', [ pgpBasic._encodeKeyId(info.id), info.binary ], function(err) {
+			var transaction = utils.generateRandomString(44);
+			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				pgpTrust.handleKeyUpload(info.id, function(err) {
+				con.query('INSERT INTO "keys" ( "id", "binary" ) VALUES ( $1, $2 )', [ info.id, info.binary ], function(err) {
 					if(err) { callback(err); return; }
 					
-					callback(null);
-				}, con);
-			}, con);
+					pgpTrust.handleKeyUpload(info.id, function(err) {
+						if(err) {
+							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
+								if(err2) { console.warn("Error rolling back key transaction", err2); }
+								callback(err);
+							});
+						}
+						else
+							callback(null);
+					}, con);
+				});
+			});
 		}
 	}, con);
 }
@@ -327,7 +369,7 @@ function _uploadIdentity(con, info, keyInfo, callback) {
 		else if(exists)
 			callback(null);
 		else
-			con.query('INSERT INTO "keys_identities" ( "id", "key", "name", "email" ) VALUES ( $1, $2, $3, $4 )', [ info.id, pgpBasic._encodeId(keyInfo.id), info.name, info.email ], callback, con);
+			con.query('INSERT INTO "keys_identities" ( "id", "key", "name", "email" ) VALUES ( $1, $2, $3, $4 )', [ info.id, keyInfo.id, info.name, info.email ], callback);
 	}, con);
 }
 
@@ -338,7 +380,7 @@ function _uploadAttribute(con, info, keyInfo, callback) {
 		else if(exists)
 			callback(null);
 		else
-			con.query('INSERT INTO "keys_attributes" ( "id", "key", "binary" ) VALUES ( $1, $2, $3 )', [ info.id, pgpBasic._encodeId(keyInfo.id), info.binary ], callback, con);
+			con.query('INSERT INTO "keys_attributes" ( "id", "key", "binary" ) VALUES ( $1, $2, $3 )', [ info.id, keyInfo.id, info.binary ], callback);
 	}, con);
 }
 
@@ -350,62 +392,89 @@ function _uploadKeySignature(con, info, objInfo, keyInfo, callback) { // keyInfo
 			callback(null);
 		else
 		{
-			con.query('INSERT INTO "keys_signatures" ( "id", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7 )', [ info.id, pgpBasic._encodeId(objInfo.id), info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
+			var transaction = utils.generateRandomString(44);
+			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				pgpTrust.verifyKeySignature(info.id, function(err, verified) {
-					if(err)
-						callback(err);
-					else if(verified === false)
-						callback(new i18n.Error_("Bad signature."));
-					else
-						callback(null);
-				}, con);
-			}, con);
+				con.query('INSERT INTO "keys_signatures" ( "id", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7 )', [ info.id, objInfo.id, info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
+					if(err) { callback(err); return; }
+					
+					pgpTrust.verifyKeySignature(info.id, function(err, verified) {
+						if(err) {
+							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
+								if(err2) { console.warn("Error rolling back key signature transaction", err2); }
+								callback(err);
+							});
+						}
+						else if(verified === false)
+							callback(new i18n.Error_("Bad signature."));
+						else
+							callback(null);
+					}, con);
+				});
+			});
 		}
 	}, con);
 }
 
 function _uploadIdentitySignature(con, info, objInfo, keyInfo, callback) {
-	pgpBasic.identitySignatureExists(info.id, objInfo.id, function(err, exists) {
+	pgpBasic.identitySignatureExists(info.id, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
 			callback(null);
 		else
 		{
-			con.query('INSERT INTO "keys_identities_signatures" ( "id", "identity", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )', [ info.id, pgpBasic._encodeId(objInfo.id), pgpBasic._encodeId(keyInfo.id), info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
-				pgpTrust.verifyIdentitySignature(info.id, function(err, verified) {
-					if(err)
-						callback(err);
-					else if(verified === false)
-						callback(new i18n.Error_("Bad signature."));
-					else
-						callback(null);
-				}, con);
-			}, con);
+			var transaction = utils.generateRandomString(44);
+			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
+				if(err) { callback(err); return; }
+				
+				con.query('INSERT INTO "keys_identities_signatures" ( "id", "identity", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )', [ info.id, objInfo.id, keyInfo.id, info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
+					pgpTrust.verifyIdentitySignature(info.id, function(err, verified) {
+						if(err) {
+							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
+								if(err2) { console.warn("Error rolling back identity signature transaction", err2); }
+								callback(err);
+							});
+						}
+						else if(verified === false)
+							callback(new i18n.Error_("Bad signature."));
+						else
+							callback(null);
+					}, con);
+				});
+			});
 		}
 	}, con);
 }
 
 function _uploadAttributeSignature(con, info, objInfo, keyInfo, callback) {
-	pgpBasic.attributeSignatureExists(info.id, objInfo.id, function(err, exists) {
+	pgpBasic.attributeSignatureExists(info.id, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
 			callback(null);
 		else
 		{
-			con.query('INSERT INTO "keys_identities_signatures" ( "id", "attribute", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )', [ info.id, pgpBasic._encodeId(objInfo.id), pgpBasic._encodeId(keyInfo.id), info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
-				pgpTrust.verifyAttributeSignature(info.id, function(err, verified) {
-					if(err)
-						callback(err);
-					else if(verified === false)
-						callback(new i18n.Error_("Bad signature."));
-					else
-						callback(null);
-				}, con);
-			}, con);
+			var transaction = utils.generateRandomString(44);
+			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
+				if(err) { callback(err); return; }
+				
+				con.query('INSERT INTO "keys_identities_signatures" ( "id", "attribute", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )', [ info.id, objInfo.id, keyInfo.id, info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
+					pgpTrust.verifyAttributeSignature(info.id, function(err, verified) {
+						if(err) {
+							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
+								if(err2) { console.warn("Error rolling back attribute signature transaction", err2); }
+								callback(err);
+							});
+						}
+						else if(verified === false)
+							callback(new i18n.Error_("Bad signature."));
+						else
+							callback(null);
+					}, con);
+				});
+			});
 		}
 	}, con);
 }

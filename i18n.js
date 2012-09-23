@@ -3,6 +3,7 @@ var i18n_middleware = require("connect-i18n")({ default_locale: "en-gb" });
 var node_util = require("util");
 var dateformat = require("dateformat");
 var utils = require("./utils");
+var markdown = require("node-markdown").Markdown;
 
 gettextModule.loadLocaleDirectory(__dirname+"/locale");
 
@@ -35,6 +36,11 @@ function ngettext(msg1, msg2, n, locale) {
 	return node_util.format.apply(node_util, args); // sprintf
 }
 
+function mdgettext(msg, locale) {
+	var msg = gettext.apply(this, arguments);
+	return markdown(msg, true);
+}
+
 function getLanguageForLocaleList(list) {
 	for(var i=0; i<list.length; i++)
 	{
@@ -58,6 +64,10 @@ function middleware(req, res, next) {
 		req.ngettext = function(msg1, msg2, n) {
 			return ngettext.apply(null, [ msg1, msg2, n, req.locale ].concat(utils.toProperArray(arguments).slice(3)));
 		};
+		
+		req.mdgettext = function(msg) {
+			return mdgettext.apply(null, [ msg, req.locale ].concat(utils.toProperArray(arguments).slice(1)));
+		};
 
 		next();
 	});
@@ -66,6 +76,7 @@ function middleware(req, res, next) {
 function injectMethods(req, toObj) {
 	toObj._ = toObj.gettext = req.gettext;
 	toObj.ngettext = req.ngettext;
+	toObj.mdgettext = req.mdgettext;
 
 	return toObj;
 }

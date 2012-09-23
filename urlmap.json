@@ -3,7 +3,8 @@
 		"/": "index",
 		"/login": "login",
 		"/register": "register",
-		"/upload": "upload"
+		"/upload": "upload",
+		"/faq/:no": "faq"
 	},
 	"post" : {
 		"/login": "login",

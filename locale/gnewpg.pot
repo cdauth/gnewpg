@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#: ../pages/upload.soy:62
+#: ../pages/faq.soy:9 ../pages/faq.soy:11 ../pages/faq.soy:12
+#: ../pages/ui.soy:77 ../pages/upload.soy:63
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-22 07:34+0200\n"
+"POT-Creation-Date: 2012-09-22 23:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,62 +60,74 @@ msgstr ""
 msgid "[SIG_48]"
 msgstr ""
 
+#: fixedStrings.tmp.js:11
+msgid "[FAQ_1]"
+msgstr ""
+
+#: fixedStrings.tmp.js:12
+msgid "[FAQ_1_TITLE]"
+msgstr ""
+
 #: ../i18n.js:13
 msgid "isoUtcDateTime"
 msgstr ""
 
-#: ../pgpUpload.js:89 ../pgpUpload.js:105
+#: ../pgpUpload.js:8
+msgid "Internal error"
+msgstr ""
+
+#: ../pgpUpload.js:101 ../pgpUpload.js:122
 msgid "No associated key."
 msgstr ""
 
-#: ../pgpUpload.js:122
+#: ../pgpUpload.js:144
 msgid "Signatures without issuer or date information are unacceptable."
 msgstr ""
 
-#: ../pgpUpload.js:128
+#: ../pgpUpload.js:150
 msgid "Signature is not exportable."
 msgstr ""
 
-#: ../pgpUpload.js:142
+#: ../pgpUpload.js:164
 #, python-format
 msgid "Signature type %s is only acceptable on identities and attributes."
 msgstr ""
 
-#: ../pgpUpload.js:151
+#: ../pgpUpload.js:173
 #, python-format
 msgid "Signature type %s is only acceptable on subkeys."
 msgstr ""
 
-#: ../pgpUpload.js:162
+#: ../pgpUpload.js:184
 #, python-format
 msgid "Unsupported signature type %s."
 msgstr ""
 
-#: ../pgpUpload.js:197
+#: ../pgpUpload.js:219
 msgid "No associated object for signature."
 msgstr ""
 
-#: ../pgpUpload.js:210
+#: ../pgpUpload.js:237
 msgid "Unknown packet."
 msgstr ""
 
-#: ../pgpUpload.js:247
+#: ../pgpUpload.js:276
 msgid "Subkey without signatures."
 msgstr ""
 
-#: ../pgpUpload.js:262
+#: ../pgpUpload.js:291
 msgid "Identity without signatures."
 msgstr ""
 
-#: ../pgpUpload.js:277
+#: ../pgpUpload.js:307
 msgid "Attribute without signatures."
 msgstr ""
 
-#: ../pgpUpload.js:290
+#: ../pgpUpload.js:321
 msgid "Key without signatures, subkeys, identities or attributes."
 msgstr ""
 
-#: ../pgpUpload.js:360 ../pgpUpload.js:382 ../pgpUpload.js:404
+#: ../pgpUpload.js:410 ../pgpUpload.js:441 ../pgpUpload.js:472
 msgid "Bad signature."
 msgstr ""
 
@@ -149,6 +162,10 @@ msgstr[1] ""
 
 #: ../pages/register.js:27
 msgid "The two passwords do not match."
+msgstr ""
+
+#: ../pages/faq.soy:9
+msgid "FAQ"
 msgstr ""
 
 #: ../pages/index.soy:12
@@ -246,39 +263,39 @@ msgstr ""
 msgid "or paste a key"
 msgstr ""
 
-#: ../pages/upload.soy:45
+#: ../pages/upload.soy:46
 msgid ""
 "If the key does not exist on the keyserver yet, it will be added to the "
 "keyserver with the highest privacy settings, so it will only be visible to "
 "people who already posess it in order to receive new signatures."
 msgstr ""
 
-#: ../pages/upload.soy:46
+#: ../pages/upload.soy:47
 msgid ""
 "New signatures in the uploaded key will be saved on the server and will be "
 "available to everyone who has access to the key."
 msgstr ""
 
-#: ../pages/upload.soy:47
+#: ../pages/upload.soy:48
 msgid "Do not publish uploaded signatures on the server"
 msgstr ""
 
-#: ../pages/upload.soy:65
+#: ../pages/upload.soy:66
 msgid "Public key"
 msgstr ""
 
-#: ../pages/upload.soy:81
+#: ../pages/upload.soy:82
 msgid "User ID"
 msgstr ""
 
-#: ../pages/upload.soy:88
+#: ../pages/upload.soy:89
 msgid "Public subkey"
 msgstr ""
 
-#: ../pages/upload.soy:95
+#: ../pages/upload.soy:96
 msgid "Attribute"
 msgstr ""
 
-#: ../pages/upload.soy:102
+#: ../pages/upload.soy:103
 msgid "Unknown packet"
 msgstr ""

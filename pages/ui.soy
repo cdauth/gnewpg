@@ -22,7 +22,7 @@
 		<link rel="stylesheet" href="/static/styles.css" type="text/css" />
 	</head>
 	<body>
-		<h1>gnewpg</h1>
+		<h1><a href="/">gnewpg</a></h1>
 		<div id="login-bar">
 {if $ij.req.session.user}
 			{_('Logged in as %s', '<strong class="username">'+$ij.req.session.user.name+'</strong>')|noAutoescape}. <form action="/logout{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" method="post" class="logout"><input type="submit" value="{_('Logout')}" /></form>
@@ -66,4 +66,14 @@
 */
 {template .success}
 <p class="success">{$message}</p>
+{/template}
+
+/**
+ * @param no
+ * @param? showTitle
+*/
+{template .faq}
+<{if $showTitle}p{else}span{/if} class="faq">
+<a href="/faq/{$no}" target="_blank">{if $showTitle}{_(''+'[FAQ_'+$no+'_TITLE]')}{else}<abbr title="{_('What does this mean?')}">?</abbr>{/if}</a>
+</{if $showTitle}p{else}span{/if}>
 {/template}
