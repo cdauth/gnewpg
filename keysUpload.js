@@ -2,21 +2,19 @@ var pgp = require("node-pgp");
 var db = require("./database");
 var keys = require("./keys");
 var keysTrust = require("./keysTrust");
+var keyrings = require("./keyrings");
 var users = require("./users");
 var groups = require("./groups");
 var i18n = require("./i18n");
 var utils = require("./utils");
 
-var intErr = new i18n.Error_("Internal error");
-
 /**
  * Stores keys into the database.
  * @param key {Buffer|Readable Stream|String|pgp.BufferedStream} The key(s) in binary format.
  * @param callback {Function} Is run when the uploading has finished. Arguments: err
- * @param userId {String} The ID of a user to whose keyring to add the uploaded keys
- * @param groupId {String} The ID of a group to whose keyring to add the uploaded keys
+ * @param keyring {keyring.Keyring} A keyring to add the uploaded keys to
 */
-function uploadKey(key, callback, userId, groupId) {
+function uploadKey(key, callback, keyring) {
 	if(!(key instanceof pgp.BufferedStream))
 		key = new pgp.BufferedStream(key);
 
@@ -63,13 +61,7 @@ function uploadKey(key, callback, userId, groupId) {
 							case pgp.consts.PKT.PUBLIC_KEY:
 								var upl = { type: type, id: info.id, signatures: [ ], subkeys: [ ], identities: [ ], attributes: [ ] };
 								_uploadKey(con, info, function(err) {
-									if(err) {
-										if(!(err instanceof i18n.Error_))
-											console.warn("Error uploading key", (err instanceof i18n.Error_) ? err : err);
-										uploaded.failed.push(utils.extend(upl, { err: intErr }));
-										readNextPacket();
-										return;
-									}
+									if(err) { uploaded.failed.push(utils.extend(upl, { err: new i18n.Error_(err) })); readNextPacket(); return; }
 									
 									lastKey = info;
 									lastKeyUpl = upl;
@@ -82,13 +74,7 @@ function uploadKey(key, callback, userId, groupId) {
 							case pgp.consts.PKT.PUBLIC_SUBKEY:
 								var upl = { type: type, id: info.id, signatures: [ ], subkeys: [ ], identities: [ ], attributes: [ ] };
 								_uploadKey(con, info, function(err) {
-									if(err) {
-										if(!(err instanceof i18n.Error_))
-											console.warn("Error uploading subkey", err);
-										uploaded.failed.push(utils.extend(upl, { err: (err instanceof i18n.Error_) ? err : intErr }));
-										readNextPacket();
-										return;
-									}
+									if(err) { uploaded.failed.push(utils.extend(upl, { err: new i18n.Error_(err) })); readNextPacket(); return; }
 									
 									lastSubkey = info;
 									lastSubkeyUpl = upl;
@@ -107,13 +93,7 @@ function uploadKey(key, callback, userId, groupId) {
 								if(lastKey == null) { uploaded.failed.push(utils.extend(upl, { err: new i18n.Error_("No associated key.") })); readNextPacket(); break; }
 								
 								_uploadIdentity(con, info, lastKey, function(err) {
-									if(err) {
-										if(!(err instanceof i18n.Error_))
-											console.warn("Error uploading identity", err);
-										uploaded.failed.push(utils.extend(upl, { err: (err instanceof i18n.Error_) ? err : intErr }));
-										readNextPacket();
-										return;
-									}
+									if(err) { uploaded.failed.push(utils.extend(upl, { err: new i18n.Error_(err) })); readNextPacket(); return; }
 									
 									lastId = info;
 									lastIdUpl = upl;
@@ -129,13 +109,7 @@ function uploadKey(key, callback, userId, groupId) {
 								if(lastKey == null) { uploaded.failed.push(utils.extend(upl, { err: new i18n.Error_("No associated key.") })); readNextPacket(); break; }
 								
 								_uploadAttribute(con, info, lastKey, function(err) {
-									if(err) {
-										if(!(err instanceof i18n.Error_))
-											console.warn("Error uploading attribute", err);
-										uploaded.failed.push(utils.extend(upl, { err: (err instanceof i18n.Error_) ? err : intErr }));
-										readNextPacket();
-										return;
-									}
+									if(err) { uploaded.failed.push(utils.extend(upl, { err: new i18n.Error_(err) })); readNextPacket(); return; }
 									
 									lastAttr = info;
 									lastAttrUpl = upl;
@@ -230,13 +204,7 @@ function uploadKey(key, callback, userId, groupId) {
 								}
 								
 								func(con, info, obj, lastKey, function(err) {
-									if(err) {
-										if(!(err instanceof i18n.Error_))
-											console.warn("Error uploading signature", err);
-										uploaded.failed.push(utils.extend(upl, { err: (err instanceof i18n.Error_) ? err : intErr }));
-										readNextPacket();
-										return;
-									}
+									if(err) { uploaded.failed.push(utils.extend(upl, { err: new i18n.Error_(err) })); readNextPacket(); return; }
 									
 									objUpl.signatures.push(upl);
 									readNextPacket();
@@ -305,34 +273,17 @@ function uploadKey(key, callback, userId, groupId) {
 								it.identities = it.identities.slice(0, j).concat(it.identities.slice(j+1));
 								loopIdentities(j); // Not j++ as we have just removed one
 							}
-							else
+							else if(keyring)
 							{
-								if(userId)
-								{
-									users.addIdentityToKeyring(userId, it.id, it.identities[j].id, function(err) {
-										if(err)
-											console.warn("Error adding identity to user keyring", err);
-										
-										checkGroup();
-									}, con);
-								}
-								else
-									checkGroup();
-								
-								function checkGroup() {
-									if(groupId)
-									{
-										groups.addIdentityToKeyring(groupId, it.id, it.identities[j].id, function(err) {
-											if(err)
-												console.warn("Error adding identity to group keyring", err);
-											
-											loopIdentities(++j);
-										}, con);
-									}
-									else
-										loopIdentities(++j);
-								}
+								keyrings.addIdentityToKeyring(keyring, userId, it.id, it.identities[j].id, function(err) {
+									if(err)
+										console.warn("Error adding identity to keyring", err);
+									
+									loopIdentities(++j);
+								}, con);
 							}
+							else
+								loopIdentities(++j);
 						}, con);
 					}
 					
@@ -348,34 +299,17 @@ function uploadKey(key, callback, userId, groupId) {
 								it.attributes = it.attributes.slice(0, j).concat(it.attributes.slice(j+1));
 								loopAttributes(j); // Not j++ as we have just removed one
 							}
-							else
+							else if(keyring)
 							{
-								if(userId)
-								{
-									users.addAttributeToKeyring(userId, it.id, it.attributes[j].id, function(err) {
-										if(err)
-											console.warn("Error adding attribute to user keyring", err);
-										
-										checkGroup();
-									}, con);
-								}
-								else
-									checkGroup();
-								
-								function checkGroup() {
-									if(groupId)
-									{
-										groups.addAttributeToKeyring(groupId, it.id, it.attributes[j].id, function(err) {
-											if(err)
-												console.warn("Error adding attribute to group keyring", err);
-											
-											loopAttributes(++j);
-										}, con);
-									}
-									else
-										loopAttributes(++j);
-								}
+								keyrings.addAttributeToKeyring(keyring, it.id, it.attributes[j].id, function(err) {
+									if(err)
+										console.warn("Error adding attribute to keyring", err);
+									
+									loopAttributes(++j);
+								}, con);
 							}
+							else
+								loopAttributes(++j);
 						}, con);
 					}
 					
@@ -389,7 +323,17 @@ function uploadKey(key, callback, userId, groupId) {
 								uploaded.uploadedKeys = uploaded.uploadedKeys.slice(0, i).concat(uploaded.uploadedKeys.slice(i+1));
 								i--;
 							}
-							loopKeys(++i);
+							else if(keyring)
+							{
+								keyrings.addKeyToKeyring(key, it.id, function(err) {
+									if(err)
+										console.warn("Error adding key to keyring", err);
+									
+									loopKeys(++i);
+								}, con);
+							}
+							else
+								loopKeys(++i);
 						}, con);
 					}
 				}
@@ -399,7 +343,7 @@ function uploadKey(key, callback, userId, groupId) {
 }
 
 function _uploadKey(con, info, callback) {
-	keys.keyExists(info.id, function(err, exists) {
+	db.entryExists("keys", { id: info.id }, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
@@ -410,7 +354,7 @@ function _uploadKey(con, info, callback) {
 			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				con.query('INSERT INTO "keys" ( "id", "date", "binary" ) VALUES ( $1, $2, $3 )', [ info.id, info.date, info.binary ], function(err) {
+				db.insert("keys", { id: info.id, fingerprint: info.fingerprint, date: info.date, binary: info.binary }, function(err) {
 					if(err) { callback(err); return; }
 					
 					keysTrust.handleKeyUpload(info.id, function(err) {
@@ -423,36 +367,36 @@ function _uploadKey(con, info, callback) {
 						else
 							callback(null);
 					}, con);
-				});
+				}, con);
 			});
 		}
 	}, con);
 }
 
 function _uploadIdentity(con, info, keyInfo, callback) {
-	keys.identityExists(info.id, keyInfo.id, function(err, exists) {
+	db.entryExists("keys_identities", { id: info.id, key: keyInfo.id }, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
 			callback(null);
 		else
-			con.query('INSERT INTO "keys_identities" ( "id", "key", "name", "email" ) VALUES ( $1, $2, $3, $4 )', [ info.id, keyInfo.id, info.name, info.email ], callback);
+			db.insert("keys_identities", { id: info.id, key: keyInfo.id, name: info.name, email: info.email }, callback, con);
 	}, con);
 }
 
 function _uploadAttribute(con, info, keyInfo, callback) {
-	keys.attributeExists(info.id, keyInfo.id, function(err, exists) {
+	db.entryExists("keys_attributes", { id: info.id, key: keyInfo.id }, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
 			callback(null);
 		else
-			con.query('INSERT INTO "keys_attributes" ( "id", "key", "binary" ) VALUES ( $1, $2, $3 )', [ info.id, keyInfo.id, info.binary ], callback);
+			db.insert("keys_attributes", { id: info.id, key: keyInfo.id, binary: info.binary }, callback, con);
 	}, con);
 }
 
 function _uploadKeySignature(con, info, objInfo, keyInfo, callback) { // keyInfo == objInfo in this case
-	keys.keySignatureExists(info.id, function(err, exists) {
+	db.entryExists("keys_signatures", { id: info.id }, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
@@ -463,7 +407,7 @@ function _uploadKeySignature(con, info, objInfo, keyInfo, callback) { // keyInfo
 			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				con.query('INSERT INTO "keys_signatures" ( "id", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7 )', [ info.id, objInfo.id, info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
+				db.insert("keys_signatures", { id: info.id, key: objInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires, function(err) {
 					if(err) { callback(err); return; }
 					
 					keysTrust.verifyKeySignature(info.id, function(err, verified) {
@@ -478,14 +422,14 @@ function _uploadKeySignature(con, info, objInfo, keyInfo, callback) { // keyInfo
 						else
 							callback(null);
 					}, con);
-				});
+				}, con);
 			});
 		}
 	}, con);
 }
 
 function _uploadIdentitySignature(con, info, objInfo, keyInfo, callback) {
-	keys.identitySignatureExists(info.id, function(err, exists) {
+	db.entryExists("keys_identities_signatures", { id: info.id }, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
@@ -496,7 +440,7 @@ function _uploadIdentitySignature(con, info, objInfo, keyInfo, callback) {
 			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				con.query('INSERT INTO "keys_identities_signatures" ( "id", "identity", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )', [ info.id, objInfo.id, keyInfo.id, info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
+				db.insert("keys_identities_signatures", { id: info.id, identity: objInfo.id, key: keyInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires }, function(err) {
 					keysTrust.verifyIdentitySignature(info.id, function(err, verified) {
 						if(err) {
 							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
@@ -509,14 +453,14 @@ function _uploadIdentitySignature(con, info, objInfo, keyInfo, callback) {
 						else
 							callback(null);
 					}, con);
-				});
+				}, con);
 			});
 		}
 	}, con);
 }
 
 function _uploadAttributeSignature(con, info, objInfo, keyInfo, callback) {
-	keys.attributeSignatureExists(info.id, function(err, exists) {
+	db.entryExists("keys_attributes_signatures", { id: info.id }, function(err, exists) {
 		if(err)
 			callback(err);
 		else if(exists)
@@ -527,7 +471,7 @@ function _uploadAttributeSignature(con, info, objInfo, keyInfo, callback) {
 			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				con.query('INSERT INTO "keys_attributes_signatures" ( "id", "attribute", "key", "issuer", "date", "binary", "sigtype", "expires" ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )', [ info.id, objInfo.id, keyInfo.id, info.issuer, info.date, info.binary, info.sigtype, info.expires ], function(err) {
+				db.insert("keys_attributes_signatures", { id: info.id, attribute: objInfo.id, key: keyInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires }, function(err) {
 					keysTrust.verifyAttributeSignature(info.id, function(err, verified) {
 						if(err) {
 							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
@@ -540,7 +484,7 @@ function _uploadAttributeSignature(con, info, objInfo, keyInfo, callback) {
 						else
 							callback(null);
 					}, con);
-				});
+				}, con);
 			});
 		}
 	}, con);

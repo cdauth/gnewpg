@@ -1,5 +1,6 @@
-var users = require("../users");
 var config = require("../config");
+var db = require("../db");
+var utils = require("../utils");
 
 module.exports.post = function(req, res, next) {
 	var errors = [ ];
@@ -14,12 +15,12 @@ module.exports.post = function(req, res, next) {
 	else if(req.body.username.length > config.usernameMaxLength)
 		errors.push(req.ngettext("The username may be at most %d character long.", "The username may be at most %d characters long.", config.usernameMaxLength, config.usernameMaxLength));
 	
-	users.getUser(req.body.username, function(err, existingUser) {
+	db.entryExists("users", { id: req.body.username }, function(err, exists) {
 		if(err)
 			next(err);
 		else
 		{
-			if(existingUser != null)
+			if(exists != null)
 				errors.push(req.gettext("This username is already taken."));
 			if(!req.body.password || req.body.password.length < config.passwordMinLength)
 				errors.push(req.ngettext("The password has to be at least %d character long.", "The password has to be at least %d characters long.", config.passwordMinLength, config.passwordMinLength));
@@ -28,7 +29,7 @@ module.exports.post = function(req, res, next) {
 		
 			if(errors.length == 0)
 			{
-				users.createUser(req.body.username, users.encodePassword(req.body.password), req.body.email, null, function(err) {
+				db.create("users", { id: req.body.username, password: utils.encodePassword(req.body.password), email: req.body.email }, function(err) {
 					if(err)
 						next(err);
 					else

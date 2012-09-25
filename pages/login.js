@@ -1,5 +1,5 @@
-var users = require("../users");
 var sessions = require("../sessions");
+var utils = require("../utils");
 
 module.exports.get = function(req, res, next) {
 	if(req.session.user)
@@ -11,10 +11,10 @@ module.exports.get = function(req, res, next) {
 module.exports.post = function(req, res, next) {
 	req.params.username = req.body.username;
 
-	users.getUser(req.body.username || "", function(err, user) {
+	db.getEntry("users", "*", { id: req.body.username || "" }, function(err, user) {
 		if(err)
 			next(err);
-		else if(user != null && users.checkPassword(user, req.body.password || ""))
+		else if(user != null && user.password == utils.encodePassword(req.body.password || ""))
 		{
 			sessions.startSession(req, res, user, req.body.stayloggedin != null, function(err) {
 				if(err)

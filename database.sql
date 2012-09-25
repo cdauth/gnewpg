@@ -1,5 +1,6 @@
 CREATE TABLE "keys" (
 	"id" CHAR(16) PRIMARY KEY, -- Long ID of the key
+	"fingerprint" VARCHAR(40) NOT NULL UNIQUE, -- Fingerprint of the key, 32 chars for v2/v3 keys, 40 chars for v4 keys
 	"binary" bytea NOT NULL,
 	"date" TIMESTAMP NOT NULL,
 	"perm_idsearch" BOOLEAN NOT NULL DEFAULT false, -- Key should be findable by searching for its ID
@@ -9,6 +10,8 @@ CREATE TABLE "keys" (
 	-- "primary_identity" TEXT DEFAULT NULL, -- Added later, table "identities" is not defined yet here
 	-- "user" TEXT REFERENCES "users"("name") DEFAULT NULL ON UPDATE CASCADE ON DELETE SET DEFAULT; -- Added later, table "users" is not defined yet here
 );
+
+CREATE INDEX "keys_shortid_idx" ON "keys" (SUBSTRING("id" FROM 8 FOR 8));
 
 CREATE TABLE "keys_signatures" (
 	"id" CHAR(27) PRIMARY KEY,
@@ -49,6 +52,9 @@ CREATE TABLE "keys_identities" (
 	PRIMARY KEY("id", "key")
 );
 
+CREATE INDEX "keys_identities_name_idx" ON "keys_identities"("name");
+CREATE INDEX "keys_identities_email_idx" ON "keys_identities"("email");
+
 CREATE TABLE "keys_identities_signatures" (
 	"id" CHAR(27) PRIMARY KEY,
 	"identity" TEXT NOT NULL,
@@ -66,6 +72,19 @@ CREATE TABLE "keys_identities_signatures" (
 
 CREATE INDEX "keys_identities_signatures_key_idx" ON "keys_identities_signatures" ("key");
 CREATE INDEX "keys_identities_signatures_issuer_idx" ON "keys_identities_signatures" ("issuer");
+
+CREATE VIEW "keys_identities_selfsigned" AS
+	SELECT DISTINCT ON ( "id", "key" )
+		"keys_identities"."id" AS "id", "keys_identities"."key" AS "key", "keys_identities"."name" AS "name", "keys_identities"."email" AS "email",
+		"keys_identities"."perm_public" AS "perm_public", "keys_identities"."perm_namesearch" AS "perm_namesearch",
+		"keys_identities"."perm_emailsearch" AS "perm_emailsearch", "keys_identities"."email_blacklisted" AS "email_blacklisted",
+		"keys_identities_signatures"."expires" AS "expires", "keys_identities_signatures"."revokedby" AS "revokedby"
+		FROM "keys_identities", "keys_identities_signatures"
+		WHERE "keys_identities"."key" = "keys_identities_signatures"."key" AND "keys_identities"."id" = "keys_identities_signatures"."identity"
+			AND "keys_identities"."key" = "keys_identities_signatures"."issuer" AND "keys_identities_signatures"."verified" = true
+			AND "keys_identities_signatures"."sigtype" IN (16, 17, 18, 19)
+		ORDER BY "keys_identities_signatures"."date" DESC
+;
 
 -----------------------------------------------------
 
@@ -96,6 +115,19 @@ CREATE TABLE "keys_attributes_signatures" (
 CREATE INDEX "keys_identities_attributes_key_idx" ON "keys_attributes_signatures" ("key");
 CREATE INDEX "keys_attributes_attributes_issuer_idx" ON "keys_attributes_signatures" ("issuer");
 
+CREATE VIEW "keys_attributes_selfsigned" AS
+	SELECT DISTINCT ON ( "id", "key" )
+		"keys_attributes"."id" AS "id", "keys_attributes"."key" AS "key", "keys_attributes"."name" AS "name", "keys_attributes"."email" AS "email",
+		"keys_attributes"."perm_public" AS "perm_public", "keys_attributes"."perm_namesearch" AS "perm_namesearch",
+		"keys_attributes"."perm_emailsearch" AS "perm_emailsearch", "keys_attributes"."email_blacklisted" AS "email_blacklisted",
+		"keys_attributes_signatures"."expires" AS "expires", "keys_attributes_signatures"."revokedby" AS "revokedby"
+		FROM "keys_attributes", "keys_attributes_signatures"
+		WHERE "keys_attributes"."key" = "keys_attributes_signatures"."key" AND "keys_attributes"."id" = "keys_attributes_signatures"."attribute"
+			AND "keys_attributes"."key" = "keys_attributes_signatures"."issuer" AND "keys_attributes_signatures"."verified" = true
+			AND "keys_attributes_signatures"."sigtype" IN (16, 17, 18, 19)
+		ORDER BY "keys_attributes_signatures"."date" DESC
+;
+
 -----------------------------------------------------
 
 CREATE VIEW "keys_signatures_all" AS
@@ -119,6 +151,12 @@ CREATE TABLE "users" (
 );
 
 CREATE INDEX "users_lower_idx" ON "users" (LOWER("id"));
+
+CREATE TABLE "users_keyrings_keys" (
+	"user" TEXT REFERENCES "users"("id"),
+	"key" CHAR(16) REFERENCES "keys"("id"),
+	PRIMARY KEY("user", "key")
+);
 
 CREATE TABLE "users_keyrings_identities" (
 	"user" TEXT REFERENCES "users"("id"),
@@ -158,6 +196,12 @@ CREATE TABLE "groups" (
 	"perm_addkeys" BOOLEAN NOT NULL -- Whether all users should be allowed to add keys
 );
 
+CREATE TABLE "groups_keyrings_keys" (
+	"group" BIGINT REFERENCES "groups"("id"),
+	"key" CHAR(16) REFERENCES "keys"("id"),
+	PRIMARY KEY("group", "key")
+);
+
 CREATE TABLE "groups_keyrings_identities" (
 	"group" BIGINT REFERENCES "groups"("id"),
 	"identity" TEXT,
@@ -180,6 +224,24 @@ CREATE TABLE "groups_users" (
 	"perm_admin" BOOLEAN NOT NULL, -- Whether the user is allowed to change the group settings
 	"perm_addkeys" BOOLEAN NOT NULL -- Whether the user is allowed to add keys to the group
 );
+
+CREATE VIEW "users_keyrings_with_groups_keys" AS
+	SELECT "user", "key" FROM "users_keyrings_keys"
+	UNION SELECT "users"."id" AS "user", "groups_keyrings_keys"."key" AS "key"
+		FROM "users", "groups_users", "groups_keyrings_keys"
+		WHERE "users"."id" = "groups_users"."user" AND "groups_users"."group" = "groups_keyrings_keys"."group";
+
+CREATE VIEW "users_keyrings_with_groups_identities" AS
+	SELECT "user", "identity", "identityKey" FROM "users_keyrings_identities"
+	UNION SELECT "users"."id" AS "user", "groups_keyrings_identities"."identity" AS "identity", "groups_keyrings_identities"."identityKey" AS "identityKey"
+		FROM "users", "groups_users", "groups_keyrings_identities"
+		WHERE "users"."id" = "groups_users"."user" AND "groups_users"."group" = "groups_keyrings_identities"."group";
+
+CREATE VIEW "users_keyrings_with_groups_attributes" AS
+	SELECT "user", "attribute", "attributeKey" FROM "users_keyrings_attributes"
+	UNION SELECT "users"."id" AS "user", "groups_keyrings_attributes"."attribute" AS "attribute", "groups_keyrings_attributes"."attributeKey" AS "attributeKey"
+		FROM "users", "groups_users", "groups_keyrings_attributes"
+		WHERE "users"."id" = "groups_users"."user" AND "groups_users"."group" = "groups_keyrings_attributes"."group";
 
 
 --===================================================

@@ -5,6 +5,8 @@ var utils = require("./utils");
 var config = require("./config");
 var pgp = require("node-pgp");
 
+
+// Fix writing of binary fields into the database
 var origPrepareValue = pgUtils.prepareValue;
 pgUtils.prepareValue = function(val) {
 	if(val instanceof Buffer) // For binary fields until https://github.com/brianc/node-postgres/pull/92 is fixed
@@ -26,6 +28,8 @@ pgUtils.prepareValue = function(val) {
 	return origPrepareValue.apply(pgUtils, arguments);
 }
 
+
+// Print SQL errors to stderr
 var origHandleError = pgQuery.prototype.handleError;
 pgQuery.prototype.handleError = function(err) {
 	console.warn("SQL error", err, this);
@@ -107,6 +111,130 @@ function getQueryFifo(queryObj) {
 	return ret;
 }
 
+function getEntries(table, fields, filter, suffix, callback, con) {
+	if(suffix == null) {
+		con = callback;
+		callback = suffix;
+	}
+	
+	var args = [ ];
+	var q = 'SELECT ';
+	if(Array.isArray(fields))
+		q += '"'+fields.join('", "')+'"';
+	else
+		q += fields;
+	q += ' FROM "'+table+'";
+
+	var filter = _filterToCondition(filter);
+	if(filter)
+	{
+		q += ' '+filter.condition;
+		args = args.concat(filter.args);
+	}
+	
+	if(suffix)
+		q += ' '+suffix;
+	
+	fifoQuery(q, args, callback, con);
+}
+
+function getEntry(table, fields, filter, callback, con) {
+	var args = [ ];
+	var q = 'SELECT ';
+	if(fields == null)
+		q += 'COUNT(*) AS n';
+	else if(Array.isArray(fields))
+		q += '"'+fields.join('", "')+'"';
+	else
+		q += fields;
+	q += ' FROM "'+table+'";
+
+	var filter = _filterToCondition(filter);
+	if(filter)
+	{
+		q += ' '+filter.condition;
+		args = args.concat(filter.args);
+	}
+	
+	q += ' LIMIT 1';
+	
+	if(fields != null)
+		query1(q, args, callback, con);
+	else
+	{
+		query1(q, args, function(err, res) {
+			if(err)
+				callback(err);
+			else
+				callback(null, res.n > 0);
+		}, con);
+	}
+}
+
+function entryExists(table, filter, callback, con) {
+	getEntry(table, null, filter, callback, con);
+}
+
+function update(table, fields, filter, callback, con) {
+	var args = [ ];
+	var q = 'UPDATE "'+table+'" SET ';
+	
+	var n = 1;
+	for(var i in fields)
+	{
+		if(n > 1)
+			q += ', ';
+		q += '"'+i+'" = $'+(n++);
+		args.push(fields[i]);
+	}
+	
+	var filter = _filterToCondition(filter);
+	if(filter)
+	{
+		q += ' '+filter.condition;
+		args = args.push(filter.args);
+	}
+	
+	query(q, args, callback, con);
+}
+
+function insert(table, fields, callback, con) {
+	var args = [ ];
+	var q = 'INSERT INTO "'+table+'" ( ';
+	var q2 = '';
+
+	var n = 1;
+	for(var i in fields)
+	{
+		if(n > 1)
+		{
+			q += ', ';
+			q2 += ', ';
+		}
+		q += '"'+i+'"';
+		q2 += '$'+(n++);
+		args.push(fields[i]);
+	}
+	
+	q += ' ) VALUES ( '+q2+' )';
+	
+	query(q, args, callback, con);
+}
+
+function remove(table, filter, callback, con) {
+	var args = [ ];
+	var q = 'DELETE FROM "'+table+'"';
+	
+	var filter = _filterToCondition(filter);
+	if(filter)
+	{
+		q += ' '+filter.condition;
+		args = args.concat(filter.args);
+	}
+	
+	query(q, args, callback, con);
+}
+
 function xExists(table, idAttrs, callback, con) {
 	getWithFilter('SELECT COUNT(*) AS n FROM "'+table+'"', idAttrs, function(err, res) {
 		if(err)
@@ -116,38 +244,50 @@ function xExists(table, idAttrs, callback, con) {
 	}, true, con);
 }
 
+function _filterToCondition(filter) {
+	if(!filter || Object.keys(filter).length == 0)
+		return null;
+
+	var condition = "";
+	var args = [ ];
+	var i = 1;
+	var first = true;
+	for(var j in filter)
+	{
+		if(first)
+			first = false;
+		else
+			condition += ' AND ';
+
+		if(Array.isArray(filter[j]))
+		{
+			condition += '"'+j+'" IN (';
+			filter[j].forEach(function(it, k) {
+				if(k > 0)
+					condition += ', ';
+				condition += '$'+(i++);
+				args.push(it);
+			});
+			condition += ')';
+		}
+		else
+		{
+			condition += '"'+j+'" = $'+(i++);
+			args.push(filter[j]);
+		}
+	}
+	
+	return { condition: condition, args: args };
+}
+
 function getWithFilter(query, filter, callback, justOne, con) {
 	var args = [ ];
 
-	if(filter && Object.keys(filter).length > 0)
+	var filter = _filterToCondition(filter);
+	if(filter)
 	{
-		query += ' WHERE ';
-		var first = true;
-		var i = args.length+1;
-		for(var j in filter)
-		{
-			if(first)
-				first = false;
-			else
-				query += ' AND ';
-
-			if(Array.isArray(filter[j]))
-			{
-				query += '"'+j+'" IN (';
-				filter[j].forEach(function(it, k) {
-					if(k > 0)
-						query += ', ';
-					query += '$'+(i++);
-					args.push(it);
-				});
-				query += ')';
-			}
-			else
-			{
-				query += '"'+j+'" = $'+(i++);
-				args.push(filter[j]);
-			}
-		}
+		query += ' WHERE '+filter.condition;
+		args = args.concat(filter.args);
 	}
 	
 	if(justOne)
@@ -166,5 +306,10 @@ exports.getUniqueRandomString = getUniqueRandomString;
 exports.getQueryFifo = getQueryFifo;
 exports.query1 = query1;
 exports.fifoQuery = fifoQuery;
-exports.xExists = xExists;
-exports.getWithFilter = getWithFilter;
+exports.getEntries = getEntries;
+exports.getEntry = getEntry;
+exports.entryExists = entryExists;
+exports.update = update;
+exports.insert = insert;
+exports.remove = remove;
+exports.delete = remove;

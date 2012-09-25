@@ -1,5 +1,6 @@
 var config = require("./config");
 var fs = require("fs");
+var pgp = require("node-pgp");
 
 var RANDOM_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -30,6 +31,11 @@ function toProperArray(arr) {
 	return ret;
 }
 
+function encodePassword(password) {
+	return pgp.utils.hash(password, "sha256", "base64").substring(0, 43);
+}
+
 exports.generateRandomString = generateRandomString;
 exports.extend = extend;
 exports.toProperArray = toProperArray;
+exports.encodePassword = encodePassword;

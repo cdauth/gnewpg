@@ -81,7 +81,17 @@ function injectMethods(req, toObj) {
 }
 
 function I18nError(msgId) {
-	this.args = arguments;
+	function _(str) { return str; }
+
+	if(msgId instanceof I18nError)
+		this.args = msgId.args;
+	else if(typeof msgId == "string")
+		this.args = arguments;
+	else
+	{
+		console.warn("Internal error", msgId);
+		this.args = [ _("Internal error") ];
+	}
 	
 	this.translate = function(gettext) {
 		return gettext.apply(null, this.args);

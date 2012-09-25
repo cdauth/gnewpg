@@ -22,6 +22,7 @@
     "node-pgp": "git://github.com/cdauth/node-pgp.git",
     "dateformat": "x.x.x",
     "node-markdown": "x.x.x",
-    "sprintf": "x.x.x"
+    "sprintf": "x.x.x",
+    "async": "x.x.x"
   }
 }
