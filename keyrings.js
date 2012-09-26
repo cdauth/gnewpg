@@ -34,7 +34,7 @@ function keyringContainsAttribute(keyring, keyId, attributeId, callback, onlyKey
 }
 
 function addKeyToKeyring(keyring, keyId, callback, con) {
-	keyringContainsIdentity(keyring, keyId, function(err, contains) {
+	keyringContainsKey(keyring, keyId, function(err, contains) {
 		if(err)
 			callback(err);
 		else if(contains)
@@ -78,9 +78,10 @@ function addAttributeToKeyring(keyring, keyId, attributeId, callback, con) {
 	}, true, con);
 }
 
-exports.getPrimaryIdentity = getPrimaryIdentity;
 exports.getKeyringForUser = getKeyringForUser;
+exports.keyringContainsKey = keyringContainsKey;
 exports.keyringContainsIdentity = keyringContainsIdentity;
 exports.keyringContainsAttribute = keyringContainsAttribute;
+exports.addKeyToKeyring = addKeyToKeyring;
 exports.addIdentityToKeyring = addIdentityToKeyring;
 exports.addAttributeToKeyring = addAttributeToKeyring;

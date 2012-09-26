@@ -1,6 +1,7 @@
 var config = require("../config");
-var db = require("../db");
+var db = require("../database");
 var utils = require("../utils");
+var users = require("../users");
 
 module.exports.post = function(req, res, next) {
 	var errors = [ ];
@@ -20,7 +21,7 @@ module.exports.post = function(req, res, next) {
 			next(err);
 		else
 		{
-			if(exists != null)
+			if(exists)
 				errors.push(req.gettext("This username is already taken."));
 			if(!req.body.password || req.body.password.length < config.passwordMinLength)
 				errors.push(req.ngettext("The password has to be at least %d character long.", "The password has to be at least %d characters long.", config.passwordMinLength, config.passwordMinLength));
@@ -29,7 +30,7 @@ module.exports.post = function(req, res, next) {
 		
 			if(errors.length == 0)
 			{
-				db.create("users", { id: req.body.username, password: utils.encodePassword(req.body.password), email: req.body.email }, function(err) {
+				users.createUser(req.body.username, req.body.password, req.body.email, null, function(err) {
 					if(err)
 						next(err);
 					else

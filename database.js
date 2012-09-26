@@ -111,10 +111,11 @@ function getQueryFifo(queryObj) {
 	return ret;
 }
 
-function getEntries(table, fields, filter, suffix, callback, con) {
-	if(suffix == null) {
+function _getEntries(table, fields, filter, suffix, callback, con) {
+	if(typeof suffix == "function") {
 		con = callback;
 		callback = suffix;
+		suffix = null;
 	}
 	
 	var args = [ ];
@@ -123,56 +124,41 @@ function getEntries(table, fields, filter, suffix, callback, con) {
 		q += '"'+fields.join('", "')+'"';
 	else
 		q += fields;
-	q += ' FROM "'+table+'";
+	q += ' FROM "'+table+'"';
 
-	var filter = _filterToCondition(filter);
-	if(filter)
-	{
-		q += ' '+filter.condition;
-		args = args.concat(filter.args);
-	}
+	var filter = _filterToCondition(filter, args);
+		q += ' WHERE '+filter;
 	
 	if(suffix)
 		q += ' '+suffix;
 	
-	fifoQuery(q, args, callback, con);
+	return [ q, args, callback, con ];
+}
+
+function getEntries(table, fields, filter, suffix, callback, con) {
+	fifoQuery.apply(null, _getEntries(table, fields, filter, suffix, callback, con));
+}
+
+function getEntriesAtOnce(table, fields, filter, suffix, callback, con) {
+	query.apply(null, _getEntries(table, fields, filter, suffix, function(err, res) {
+		if(err)
+			callback(err);
+		else
+			callback(null, res.rows)
+	}, con));
 }
 
 function getEntry(table, fields, filter, callback, con) {
-	var args = [ ];
-	var q = 'SELECT ';
-	if(fields == null)
-		q += 'COUNT(*) AS n';
-	else if(Array.isArray(fields))
-		q += '"'+fields.join('", "')+'"';
-	else
-		q += fields;
-	q += ' FROM "'+table+'";
-
-	var filter = _filterToCondition(filter);
-	if(filter)
-	{
-		q += ' '+filter.condition;
-		args = args.concat(filter.args);
-	}
-	
-	q += ' LIMIT 1';
-	
-	if(fields != null)
-		query1(q, args, callback, con);
-	else
-	{
-		query1(q, args, function(err, res) {
-			if(err)
-				callback(err);
-			else
-				callback(null, res.n > 0);
-		}, con);
-	}
+	query1.apply(null, _getEntries(table, fields, filter, "LIMIT 1", callback, con));
 }
 
 function entryExists(table, filter, callback, con) {
-	getEntry(table, null, filter, callback, con);
+	query1.apply(null, _getEntries(table, "COUNT(*) AS n", filter, "LIMIT 1", function(err, res) {
+		if(err)
+			callback(err);
+		else
+			callback(null, res.n > 0);
+	}, con));
 }
 
 function update(table, fields, filter, callback, con) {
@@ -188,12 +174,8 @@ function update(table, fields, filter, callback, con) {
 		args.push(fields[i]);
 	}
 	
-	var filter = _filterToCondition(filter);
-	if(filter)
-	{
-		q += ' '+filter.condition;
-		args = args.push(filter.args);
-	}
+	var filter = _filterToCondition(filter, args);
+		q += ' WHERE '+filter;
 	
 	query(q, args, callback, con);
 }
@@ -225,79 +207,46 @@ function remove(table, filter, callback, con) {
 	var args = [ ];
 	var q = 'DELETE FROM "'+table+'"';
 	
-	var filter = _filterToCondition(filter);
+	var filter = _filterToCondition(filter, args);
 	if(filter)
-	{
-		q += ' '+filter.condition;
-		args = args.concat(filter.args);
-	}
+		q += ' WHERE '+filter;
 	
 	query(q, args, callback, con);
 }
 
-function xExists(table, idAttrs, callback, con) {
-	getWithFilter('SELECT COUNT(*) AS n FROM "'+table+'"', idAttrs, function(err, res) {
-		if(err)
-			callback(err);
-		else
-			callback(null, !!res.n);
-	}, true, con);
-}
-
-function _filterToCondition(filter) {
+function _filterToCondition(filter, args) {
 	if(!filter || Object.keys(filter).length == 0)
 		return null;
 
-	var condition = "";
-	var args = [ ];
-	var i = 1;
+	var ret = "";
+	var i = args.length+1;
 	var first = true;
 	for(var j in filter)
 	{
 		if(first)
 			first = false;
 		else
-			condition += ' AND ';
+			ret += ' AND ';
 
 		if(Array.isArray(filter[j]))
 		{
-			condition += '"'+j+'" IN (';
+			ret += '"'+j+'" IN (';
 			filter[j].forEach(function(it, k) {
 				if(k > 0)
-					condition += ', ';
-				condition += '$'+(i++);
+					ret += ', ';
+				ret += '$'+(i++);
 				args.push(it);
 			});
-			condition += ')';
+			ret += ')';
 		}
 		else
 		{
-			condition += '"'+j+'" = $'+(i++);
+			ret += '"'+j+'" = $'+(i++);
 			args.push(filter[j]);
 		}
 	}
 	
-	return { condition: condition, args: args };
-}
-
-function getWithFilter(query, filter, callback, justOne, con) {
-	var args = [ ];
-
-	var filter = _filterToCondition(filter);
-	if(filter)
-	{
-		query += ' WHERE '+filter.condition;
-		args = args.concat(filter.args);
-	}
-	
-	if(justOne)
-	{
-		query += ' LIMIT 1';
-		query1(query, args, callback, con);
-	}
-	else
-		fifoQuery(query, args, callback, con);
-	
+	return ret;
 }
 
 exports.getConnection = getConnection;
@@ -307,6 +256,7 @@ exports.getQueryFifo = getQueryFifo;
 exports.query1 = query1;
 exports.fifoQuery = fifoQuery;
 exports.getEntries = getEntries;
+exports.getEntriesAtOnce = getEntriesAtOnce;
 exports.getEntry = getEntry;
 exports.entryExists = entryExists;
 exports.update = update;

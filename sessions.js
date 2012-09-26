@@ -1,5 +1,4 @@
 var db = require("./database");
-var users = require("./users");
 var config = require("./config");
 
 var COOKIE_NAME = "gnewpg_sid";
@@ -32,10 +31,10 @@ function destroySession(session, callback) {
 }
 
 function getSession(id, callback) {
-	db.getEntry("sessions", [ "id", "user", "persistent" ], { id: id }, function(err, sessionRecord)
+	db.getEntry("sessions", [ "id", "user", "persistent" ], { id: id }, function(err, sessionRecord) {
 		if(err)
 			callback(err);
-		else if(!res)
+		else if(!sessionRecord)
 			callback(null, null);
 		else
 		{
@@ -48,7 +47,7 @@ function getSession(id, callback) {
 				if(err)
 					callback(err);
 				else
-					callback(null, new Session(sessionRecord.id, user, sessionRecord.persistent));
+					callback(null, new Session(sessionRecord.id, userRecord, sessionRecord.persistent));
 			});
 		}
 	});

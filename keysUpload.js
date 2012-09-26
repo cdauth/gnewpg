@@ -3,7 +3,6 @@ var db = require("./database");
 var keys = require("./keys");
 var keysTrust = require("./keysTrust");
 var keyrings = require("./keyrings");
-var users = require("./users");
 var groups = require("./groups");
 var i18n = require("./i18n");
 var utils = require("./utils");
@@ -275,7 +274,7 @@ function uploadKey(key, callback, keyring) {
 							}
 							else if(keyring)
 							{
-								keyrings.addIdentityToKeyring(keyring, userId, it.id, it.identities[j].id, function(err) {
+								keyrings.addIdentityToKeyring(keyring, it.id, it.identities[j].id, function(err) {
 									if(err)
 										console.warn("Error adding identity to keyring", err);
 									
@@ -325,7 +324,7 @@ function uploadKey(key, callback, keyring) {
 							}
 							else if(keyring)
 							{
-								keyrings.addKeyToKeyring(key, it.id, function(err) {
+								keyrings.addKeyToKeyring(keyring, it.id, function(err) {
 									if(err)
 										console.warn("Error adding key to keyring", err);
 									
@@ -407,7 +406,7 @@ function _uploadKeySignature(con, info, objInfo, keyInfo, callback) { // keyInfo
 			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				db.insert("keys_signatures", { id: info.id, key: objInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires, function(err) {
+				db.insert("keys_signatures", { id: info.id, key: objInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires }, function(err) {
 					if(err) { callback(err); return; }
 					
 					keysTrust.verifyKeySignature(info.id, function(err, verified) {

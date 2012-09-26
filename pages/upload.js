@@ -1,5 +1,6 @@
 var keysUpload = require("../keysUpload");
 var fs = require("fs");
+var keyrings = require("../keyrings");
 
 module.exports.post = function(req, res, next) {
 	var f = req.files.file;
@@ -11,6 +12,10 @@ module.exports.post = function(req, res, next) {
 	var uploadedKeys = [ ];
 	var errors = [ ];
 	var failed = [ ];
+	
+	var keyring = null;
+	if(req.session.user)
+		keyring = keyrings.getKeyringForUser(req.session.user.id);
 	
 	handleNext(0);
 	function handleNext(i) {
@@ -40,7 +45,7 @@ module.exports.post = function(req, res, next) {
 				}
 				handleNext(++i);
 			});
-		}, req.session.user ? req.session.user.id : null);
+		}, keyring);
 	}
 	
 	function end() {
@@ -61,6 +66,6 @@ module.exports.post = function(req, res, next) {
 			req.params.errors = errors;
 			
 			next();
-		}, req.session.user ? req.session.user.id : null);
+		}, keyring);
 	}
 }

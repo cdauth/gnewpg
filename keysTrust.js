@@ -114,7 +114,7 @@ function _handleVerifiedSignature(keyId, sigInfo, callback, con)
 function _checkRevocationStatus(keyId, callback, con) {
 	var authorisedKeys = [ ];
 	
-	db.getEntries("keys_signatures", [ "id", "issuer", "sigtype" ], { "sigtype": [ pgp.consts.SIG.REVOK, pgp.consts.SIG.SUBKEY_REVOK ], "verified" : true }, function(err, sigRecords) {
+	db.getEntries("keys_signatures", [ "id", "issuer", "sigtype" ], { "key" : keyId, "sigtype": [ pgp.consts.SIG.REVOK, pgp.consts.SIG.SUBKEY_REVOK ], "verified" : true }, function(err, sigRecords) {
 		if(err) { callback(err); return; }
 		
 		next();
@@ -128,7 +128,7 @@ function _checkRevocationStatus(keyId, callback, con) {
 					callback(err);
 				else if(sigRecord.sigtype == pgp.consts.SIG.SUBKEY_REVOK)
 				{ // If this is a subkey revokation, check the parent key(s) and see if any of them authorises the issuer of the revocation
-					db.getEntries("keys_subkeys", [ "parentkey" ], function(err, subkeyRecords) {
+					db.getEntries("keys_subkeys", [ "parentkey" ], { id: keyId }, function(err, subkeyRecords) {
 						if(err) { callback(err); return; }
 						
 						checkParentKey();
@@ -303,8 +303,7 @@ function _checkSelfSignatures(keyId, callback, con) {
 				
 				function end() {
 					var updates = { };
-					var i = args.length+1;
-					if(expires == null || expire == 0)
+					if(expire == null || expire == 0)
 						updates.expires = null;
 					else
 						updates.expires = expire;
@@ -451,7 +450,7 @@ function verifyIdentitySignature(signatureId, callback, con) {
 			if(sigRecord.key == sigRecord.issuer)
 				getIssuer(null, keyRecord);
 			else
-				db.getEntry("key", [ "binary" ], { id: sigRecord.issuer }, getIssuer, con);
+				db.getEntry("keys", [ "binary" ], { id: sigRecord.issuer }, getIssuer, con);
 			
 			function getIssuer(err, issuerRecord) {
 				if(err) { callback(err); return; }
@@ -506,7 +505,7 @@ function verifyAttributeSignature(signatureId, callback, con) {
 		db.getEntry("keys", [ "binary" ], { id: sigRecord.key }, function(err, keyRecord) {
 			if(err) { callback(err); return; }
 			
-			db.getEntry("attributes", [ "binary" ], { id: sigRecord.attribute, key: sigRecord.key }, function(err, attributeRecord) {
+			db.getEntry("keys_attributes", [ "binary" ], { id: sigRecord.attribute, key: sigRecord.key }, function(err, attributeRecord) {
 				if(err) { callback(err); return; }
 			
 				if(sigRecord.key == sigRecord.issuer)

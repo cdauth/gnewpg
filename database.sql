@@ -83,7 +83,7 @@ CREATE VIEW "keys_identities_selfsigned" AS
 		WHERE "keys_identities"."key" = "keys_identities_signatures"."key" AND "keys_identities"."id" = "keys_identities_signatures"."identity"
 			AND "keys_identities"."key" = "keys_identities_signatures"."issuer" AND "keys_identities_signatures"."verified" = true
 			AND "keys_identities_signatures"."sigtype" IN (16, 17, 18, 19)
-		ORDER BY "keys_identities_signatures"."date" DESC
+		ORDER BY "keys_identities"."id" ASC, "keys_identities"."key" ASC, "keys_identities_signatures"."date" DESC
 ;
 
 -----------------------------------------------------
@@ -117,15 +117,14 @@ CREATE INDEX "keys_attributes_attributes_issuer_idx" ON "keys_attributes_signatu
 
 CREATE VIEW "keys_attributes_selfsigned" AS
 	SELECT DISTINCT ON ( "id", "key" )
-		"keys_attributes"."id" AS "id", "keys_attributes"."key" AS "key", "keys_attributes"."name" AS "name", "keys_attributes"."email" AS "email",
-		"keys_attributes"."perm_public" AS "perm_public", "keys_attributes"."perm_namesearch" AS "perm_namesearch",
-		"keys_attributes"."perm_emailsearch" AS "perm_emailsearch", "keys_attributes"."email_blacklisted" AS "email_blacklisted",
-		"keys_attributes_signatures"."expires" AS "expires", "keys_attributes_signatures"."revokedby" AS "revokedby"
+		"keys_attributes"."id" AS "id", "keys_attributes"."key" AS "key", "keys_attributes"."binary" AS "binary",
+		"keys_attributes"."perm_public" AS "perm_public", "keys_attributes_signatures"."expires" AS "expires",
+		"keys_attributes_signatures"."revokedby" AS "revokedby"
 		FROM "keys_attributes", "keys_attributes_signatures"
 		WHERE "keys_attributes"."key" = "keys_attributes_signatures"."key" AND "keys_attributes"."id" = "keys_attributes_signatures"."attribute"
 			AND "keys_attributes"."key" = "keys_attributes_signatures"."issuer" AND "keys_attributes_signatures"."verified" = true
 			AND "keys_attributes_signatures"."sigtype" IN (16, 17, 18, 19)
-		ORDER BY "keys_attributes_signatures"."date" DESC
+		ORDER BY "keys_attributes"."id" ASC, "keys_attributes"."key" ASC, "keys_attributes_signatures"."date" DESC
 ;
 
 -----------------------------------------------------

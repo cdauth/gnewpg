@@ -1,5 +1,6 @@
 var sessions = require("../sessions");
 var utils = require("../utils");
+var db = require("../database");
 
 module.exports.get = function(req, res, next) {
 	if(req.session.user)
