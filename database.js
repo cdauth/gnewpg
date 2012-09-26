@@ -73,8 +73,19 @@ function fifoQuery(query, args, callback, con) {
 		if(err)
 			callback(err);
 		else
-			callback(null, getQueryFifo(con.query(query, args)));
+			callback(null, _prepareQueryFifo(new pgp.Fifo(), con.query(query, args)));
 	});
+}
+
+function fifoQuerySync(query, args, con) {
+	var ret = new pgp.Fifo();
+	getConnection_(con, function(err, con) {
+		if(err)
+			ret._end(err);
+		else
+			_prepareQueryFifo(ret, con.query(query, args));
+	});
+	return ret;
 }
 
 function getUniqueRandomString(length, table, field, callback, con) {
@@ -93,25 +104,23 @@ function getUniqueRandomString(length, table, field, callback, con) {
 	});
 }
 
-function getQueryFifo(queryObj) {
-	var ret = new pgp.Fifo();
-	
+function _prepareQueryFifo(fifo, queryObj) {
 	queryObj.on("row", function(row) {
-		ret._add(row);
+		fifo._add(row);
 	});
 	
 	queryObj.on("error", function(err) {
-		ret._end(err);
+		fifo._end(err);
 	});
 	
 	queryObj.on("end", function() {
-		ret._end();
+		fifo._end();
 	});
 	
-	return ret;
+	return fifo;
 }
 
-function _getEntries(table, fields, filter, suffix, callback, con) {
+function _getEntries(table, fields, filter, suffix) {
 	if(typeof suffix == "function") {
 		con = callback;
 		callback = suffix;
@@ -132,33 +141,42 @@ function _getEntries(table, fields, filter, suffix, callback, con) {
 	if(suffix)
 		q += ' '+suffix;
 	
-	return [ q, args, callback, con ];
+	return { query: q, args: args };
 }
 
 function getEntries(table, fields, filter, suffix, callback, con) {
-	fifoQuery.apply(null, _getEntries(table, fields, filter, suffix, callback, con));
+	var q = _getEntries(table, fields, filter, suffix);
+	fifoQuery(q.query, q.args, callback, con);
+}
+
+function getEntriesSync(table, fields, filter, suffix, con) {
+	var q = _getEntries(table, fields, filter, suffix);
+	return fifoQuerySync(q.query, q.args, con);
 }
 
 function getEntriesAtOnce(table, fields, filter, suffix, callback, con) {
-	query.apply(null, _getEntries(table, fields, filter, suffix, function(err, res) {
+	var q = _getEntries(table, fields, filter, suffix);
+	query(q.query, q.args, function(err, res) {
 		if(err)
 			callback(err);
 		else
 			callback(null, res.rows)
-	}, con));
+	}, con);
 }
 
 function getEntry(table, fields, filter, callback, con) {
-	query1.apply(null, _getEntries(table, fields, filter, "LIMIT 1", callback, con));
+	var q = _getEntries(table, fields, filter, "LIMIT 1");
+	query1(q.query, q.args, callback, con);
 }
 
 function entryExists(table, filter, callback, con) {
-	query1.apply(null, _getEntries(table, "COUNT(*) AS n", filter, "LIMIT 1", function(err, res) {
+	var q = _getEntries(table, "COUNT(*) AS n", filter, "LIMIT 1");
+	query1(q.query, q.args, function(err, res) {
 		if(err)
 			callback(err);
 		else
 			callback(null, res.n > 0);
-	}, con));
+	}, con);
 }
 
 function update(table, fields, filter, callback, con) {
@@ -252,10 +270,11 @@ function _filterToCondition(filter, args) {
 exports.getConnection = getConnection;
 exports.query = query;
 exports.getUniqueRandomString = getUniqueRandomString;
-exports.getQueryFifo = getQueryFifo;
 exports.query1 = query1;
 exports.fifoQuery = fifoQuery;
+exports.fifoQuerySync = fifoQuerySync;
 exports.getEntries = getEntries;
+exports.getEntriesSync = getEntriesSync;
 exports.getEntriesAtOnce = getEntriesAtOnce;
 exports.getEntry = getEntry;
 exports.entryExists = entryExists;

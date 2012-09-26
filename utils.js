@@ -24,18 +24,10 @@ function extend(obj1, obj2) {
 	return obj1;
 };
 
-function toProperArray(arr) {
-	var ret = [ ];
-	for(var i=0; i<arr.length; i++)
-		ret.push(arr[i]);
-	return ret;
-}
-
 function encodePassword(password) {
 	return pgp.utils.hash(password, "sha256", "base64").substring(0, 43);
 }
 
 exports.generateRandomString = generateRandomString;
 exports.extend = extend;
-exports.toProperArray = toProperArray;
 exports.encodePassword = encodePassword;

@@ -5,6 +5,7 @@ var dateformat = require("dateformat");
 var utils = require("./utils");
 var markdown = require("node-markdown").Markdown;
 var sprintf = require("sprintf").sprintf;
+var pgp = require("node-pgp");
 
 gettextModule.loadLocaleDirectory(__dirname+"/locale");
 
@@ -14,7 +15,7 @@ function gettext(msg, locale) {
 	if(msg instanceof Date)
 		return dateformat(msg, gettext("isoUtcDateTime", msg));
 	else if(msg instanceof I18nError)
-		return msg.translate(function(msg) { return gettext.apply(null, [ msg, locale ].concat(utils.toProperArray(arguments).slice(1))); });
+		return msg.translate(function(msg) { return gettext.apply(null, [ msg, locale ].concat(pgp.utils.toProperArray(arguments).slice(1))); });
 	else if(typeof msg == "string")
 	{
 		var args = [ gettextModule.gettext(msg) ];
@@ -57,15 +58,15 @@ function middleware(req, res, next) {
 		req.locale = getLanguageForLocaleList(req.locales);
 		
 		req.gettext = function(msg) {
-			return gettext.apply(null, [ msg, req.locale ].concat(utils.toProperArray(arguments).slice(1)));
+			return gettext.apply(null, [ msg, req.locale ].concat(pgp.utils.toProperArray(arguments).slice(1)));
 		};
 		
 		req.ngettext = function(msg1, msg2, n) {
-			return ngettext.apply(null, [ msg1, msg2, n, req.locale ].concat(utils.toProperArray(arguments).slice(3)));
+			return ngettext.apply(null, [ msg1, msg2, n, req.locale ].concat(pgp.utils.toProperArray(arguments).slice(3)));
 		};
 		
 		req.mdgettext = function(msg) {
-			return mdgettext.apply(null, [ msg, req.locale ].concat(utils.toProperArray(arguments).slice(1)));
+			return mdgettext.apply(null, [ msg, req.locale ].concat(pgp.utils.toProperArray(arguments).slice(1)));
 		};
 
 		next();

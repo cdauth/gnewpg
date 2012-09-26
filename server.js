@@ -46,9 +46,12 @@ function request(method, template) {
 	if(module)
 		module = require(module);
 	
-	return function(req, res) {
-		var send = function() {
-			res.send(soynode.render("gnewpg.pages."+template, req.params, i18n.injectMethods(req, { "req" : req })));
+	return function(req, res, next) {
+		var send = function(err) {
+			if(err)
+				next(err);
+			else
+				res.send(soynode.render("gnewpg.pages."+template, req.params, i18n.injectMethods(req, { "req" : req })));
 		};
 	
 		if(module && module[method])

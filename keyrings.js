@@ -15,22 +15,87 @@ function getKeyringForGroup(groupId) {
 	return new Keyring("groups_keyrings", "groups_keyrings", "group", groupId);
 }
 
+/**
+ * Returns a pseudo keyring for the uploadedKeys object returned by keysUpload.uploadKey() that contains all keys, identities
+ * and attributes that have been uploaded.
+*/
+function getPseudoKeyringForUploadedKeys(uploadedKeys) {
+	return uploadedKeys;
+}
+
 function keyringContainsKey(keyring, keyId, callback, onlyKeyring, con) {
-	var filter = { "key" : keyId };
-	filter[keyring.ownerCol] = keyring.ownerId;
-	db.entryExists((onlyKeyring ? keyring.tablePrefix : keyring.tablePrefix2)+"_keys", filter, callback, con);
+	if(keyring instanceof Keyring)
+	{
+		var filter = { "key" : keyId };
+		filter[keyring.ownerCol] = keyring.ownerId;
+		db.entryExists((onlyKeyring ? keyring.tablePrefix : keyring.tablePrefix2)+"_keys", filter, callback, con);
+	}
+	else
+	{ // Pseudo keyring
+		for(var i=0; i<keyring.length; i++)
+		{
+			if(keyring[i].id == keyId)
+			{
+				callback(null, true);
+				return;
+			}
+		}
+		callback(null, false);
+	}
 }
 
 function keyringContainsIdentity(keyring, keyId, identityId, callback, onlyKeyring, con) {
-	var filter = { "identityKey" : keyId, "identity" : identityId };
-	filter[keyring.ownerCol] = keyring.ownerId;
-	db.entryExists((onlyKeyring ? keyring.tablePrefix : keyring.tablePrefix2)+"_identities", filter, callback, con);
+	if(keyring instanceof Keyring)
+	{
+		var filter = { "identityKey" : keyId, "identity" : identityId };
+		filter[keyring.ownerCol] = keyring.ownerId;
+		db.entryExists((onlyKeyring ? keyring.tablePrefix : keyring.tablePrefix2)+"_identities", filter, callback, con);
+	}
+	else
+	{ // Pseudo keyring
+		for(var i=0; i<keyring.length; i++)
+		{
+			if(keyring[i].id == keyId)
+			{
+				for(var j=0; j<keyring[i].identities.length; j++)
+				{
+					if(keyring[i].identities[j].id == identityId)
+					{
+						callback(null, true);
+						return;
+					}
+				}
+			}
+		}
+		callback(null, false);
+	}
 }
 
 function keyringContainsAttribute(keyring, keyId, attributeId, callback, onlyKeyring, con) {
-	var filter = { "attributeKey" : keyId, "attribute" : attributeId };
-	filter[keyring.ownerCol] = keyring.ownerId;
-	db.entryExists((onlyKeyring ? keyring.tablePrefix : keyring.tablePrefix2)+"_attributes", filter, callback, con);
+	if(keyring instanceof Keyring)
+	{
+		var filter = { "attributeKey" : keyId, "attribute" : attributeId };
+		filter[keyring.ownerCol] = keyring.ownerId;
+		db.entryExists((onlyKeyring ? keyring.tablePrefix : keyring.tablePrefix2)+"_attributes", filter, callback, con);
+	}
+	else
+	{ // Pseudo keyring
+		for(var i=0; i<keyring.length; i++)
+		{
+			if(keyring[i].id == keyId)
+			{
+				for(var j=0; j<keyring[i].attributes.length; j++)
+				{
+					if(keyring[i].attributes[j].id == attributeId)
+					{
+						callback(null, true);
+						return;
+					}
+				}
+			}
+		}
+		callback(null, false);
+	}
 }
 
 function addKeyToKeyring(keyring, keyId, callback, con) {

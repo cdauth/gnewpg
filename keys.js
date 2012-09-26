@@ -127,66 +127,104 @@ function getPrimaryIdentity(keyId, keyring, callback, con) {
 	}, con);
 }
 
-/**
- * Exports the specified keys.
- * @param keys {Array} An array of key records.objects. Each object contains an entry `id`, which is the ID of the key to export, and entries `signatures`, `subkeys`,
- *                     `identities`, and `attributes`, each of which is an array of objects that contain the `id` (and `key` for `identities` and
- *                     `attributes`) and `signatures` entry.
- * @return {pgp.BufferedStream}
-*/
-function exportKeys(keys, con) {
+function exportKey(keyId, keyring, selection, con) {
 	var ret = new pgp.BufferedStream();
 	
-	var formats = {
-		"key" : { table: "keys", pkt: pgp.consts.PKT.PUBLIC_KEY, sub: [ "sigKey", "subkey", "id", "attr" ] },
-		"sigKey" : { idx: "signatures", table: "keys_signatures", pkt: pgp.consts.PKT.SIGNATURE, sub: [ ] },
-		"subkeys" : { idx: "subkeys", table: "keys", pkt: pgp.consts.PKT.PUBIC_SUBKEY, sub: [ "sigKey" ] },
-		"id" : { idx: "identities", table: "keys_identities", pkt: pgp.consts.PKT.USER_ID, sub: [ "sigId" ] },
-		"sigId" : { idx: "signatures", table: "keys_identities_signatures", pkt: pgp.consts.PKT.SIGNATURE, sub: [ ] },
-		"attr" : { idx: "attributes", table: "keys_attributes", pkt: pgp.consts.PKT.ATTRIBUTE, sub: [ "sigAttr" ] },
-		"sigAttr" : { idx: "signatures", table: "keys_attributes_signatures", pkt: pgp.consts.PKT.SIGNATURE, sub: [ ] }
-	};
-	
-	handleObjects(keys, formats.key, function(err) {
-		ret._endData(err);
-	});
+	db.getEntry("keys", [ "binary", "perm_idsearch" ], { id: keyId }, function(err, keyRecord) {
+		if(err) { ret._endData(err); return; }
+		else if(keyRecord == null) { ret._endData(new i18n.Error_("Key %s does not exist.", keyId)); return; }
+		
+		async.series([
+			function(cb) {
+				if(keyRecord.perm_idsearch)
+					cb();
+				else if(keyring)
+				{
+					keyrings.keyringContainsKey(keyring, keyId, function(err, contains) {
+						if(err)
+							cb(err);
+						else if(contains)
+							cb();
+						else
+							cb(new i18n.Error_("No permission to view key %s.", keyId));
+					}, con);
+				}
+				else
+					cb(new i18n.Error_("No permission to view key %s.", keyId));
+			},
+			function(cb) {
+				ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.PUBLIC_KEY, keyRecord.binary));
+				
+				db.getEntriesSync("keys_signatures", [ "id", "binary" ], { key: keyId }, con).forEach(function(signatureRecord, cb2) {
+					if(!selection || !selection.signatures || selection.signatures[signatureRecord.id] != false)
+						ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, signatureRecord.binary));
+					cb2();
+				}, cb);
+			},
+			function(cb) {
+				db.getEntriesSync("keys_identities", [ "id", "perm_public" ], { key: keyId }, con).forEach(function(identityRecord, cb2) {
+					if(selection && selection.identities && selection.identities[identityRecord.id] == false)
+						send(null, false);
+					if(identityRecord.perm_public)
+						send(null, true);
+					else if(keyring)
+						keyrings.keyringContainsIdentity(keyring, keyId, identityRecord.id, send, con);
+					else
+						send(null, false);
+
+					function send(err, perm) {
+						if(err)
+							cb2(err);
+						else if(!perm)
+							cb2();
+						else
+						{
+							ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.USER_ID, new Buffer(identityRecord.id, "utf8")));
+							
+							db.getEntriesSync("keys_identities_signatures", [ "binary" ], { key: keyId, identity: identityRecord.id }, con).forEach(function(signatureRecord, cb2) {
+								if(!selection || !selection.signatures || selection.signatures[signatureRecord.id] != false)
+									ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, signatureRecord.binary));
+								cb2();
+							}, cb2);
+						}
+					}
+				}, cb);
+			},
+			function(cb) {
+				db.getEntriesSync("keys_attributes", [ "id", "binary", "perm_public" ], { key: keyId }, con).forEach(function(attributeRecord, cb2) {
+					if(selection && selection.attributes && selection.attributes[attributeRecord.id] == false)
+						send(null, false);
+					else if(attributeRecord.perm_public)
+						send(null, true);
+					else if(keyring)
+						keyrings.keyringContainsAttribute(keyring, keyId, attributeRecord.id, send, con);
+					else
+						send(null, false);
+
+					function send(err, perm) {
+						if(err)
+							cb2(err);
+						else if(!perm)
+							cb2();
+						else
+						{
+							ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.ATTRIBUTE, attributeRecord.binary));
+							
+							db.getEntriesSync("keys_attributes_signatures", [ "binary" ], { key: keyId, attribute: attributeRecord.id }, con).forEach(function(attributeRecord, cb2) {
+								if(!selection || !selection.signatures || selection.signatures[signatureRecord.id] != false)
+									ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, attributeRecord.binary));
+								cb2();
+							}, cb2);
+						}
+					}
+				}, cb);
+			}
+		], function(err) {
+			ret._endData(err);
+		});
+	}, con);
 	
 	return ret;
-
-	
-	function handleObjects(parentObj, format, cb) {
-		async.forEachSeries(parentObj, function(obj, objCb) {
-			fetchBinary(obj, format.table, function(err, binary) {
-				if(err) { objCb(err); return; }
-				
-				ret._sendData(pgp.packets.generatePacket(format.pkt, binary));
-				async.forEachSeries(format.sub, function(sub, subCb) {
-					handleObjects(obj[formats[sub].idx] || [ ], formats[sub], subCb);
-				}, objCb);
-			});
-		}, cb);
-	}
-	
-	function fetchBinary(obj, table, cb) {
-		if(table == "keys_identities")
-			cb(null, new Buffer(obj.id, "utf8"));
-		else if(obj.binary)
-			cb(null, obj.binary);
-		else
-		{
-			var filter = { id: obj.id };
-			if(table == "keys_attributes")
-				filter.key = obj.key;
-			db.getEntry(table, [ "binary" ], filter, function(err, ret) {
-				if(err)
-					cb(err);
-				else if(ret == null)
-					cb(new i18n.Error_("Could not find object %s.", obj.id));
-				else
-					cb(null, ret.binary);
-			}, con);
-		}
-	}
 }
 
 /*function getKeyWithSubobjects(keyId, keyring, callback, con) {
@@ -239,4 +277,4 @@ exports.removeEmptyKey = removeEmptyKey;
 exports.removeEmptyIdentity = removeEmptyIdentity;
 exports.removeEmptyAttribute = removeEmptyAttribute;
 exports.getPrimaryIdentity = getPrimaryIdentity;
-exports.exportKeys = exportKeys;
+exports.exportKey = exportKey;
