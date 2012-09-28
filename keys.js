@@ -157,19 +157,19 @@ function exportKey(keyId, keyring, selection, con) {
 				ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.PUBLIC_KEY, keyRecord.binary));
 				
 				db.getEntriesSync("keys_signatures", [ "id", "binary" ], { key: keyId, sigtype: [ pgp.consts.SIG.KEY_BY_SUBKEY, pgp.consts.SIG.KEY, pgp.consts.SIG.KEY_REVOK ] }, con).forEachSeries(function(signatureRecord, cb2) {
-					if(!selection || !selection.signatures || selection.signatures[signatureRecord.id] != false)
+					if(!selection || !selection.signatures || selection.signatures[signatureRecord.id])
 						ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, signatureRecord.binary));
 					cb2();
 				}, cb);
 			},
 			function(cb) {
 				db.getEntriesSync("keys_subkeys", [ "id", "binary" ], { parentkey: keyId }, con).forEachSeries(function(subkeyRecord, cb2) {
-					if(!selection || !selection.subkeys || selection.subkeys[subkeyRecord.id] != false)
+					if(!selection || !selection.subkeys || selection.subkeys[subkeyRecord.id])
 					{
 						ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.PUBLIC_SUBKEY, subkeyRecord.binary));
 						
-						db.getEntriesSync("keys_signatures", [ "binary" ], { key: subkeyRecord.id, sigtype: [ pgp.consts.SIG.SUBKEY, pgp.consts.SIG.SUBKEY_REVOK ] }, con).forEachSeries(function(signatureRecord, cb3) {
-							if(!selection || !selection.signatures || selection.signatures[signatureRecord.id] != false)
+						db.getEntriesSync("keys_signatures", [ "id", "binary" ], { key: subkeyRecord.id, sigtype: [ pgp.consts.SIG.SUBKEY, pgp.consts.SIG.SUBKEY_REVOK ] }, con).forEachSeries(function(signatureRecord, cb3) {
+							if(!selection || !selection.signatures || selection.signatures[signatureRecord.id])
 								ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, signatureRecord.binary));
 							cb3();
 						}, cb2);
@@ -180,9 +180,9 @@ function exportKey(keyId, keyring, selection, con) {
 			},
 			function(cb) {
 				db.getEntriesSync("keys_identities_selfsigned", [ "id", "perm_public" ], { key: keyId }, con).forEachSeries(function(identityRecord, cb2) {
-					if(selection && selection.identities && selection.identities[identityRecord.id] == false)
+					if(selection && selection.identities && !selection.identities[identityRecord.id])
 						send(null, false);
-					if(identityRecord.perm_public)
+					else if(identityRecord.perm_public)
 						send(null, true);
 					else if(keyring)
 						keyrings.keyringContainsIdentity(keyring, keyId, identityRecord.id, send, con);
@@ -198,8 +198,8 @@ function exportKey(keyId, keyring, selection, con) {
 						{
 							ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.USER_ID, new Buffer(identityRecord.id, "utf8")));
 							
-							db.getEntriesSync("keys_identities_signatures", [ "binary" ], { key: keyId, identity: identityRecord.id }, con).forEachSeries(function(signatureRecord, cb3) {
-								if(!selection || !selection.signatures || selection.signatures[signatureRecord.id] != false)
+							db.getEntriesSync("keys_identities_signatures", [ "id", "binary" ], { key: keyId, identity: identityRecord.id }, con).forEachSeries(function(signatureRecord, cb3) {
+								if(!selection || !selection.signatures || selection.signatures[signatureRecord.id])
 									ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, signatureRecord.binary));
 								cb3();
 							}, cb2);
@@ -209,7 +209,7 @@ function exportKey(keyId, keyring, selection, con) {
 			},
 			function(cb) {
 				db.getEntriesSync("keys_attributes_selfsigned", [ "id", "binary", "perm_public" ], { key: keyId }, con).forEachSeries(function(attributeRecord, cb2) {
-					if(selection && selection.attributes && selection.attributes[attributeRecord.id] == false)
+					if(selection && selection.attributes && !selection.attributes[attributeRecord.id])
 						send(null, false);
 					else if(attributeRecord.perm_public)
 						send(null, true);
@@ -227,8 +227,8 @@ function exportKey(keyId, keyring, selection, con) {
 						{
 							ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.ATTRIBUTE, attributeRecord.binary));
 							
-							db.getEntriesSync("keys_attributes_signatures", [ "binary" ], { key: keyId, attribute: attributeRecord.id }, con).forEachSeries(function(attributeRecord, cb3) {
-								if(!selection || !selection.signatures || selection.signatures[signatureRecord.id] != false)
+							db.getEntriesSync("keys_attributes_signatures", [ "id", "binary" ], { key: keyId, attribute: attributeRecord.id }, con).forEachSeries(function(attributeRecord, cb3) {
+								if(!selection || !selection.signatures || selection.signatures[signatureRecord.id])
 									ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, attributeRecord.binary));
 								cb3();
 							}, cb2);
@@ -413,7 +413,7 @@ function getKeyWithSubobjects(keyId, keyring, detailed, callback, con) {
 
 			signatureRecords.forEachSeries(function(signatureRecord, cb) {
 				objRecord.signatures.push(signatureRecord);
-				
+
 				async.waterfall([
 					async.apply(addPrimaryId, signatureRecord),
 					async.apply(handleRevokedBy, signatureRecord),

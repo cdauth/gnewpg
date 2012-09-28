@@ -5,8 +5,10 @@ dd { margin-left:13.1em; padding-left:0; }
 
 table { border-collapse:collapse; border-spacing:0; }
 table td,table th { border:1px dashed #aaa; padding:2px 4px; }
-table tr.heading { border-top:1px solid #888; border-left:1px solid #888; background-color:#f8f8f8; }
-table tr.sub-heading { border-top:1px solid #888; }
+table tr.heading td { border-top:1px solid #888; background-color:#f8f8f8; }
+table tr.heading td { border-left:1px solid #888; }
+table tr.heading td + td { border-left:1px dashed #aaa; }
+table tr.sub-heading td { border-top:1px solid #888; }
 table tr.sub-heading td { border-left:1px solid #888; }
 table tr.sub-heading td + td { border-left:1px dashed #aaa; }
 
@@ -36,6 +38,8 @@ div.submit { padding-top:.5em; }
 .key-details .c-indentation { border-left-style:none; border-top-style:none; border-bottom-style:none; }
 .key-details tr.revoked td.c-object,.key-details tr.revoked td.c-signature,.key-details tr.revoked td.c-issuer,.key-details tr.revoked td.c-date { text-decoration:line-through; }
 .key-details tr.expired td.c-object,.key-details tr.expired td.c-signature,.key-details tr.expired td.c-issuer,.key-details tr.expired td.c-date { text-decoration:line-through; }
+.key-details td.c-checkbox,.key-details th.c-checkbox { border-style:none; background-color:transparent; }
+.key-details tr.heading td + td,.key-details tr.sub-heading td.c-object { border-left:1px solid #888; }
 
 
 /* index.soy */

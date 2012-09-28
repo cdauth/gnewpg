@@ -55,14 +55,23 @@
 	<input type="submit" name="changeowner" value="{_('This key belongs to me!')}" />
 </form>
 				{/if}
+
+<form action="{$keyId}/export" method="get">
+	<div class="submit"><input type="submit" value="{_('Export this key')}" /> {call gnewpg.ui.exportFormats /}</div>
+
 				{if $details}
+	<input type="hidden" name="selection" value="true" />
 <a href="{$keyId}">{_('Details')}: <strong>{_('on')}</strong></a>
 				{else}
 <a href="{$keyId}?details=1">{_('Details')}: <strong>{_('off')}</strong></a>
 				{/if}
+
 <table class="key-details">
 	<thead>
 		<tr>
+				{if $details}
+			<th class="c-checkbox">&nbsp;</th>
+				{/if}
 			<th class="c-indentation">&nbsp;</th>
 			<th class="c-signature">{_('Signature')}</th>
 			<th class="c-issuer">{_('Issued by')}</th>
@@ -78,6 +87,9 @@
 					{call .signature}{param sig:$sig/}{param details:$details/}{/call}
 				{/foreach}
 		<tr class="heading">
+				{if $details}
+			<td class="c-checkbox">&nbsp;</td>
+				{/if}
 			<td colspan="{if $details}6{else}5{/if}">
 				<h3>{_('Subkeys')}</h3>
 				{if $keyDetails.subkeys.length == 0}
@@ -87,6 +99,9 @@
 		</tr>
 				{foreach $subkey in $keyDetails.subkeys}
 		<tr class="sub-heading{if $subkey.revokedby} revoked{/if}{if $subkey.expired} expired{/if}">
+					{if $details}
+			<td class="c-checkbox"><input type="checkbox" name="subkeys" value="{$subkey.id}" checked="checked" /></td>
+					{/if}
 			<td colspan="4" class="c-object">{call gnewpg.ui.security}{param security:$subkey.security/}{param content}<em>{_('Subkey')} {formatKeyId($subkey.id)}</em>{/param}{/call}</td>
 			<td class="c-expires">{if $subkey.revokedby}{call .revokedby}{param sig:$subkey.revokedby/}{/call}{else}{if $subkey.expires}{_($subkey.expires)}{else}<em>{_('never')}</em>{/if}{/if}
 					{if $details}
@@ -100,6 +115,9 @@
 				{/foreach}
 
 		<tr class="heading">
+				{if $details}
+			<td class="c-checkbox">&nbsp;</td>
+				{/if}
 			<td colspan="{if $details}6{else}5{/if}">
 				<h3>{_('Identities')}</h3>
 				{if $keyDetails.identities.length == 0}
@@ -109,11 +127,17 @@
 		</tr>
 				{foreach $identity in $keyDetails.identities}
 		<tr class="sub-heading{if $identity.revokedby} revoked{/if}{if $identity.expired} expired{/if}">
+					{if $details}
+			<td class="c-checkbox"><input type="checkbox" name="identities" value="{$identity.id}" checked="checked" /></td>
+					{/if}
 			<td colspan="{if $details}6{else}5{/if}" class="c-object">{call gnewpg.ui.security}{param security:$identity.security/}{param content}<em>{$identity.id}</em>{if $identity.id == $keyDetails.primary_id} ({_('primary')}){/if}{/param}{/call}</td>
 		</tr>
 		{call .signatures}{param sigs:$identity.signatures/}{param details:$details/}{/call}
 				{/foreach}
 		<tr class="heading">
+				{if $details}
+			<td class="c-checkbox">&nbsp;</td>
+				{/if}
 			<td colspan="{if $details}6{else}5{/if}">
 				<h3>{_('Attributes')}</h3>
 				{if $keyDetails.attributes.length == 0}
@@ -123,12 +147,16 @@
 		</tr>
 				{foreach $attribute in $keyDetails.attributes}
 		<tr class="sub-heading{if $attribute.revokedby} revoked{/if}{if $attribute.expired} expired{/if}">
+					{if $details}
+			<td class="c-checkbox"><input type="checkbox" name="attributes" value="{$attribute.id}" checked="checked" /></td>
+					{/if}
 			<td colspan="{if $details}6{else}5{/if}" class="c-object">{call gnewpg.ui.security}{param security:$attribute.security/}{param content}<em>{_('Attribute')}</em>{if $attribute.pictures} ({_('picture')} {$attribute.pictures}){/if}{/param}{/call}</td>
 		</tr>
 		{call .signatures}{param sigs:$attribute.signatures/}{param details:$details/}{/call}
 				{/foreach}
 	</tbody>
 </table>
+</form>
 			{/if}
 		{/param}
 	{/call}
@@ -159,6 +187,9 @@
 */
 {template .signature}
 <tr class="{if $sig.revokedby}revoked{/if} {if $sig.expired}expired{/if}">
+	{if $details}
+	<td class="c-checkbox"><input type="checkbox" name="signatures" value="{$sig.id}" checked="checked" /></td>
+	{/if}
 	<td class="c-indentation">&nbsp;</td>
 	<td class="c-signature">{call gnewpg.ui.security}{param security:$sig.security/}{param content}{_(''+'[SIG_'+$sig.sigtype+']')}{/param}{/call}</td>
 	<td class="c-issuer">
@@ -195,7 +226,7 @@
 			<br />{_('non-revocable')}
 		{/if}
 		{if $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.POLICY]} /* URL is automatically prevented from being javascript: according to https://developers.google.com/closure/templates/docs/security */
-			<br /><a href="{$sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.POLICY]}" rel="nofollow">policy</a>
+			<br /><a href="{$sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.POLICY][0].value}" rel="nofollow">policy</a>
 		{/if}
 		{if $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.REVOC_REASON]}
 			<br />{_('Reason for revocation')}: {_(''+'[REVOK_'+$sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.REVOC_REASON][0].value.code+']')}

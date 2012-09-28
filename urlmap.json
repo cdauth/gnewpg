@@ -7,6 +7,7 @@
 		"/faq/:no": "faq",
 		"/search" : "search",
 		"/key/:keyId" : "key",
+		"/key/:keyId/export" : "exportKey",
 		"/keyring" : "keyring"
 	},
 	"post" : {
