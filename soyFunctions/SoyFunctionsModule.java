@@ -11,11 +11,11 @@ import com.google.template.soy.jssrc.restricted.SoyJsSrcFunction;
 import com.google.template.soy.jssrc.restricted.JsExpr;
 
 /**
- * This adds the gettext(), _() and ngettext() functions to the soy template language.
+ * This adds the several functions to the soy template language.
  *
  * How this works is decribed on {@link "https://groups.google.com/d/msg/closure-templates-discuss/Fewbk_m1i2c/nSv5dO3W2-AJ"}.
  * 
- * The functions simply map themselves to the $ij.gettext(), $ij._() and $ij.ngettext() methods. This is necessary, as
+ * The functions simply map themselves to the $ij.function(), where <code>function</code> is the function name. This is necessary because
  * soy does not allow calling methods directly. Those methods are injected into soy in the i18n.js file.
  *
  * As the $ij variable is normally not available if it is not explicitly used in the template, it is necessary to add the 
@@ -23,7 +23,7 @@ import com.google.template.soy.jssrc.restricted.JsExpr;
  * loaded into the compiler.
 */
 
-public class SoyGettextModule extends AbstractModule
+public class SoyFunctionsModule extends AbstractModule
 {
 	@Override public void configure() {
 		Multibinder<SoyFunction> soyFunctionsSetBinder = Multibinder.newSetBinder(binder(), SoyFunction.class);
@@ -31,6 +31,8 @@ public class SoyGettextModule extends AbstractModule
 		soyFunctionsSetBinder.addBinding().to(_.class);
 		soyFunctionsSetBinder.addBinding().to(ngettext.class);
 		soyFunctionsSetBinder.addBinding().to(mdgettext.class);
+		soyFunctionsSetBinder.addBinding().to(formatFingerprint.class);
+		soyFunctionsSetBinder.addBinding().to(formatKeyId.class);
 	}
 
 	public static class gettext implements SoyJsSrcFunction
@@ -77,5 +79,15 @@ public class SoyGettextModule extends AbstractModule
 	public static class mdgettext extends gettext
 	{
 		{ name = "mdgettext"; }
+	}
+	
+	public static class formatFingerprint extends gettext
+	{
+		{ name = "formatFingerprint"; }
+	}
+	
+	public static class formatKeyId extends gettext
+	{
+		{ name = "formatKeyId"; }
 	}
 }

@@ -6,7 +6,8 @@ CREATE TABLE "keys" (
 	"perm_idsearch" BOOLEAN NOT NULL DEFAULT false, -- Key should be findable by searching for its ID
 	"perm_searchengines" BOOLEAN NOT NULL DEFAULT false, -- Key might be listed in search engines
 	"expires" TIMESTAMP DEFAULT NULL,
-	"revokedby" CHAR(27) DEFAULT NULL -- This can reference all three signature tables
+	"revokedby" CHAR(27) DEFAULT NULL, -- This can reference all three signature tables
+	"security" SMALLINT NOT NULL
 	-- "primary_identity" TEXT DEFAULT NULL, -- Added later, table "identities" is not defined yet here
 	-- "user" TEXT REFERENCES "users"("name") DEFAULT NULL ON UPDATE CASCADE ON DELETE SET DEFAULT; -- Added later, table "users" is not defined yet here
 );
@@ -22,7 +23,8 @@ CREATE TABLE "keys_signatures" (
 	"verified" BOOLEAN NOT NULL DEFAULT false,
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (25, 31, 32, 24, 40, 48)), -- 0x19, 0x1F, 0x20, 0x18, 0x28, 0x30
 	"expires" TIMESTAMP,
-	"revokedby" CHAR(27) REFERENCES "keys_signatures" ("id") DEFAULT NULL
+	"revokedby" CHAR(27) REFERENCES "keys_signatures" ("id") DEFAULT NULL,
+	"security" SMALLINT NOT NULL
 );
 
 CREATE INDEX "keys_signatures_key_idx" ON "keys_signatures" ("key");
@@ -33,8 +35,9 @@ CREATE VIEW "keys_subkeys" AS SELECT DISTINCT
 	"keys"."binary" AS "binary",
 	"keys_signatures"."issuer" AS "parentkey",
 	"keys_signatures"."expires" AS "expires",
-	"keys_signatures"."revokedby" AS "revokedby"
-	FROM "keys", "keys_signatures" WHERE "keys_signatures"."key" = "keys"."id" AND "keys_signatures"."verified" = true AND "keys_signatures"."sigtype" = 24 -- 0x18
+	"keys_signatures"."revokedby" AS "revokedby",
+	LEAST("keys_signatures"."security", "keys"."security") AS "security"
+	FROM "keys", "keys_signatures" WHERE "keys_signatures"."key" = "keys"."id" AND "keys_signatures"."verified" = true AND "keys_signatures"."sigtype" = 24 AND "keys_signatures"."security" > 0 -- 24 == 0x18
 ;
 
 -----------------------------------------------------
@@ -66,6 +69,7 @@ CREATE TABLE "keys_identities_signatures" (
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (16, 17, 18, 19, 48)), --0x10, 0x11, 0x12, 0x13, 0x30
 	"expires" TIMESTAMP,
 	"revokedby" CHAR(27) REFERENCES "keys_identities_signatures" ("id") DEFAULT NULL,
+	"security" SMALLINT NOT NULL,
 
 	FOREIGN KEY ("identity", "key") REFERENCES "keys_identities" ( "id", "key" )
 );
@@ -78,13 +82,19 @@ CREATE VIEW "keys_identities_selfsigned" AS
 		"keys_identities"."id" AS "id", "keys_identities"."key" AS "key", "keys_identities"."name" AS "name", "keys_identities"."email" AS "email",
 		"keys_identities"."perm_public" AS "perm_public", "keys_identities"."perm_namesearch" AS "perm_namesearch",
 		"keys_identities"."perm_emailsearch" AS "perm_emailsearch", "keys_identities"."email_blacklisted" AS "email_blacklisted",
-		"keys_identities_signatures"."expires" AS "expires", "keys_identities_signatures"."revokedby" AS "revokedby"
+		"keys_identities_signatures"."expires" AS "expires", "keys_identities_signatures"."revokedby" AS "revokedby",
+		"keys_identities_signatures"."security" AS "security"
 		FROM "keys_identities", "keys_identities_signatures"
 		WHERE "keys_identities"."key" = "keys_identities_signatures"."key" AND "keys_identities"."id" = "keys_identities_signatures"."identity"
 			AND "keys_identities"."key" = "keys_identities_signatures"."issuer" AND "keys_identities_signatures"."verified" = true
 			AND "keys_identities_signatures"."sigtype" IN (16, 17, 18, 19)
+			AND "keys_identities_signatures"."security" > 0
 		ORDER BY "keys_identities"."id" ASC, "keys_identities"."key" ASC, "keys_identities_signatures"."date" DESC
 ;
+
+ALTER TABLE "keys"
+	ADD COLUMN "primary_identity" TEXT DEFAULT NULL,
+	ADD FOREIGN KEY ("primary_identity", "id") REFERENCES "keys_identities" ("id", "key");
 
 -----------------------------------------------------
 
@@ -108,6 +118,7 @@ CREATE TABLE "keys_attributes_signatures" (
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (16, 17, 18, 19, 48)), --0x10, 0x11, 0x12, 0x13, 0x30
 	"expires" TIMESTAMP,
 	"revokedby" CHAR(27) REFERENCES "keys_attributes_signatures" ("id") DEFAULT NULL,
+	"security" SMALLINT NOT NULL,
 	
 	FOREIGN KEY ("attribute", "key") REFERENCES "keys_attributes"("id", "key")
 );
@@ -119,11 +130,12 @@ CREATE VIEW "keys_attributes_selfsigned" AS
 	SELECT DISTINCT ON ( "id", "key" )
 		"keys_attributes"."id" AS "id", "keys_attributes"."key" AS "key", "keys_attributes"."binary" AS "binary",
 		"keys_attributes"."perm_public" AS "perm_public", "keys_attributes_signatures"."expires" AS "expires",
-		"keys_attributes_signatures"."revokedby" AS "revokedby"
+		"keys_attributes_signatures"."revokedby" AS "revokedby", "keys_attributes_signatures"."security" AS "security"
 		FROM "keys_attributes", "keys_attributes_signatures"
 		WHERE "keys_attributes"."key" = "keys_attributes_signatures"."key" AND "keys_attributes"."id" = "keys_attributes_signatures"."attribute"
 			AND "keys_attributes"."key" = "keys_attributes_signatures"."issuer" AND "keys_attributes_signatures"."verified" = true
 			AND "keys_attributes_signatures"."sigtype" IN (16, 17, 18, 19)
+			AND "keys_attributes_signatures"."security" > 0
 		ORDER BY "keys_attributes"."id" ASC, "keys_attributes"."key" ASC, "keys_attributes_signatures"."date" DESC
 ;
 
@@ -156,6 +168,12 @@ CREATE TABLE "users_keyrings_keys" (
 	"key" CHAR(16) REFERENCES "keys"("id"),
 	PRIMARY KEY("user", "key")
 );
+
+CREATE VIEW "users_keyrings_keys_with_keys" AS
+	SELECT "keys"."id" AS "id", "keys"."fingerprint" AS "fingerprint", "keys"."binary" AS "binary", "keys"."date" AS "date",
+		"keys"."expires" AS "expires", "keys"."revokedby" AS "revokedby", "keys"."primary_identity" AS "primary_identity",
+		"users_keyrings_keys"."user" AS "user"
+	FROM "keys", "users_keyrings_keys" WHERE "keys"."id" = "users_keyrings_keys"."key";
 
 CREATE TABLE "users_keyrings_identities" (
 	"user" TEXT REFERENCES "users"("id"),
@@ -264,6 +282,4 @@ CREATE INDEX "sessions_time_idx" ON "sessions"("persistent", "last_access");
 
 
 ALTER TABLE "keys"
-	ADD COLUMN "primary_identity" TEXT DEFAULT NULL,
-	ADD COLUMN "user" TEXT DEFAULT NULL REFERENCES "users"("id") ON UPDATE CASCADE ON DELETE SET DEFAULT,
-	ADD FOREIGN KEY ("primary_identity", "id") REFERENCES "keys_identities" ("id", "key");
+	ADD COLUMN "user" TEXT DEFAULT NULL REFERENCES "users"("id") ON UPDATE CASCADE ON DELETE SET DEFAULT;

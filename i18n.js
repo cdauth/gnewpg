@@ -38,7 +38,7 @@ function ngettext(msg1, msg2, n, locale) {
 
 function mdgettext(msg, locale) {
 	var msg = gettext.apply(this, arguments);
-	return markdown(msg, true);
+	return markdown(msg);
 }
 
 function getLanguageForLocaleList(list) {
@@ -68,6 +68,17 @@ function middleware(req, res, next) {
 		req.mdgettext = function(msg) {
 			return mdgettext.apply(null, [ msg, req.locale ].concat(pgp.utils.toProperArray(arguments).slice(1)));
 		};
+		
+		req.formatFingerprint = function(str) {
+			var ret = [ ];
+			for(var i = 0; i<str.length; i+=4)
+				ret.push(str.substr(i, 4));
+			return ret.join("\u00a0");
+		};
+		
+		req.formatKeyId = function(keyId) {
+			return { contentKind : 0, content : keyId.substr(0, 8)+"<strong>"+keyId.substr(8, 16)+"</strong>" };
+		};
 
 		next();
 	});
@@ -77,6 +88,9 @@ function injectMethods(req, toObj) {
 	toObj._ = toObj.gettext = req.gettext;
 	toObj.ngettext = req.ngettext;
 	toObj.mdgettext = req.mdgettext;
+	toObj.formatFingerprint = req.formatFingerprint;
+	toObj.formatKeyId = req.formatKeyId;
+	toObj.consts = pgp.consts;
 
 	return toObj;
 }

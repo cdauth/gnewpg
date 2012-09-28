@@ -353,7 +353,7 @@ function _uploadKey(con, info, callback) {
 			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				db.insert("keys", { id: info.id, fingerprint: info.fingerprint, date: info.date, binary: info.binary }, function(err) {
+				db.insert("keys", { id: info.id, fingerprint: info.fingerprint, date: info.date, binary: info.binary, security: info.security }, function(err) {
 					if(err) { callback(err); return; }
 					
 					keysTrust.handleKeyUpload(info.id, function(err) {
@@ -406,7 +406,7 @@ function _uploadKeySignature(con, info, objInfo, keyInfo, callback) { // keyInfo
 			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				db.insert("keys_signatures", { id: info.id, key: objInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires }, function(err) {
+				db.insert("keys_signatures", { id: info.id, key: objInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires, security: info.security }, function(err) {
 					if(err) { callback(err); return; }
 					
 					keysTrust.verifyKeySignature(info.id, function(err, verified) {
@@ -439,7 +439,7 @@ function _uploadIdentitySignature(con, info, objInfo, keyInfo, callback) {
 			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				db.insert("keys_identities_signatures", { id: info.id, identity: objInfo.id, key: keyInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires }, function(err) {
+				db.insert("keys_identities_signatures", { id: info.id, identity: objInfo.id, key: keyInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires, security: info.security }, function(err) {
 					keysTrust.verifyIdentitySignature(info.id, function(err, verified) {
 						if(err) {
 							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {
@@ -470,7 +470,7 @@ function _uploadAttributeSignature(con, info, objInfo, keyInfo, callback) {
 			con.query('SAVEPOINT "'+transaction+'"', [ ], function(err) {
 				if(err) { callback(err); return; }
 				
-				db.insert("keys_attributes_signatures", { id: info.id, attribute: objInfo.id, key: keyInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires }, function(err) {
+				db.insert("keys_attributes_signatures", { id: info.id, attribute: objInfo.id, key: keyInfo.id, issuer: info.issuer, date: info.date, binary: info.binary, sigtype: info.sigtype, expires: info.expires, security: info.security }, function(err) {
 					keysTrust.verifyAttributeSignature(info.id, function(err, verified) {
 						if(err) {
 							con.query('ROLLBACK TO "'+transaction+'"', [ ], function(err2) {

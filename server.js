@@ -22,8 +22,8 @@ app.use("/static", express.static(__dirname+"/static"));
 app.use(i18n.middleware);
 
 soynode.setOptions({
-	"classpath" : __dirname+"/soy_gettext/SoyGettextModule.jar",
-	"pluginModules" : [ "gnewpg.SoyGettextModule" ],
+	"classpath" : __dirname+"/soyFunctions/SoyFunctionsModule.jar",
+	"pluginModules" : [ "gnewpg.SoyFunctionsModule" ],
 	"additionalArguments" : [ "--isUsingIjData" ]
 });
 soynode.compileTemplates(__dirname+"/pages", function(err) {

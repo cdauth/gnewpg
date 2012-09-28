@@ -3,6 +3,8 @@ var keysUpload = require("../keysUpload");
 var fs = require("fs");
 var keyrings = require("../keyrings");
 var async = require("async");
+var utils = require("../utils");
+var pgp = require("node-pgp");
 
 module.exports.post = function(req, res, next) {
 	var f = req.files.file;
@@ -21,7 +23,7 @@ module.exports.post = function(req, res, next) {
 	
 	async.series([
 		function(cb) {
-			async.forEach(f, function(it, cb2) {
+			async.forEachSeries(f, function(it, cb2) {
 				keysUpload.uploadKey(fs.createReadStream(it.path), function(err, uploaded) {
 					if(err)
 					{
@@ -70,18 +72,30 @@ module.exports.post = function(req, res, next) {
 		
 		if(req.body.downloadupdated)
 		{
-			res.attachment("gnewpgUploadedKeys.pgp");
-			res.type("application/pgp-keys");
+			var formatInfo = utils.getInfoForFormat(req.body.exportFormat);
+			res.attachment("gnewpgUploadedKeys"+formatInfo.extension);
+			res.type(formatInfo.mimetype);
 			
 			var pseudoKeyring = keyring || keyrings.getPseudoKeyringForUploadedKeys(uploadedKeys);
 			
-			async.forEach(uploadedKeys, function(it, cb) {
-				keys.exportKey(it.id, pseudoKeyring).whilst(function(data, cb) {
-					res.send(data, "binary");
+			var all = new pgp.BufferedStream();
+			async.forEachSeries(uploadedKeys, function(it, cb) {
+				keys.exportKey(it.id, pseudoKeyring).whilst(function(data, cb2) {
+					all._sendData(data);
+					cb2();
 				}, cb);
+			}, function(err) {
+				all._endData(err);
+			});
+
+			utils.encodeToFormat(all, req.body.exportFormat).whilst(function(data, cb) {
+				res.write(data, "binary");
+				cb();
 			}, function(err) {
 				if(err)
 					next(err);
+				else
+					res.end();
 			});
 		}
 		else

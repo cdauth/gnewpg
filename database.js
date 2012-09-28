@@ -121,12 +121,6 @@ function _prepareQueryFifo(fifo, queryObj) {
 }
 
 function _getEntries(table, fields, filter, suffix) {
-	if(typeof suffix == "function") {
-		con = callback;
-		callback = suffix;
-		suffix = null;
-	}
-	
 	var args = [ ];
 	var q = 'SELECT ';
 	if(Array.isArray(fields))
@@ -145,16 +139,36 @@ function _getEntries(table, fields, filter, suffix) {
 }
 
 function getEntries(table, fields, filter, suffix, callback, con) {
+	if(typeof suffix == "function")
+	{
+		con = callback;
+		callback = suffix;
+		suffix = null;
+	}
+
 	var q = _getEntries(table, fields, filter, suffix);
 	fifoQuery(q.query, q.args, callback, con);
 }
 
 function getEntriesSync(table, fields, filter, suffix, con) {
+	if(typeof suffix == "object")
+	{
+		con = suffix;
+		suffix = null;
+	}
+
 	var q = _getEntries(table, fields, filter, suffix);
 	return fifoQuerySync(q.query, q.args, con);
 }
 
 function getEntriesAtOnce(table, fields, filter, suffix, callback, con) {
+	if(typeof suffix == "function")
+	{
+		con = callback;
+		callback = suffix;
+		suffix = null;
+	}
+
 	var q = _getEntries(table, fields, filter, suffix);
 	query(q.query, q.args, function(err, res) {
 		if(err)

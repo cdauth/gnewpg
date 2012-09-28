@@ -1,0 +1,221 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param keyId
+ * @param error
+ * @param keyDetails
+ * @param details
+ * @param searchengines
+ * @param pictures
+*/
+{template .key}
+	{call gnewpg.ui.html}
+		{param searchengines: $searchengines /}
+		{param title}{_('Key %s', $keyId)}{/param}
+		{param content}
+			{if $error}
+{call gnewpg.ui.error}{param message}{_($error)}{/param}{/call}
+			{else}
+				{if $pictures.length > 0}
+<ul class="keyPictures">
+					{foreach $picture in $pictures}
+	<li class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}"><img src="{$picture.src|noAutoescape}" alt="" /> <span>{_('Picture #%d', $picture.idx)}</span></li>
+					{/foreach}
+</ul>
+				{/if}
+<dl>
+	<dt>{_('Fingerprint')}</dt>
+	<dd>{formatFingerprint($keyDetails.fingerprint)}</dd>
+	
+	<dt>{_('Security')}</dt>
+	<dd>{call gnewpg.ui.security}{param security:$keyDetails.security/}{/call}</dd>
+	
+	<dt>{_('Creation date')}</dt>
+	<dd>{_($keyDetails.date)}</dd>
+	
+	<dt>{_('Expiration date')}</dt>
+	<dd>{if $keyDetails.expires}{_($keyDetails.expires)}{else}<em>{_('never')}</em>{/if}</dd>
+	
+	<dt>{_('Revoked')}</dt>
+	<dd>{if $keyDetails.revokedby}{call .revokedby}{param sig:$keyDetails.revokedby/}{/call}{else}<em>{_('no')}</em>{/if}</dd>
+				{if $details}
+
+	<dt>{_('Key version')}</dt>
+	<dd>{call gnewpg.ui.security}{param security:$keyDetails.info.versionSecurity/}{param content}{$keyDetails.info.version}{/param}{/call}</dd>
+	
+	<dt>{_('Public key algorithm')}</dt>
+	<dd>{_(''+'[PKALGO_'+$keyDetails.info.pkalgo+']')}</dd>
+	
+	<dt>{_('Key size')}</dt>
+	<dd>{call gnewpg.ui.security}{param security:$keyDetails.info.sizeSecurity/}{param content}{_('%d bits', $keyDetails.info.size)}{/param}{/call}</dd>
+				{/if}
+</dl>
+				{if $ij.req.session.user}
+<form action="" method="post">
+	<input type="submit" name="changeowner" value="{_('This key belongs to me!')}" />
+</form>
+				{/if}
+				{if $details}
+<a href="{$keyId}">{_('Details')}: <strong>{_('on')}</strong></a>
+				{else}
+<a href="{$keyId}?details=1">{_('Details')}: <strong>{_('off')}</strong></a>
+				{/if}
+<table class="key-details">
+	<thead>
+		<tr>
+			<th class="c-indentation">&nbsp;</th>
+			<th class="c-signature">{_('Signature')}</th>
+			<th class="c-issuer">{_('Issued by')}</th>
+			<th class="c-date">{_('Date')}</th>
+			<th class="c-expires">{_('Expires/revoked')}</th>
+				{if $details}
+			<th class="c-details">{_('Details')}</th>
+				{/if}
+		</tr>
+	</thead>
+	<tbody>
+				{foreach $sig in $keyDetails.signatures}
+					{call .signature}{param sig:$sig/}{param details:$details/}{/call}
+				{/foreach}
+		<tr class="heading">
+			<td colspan="{if $details}6{else}5{/if}">
+				<h3>{_('Subkeys')}</h3>
+				{if $keyDetails.subkeys.length == 0}
+				<p><em>{_('No subkeys.')}</em></p>
+				{/if}
+			</td>
+		</tr>
+				{foreach $subkey in $keyDetails.subkeys}
+		<tr class="sub-heading{if $subkey.revokedby} revoked{/if}{if $subkey.expired} expired{/if}">
+			<td colspan="4" class="c-object">{call gnewpg.ui.security}{param security:$subkey.security/}{param content}<em>{_('Subkey')} {formatKeyId($subkey.id)}</em>{/param}{/call}</td>
+			<td class="c-expires">{if $subkey.revokedby}{call .revokedby}{param sig:$subkey.revokedby/}{/call}{else}{if $subkey.expires}{_($subkey.expires)}{else}<em>{_('never')}</em>{/if}{/if}
+					{if $details}
+			<td class="c-details">
+				{call gnewpg.ui.security}{param security:$subkey.info.versionSecurity/}{param content}{_('version')} {$subkey.info.version}{/param}{/call}<br />
+				{call gnewpg.ui.security}{param security:$subkey.info.sizeSecurity/}{param content}{_('%d bit', $subkey.info.size)}{/param}{/call} {_(''+'[PKALGO_'+$subkey.info.pkalgo+']')}
+			</td>
+					{/if}
+		</tr>
+		{call .signatures}{param sigs:$subkey.signatures/}{param details:$details/}{/call}
+				{/foreach}
+
+		<tr class="heading">
+			<td colspan="{if $details}6{else}5{/if}">
+				<h3>{_('Identities')}</h3>
+				{if $keyDetails.identities.length == 0}
+<p><em>{_('No identities.')}</em></p>
+				{/if}
+			</td>
+		</tr>
+				{foreach $identity in $keyDetails.identities}
+		<tr class="sub-heading{if $identity.revokedby} revoked{/if}{if $identity.expired} expired{/if}">
+			<td colspan="{if $details}6{else}5{/if}" class="c-object">{call gnewpg.ui.security}{param security:$identity.security/}{param content}<em>{$identity.id}</em>{if $identity.id == $keyDetails.primary_id} ({_('primary')}){/if}{/param}{/call}</td>
+		</tr>
+		{call .signatures}{param sigs:$identity.signatures/}{param details:$details/}{/call}
+				{/foreach}
+		<tr class="heading">
+			<td colspan="{if $details}6{else}5{/if}">
+				<h3>{_('Attributes')}</h3>
+				{if $keyDetails.attributes.length == 0}
+<p><em>{_('No attributes.')}</em></p>
+				{/if}
+			</td>
+		</tr>
+				{foreach $attribute in $keyDetails.attributes}
+		<tr class="sub-heading{if $attribute.revokedby} revoked{/if}{if $attribute.expired} expired{/if}">
+			<td colspan="{if $details}6{else}5{/if}" class="c-object">{call gnewpg.ui.security}{param security:$attribute.security/}{param content}<em>{_('Attribute')}</em>{if $attribute.pictures} ({_('picture')} {$attribute.pictures}){/if}{/param}{/call}</td>
+		</tr>
+		{call .signatures}{param sigs:$attribute.signatures/}{param details:$details/}{/call}
+				{/foreach}
+	</tbody>
+</table>
+			{/if}
+		{/param}
+	{/call}
+{/template}
+
+/**
+ * @param sigs
+ * @param details
+*/
+{template .signatures}
+	{if $sigs.length == 0}
+<tr>
+	<td>&nbsp;</td>
+	<td colspan="{if $details}5{else}4{/if}">
+		<em>{_('No signatures.')}</em>
+	</td>
+</tr>
+	{else}
+		{foreach $sig in $sigs}
+{call .signature}{param sig:$sig/}{param more:true/}{param details:$details/}{/call}</li>
+		{/foreach}
+	{/if}
+{/template}
+
+/**
+ * @param sig
+ * @param? details
+*/
+{template .signature}
+<tr class="{if $sig.revokedby}revoked{/if} {if $sig.expired}expired{/if}">
+	<td class="c-indentation">&nbsp;</td>
+	<td class="c-signature">{call gnewpg.ui.security}{param security:$sig.security/}{param content}{_(''+'[SIG_'+$sig.sigtype+']')}{/param}{/call}</td>
+	<td class="c-issuer">
+	{if $sig.verified == false}
+		{call gnewpg.ui.security}{param security:-1/}{param content}<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}</a>{if $sig.issuer_primary_identity}<br />({$sig.issuer_primary_identity}){/if}<br /><strong>({_('unverified')})</strong>{/param}{/call}
+	{else}
+		<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}</a><br />{if $sig.issuer_primary_identity} ({$sig.issuer_primary_identity}){/if}
+	{/if}
+	</td>
+	<td class="c-date">{_($sig.date)}</td>
+	<td>
+	{if $sig.revokedby}
+		{call .revokedby}{param sig:$sig.revokedby/}{/call}
+	{else}
+		{if $sig.expires}{_($sig.expires)}{else}<em>{_('never')}</em>{/if}
+	{/if}
+	</td>
+	{if $details}
+	<td class="c-details">
+		{_('version')} {$sig.info.version}, {call gnewpg.ui.security}{param security:$sig.info.hashalgoSecurity/}{param content}{_(''+'[HASHALGO_'+$sig.info.hashalgo+']')}{/param}{/call}
+		{if $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.TRUST] and $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.TRUST][0].value.level > 0}
+			<br />
+			{if $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.TRUST][0].value.amount < 120}
+				{_('Partial trust')}
+			{else}
+				{_('Complete trust')}
+			{/if}
+			, {ngettext('%d level', '%d levels', $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.TRUST][0].value.level, $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.TRUST][0].value.level)}
+			{if $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.REGEXP]}
+				, {_('regexp')}: <code>$sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.REGEXP][0].value</code>
+			{/if}
+		{/if}
+		{if $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.REVOCABLE] and not $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.REVOCABLE][0].value}
+			<br />{_('non-revocable')}
+		{/if}
+		{if $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.POLICY]} /* URL is automatically prevented from being javascript: according to https://developers.google.com/closure/templates/docs/security */
+			<br /><a href="{$sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.POLICY]}" rel="nofollow">policy</a>
+		{/if}
+		{if $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.REVOC_REASON]}
+			<br />{_('Reason for revocation')}: {_(''+'[REVOK_'+$sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.REVOC_REASON][0].value.code+']')}
+			{if $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.REVOC_REASON][0].value.explanation}
+				{sp}– {_('“%s”', $sig.info.hashedSubPackets[$ij.consts.SIGSUBPKT.REVOC_REASON][0].value.explanation)}
+			{/if}
+		{/if}
+	</td>
+	{/if}
+{/template}
+
+/**
+ * @param sig
+*/
+{template .revokedby}
+	{_($sig.date)}<br />
+	{_('by')}{sp}
+	{if $sig.verified == false}
+		{call gnewpg.ui.security}{param security:-1/}{param content}<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}{if $sig.issuer_primary_identity}<br />({$sig.issuer_primary_identity}){/if}</a><br /><strong>({_('unverified')})</strong>{/param}{/call}
+	{else}
+		<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}{if $sig.issuer_primary_identity}<br />({$sig.issuer_primary_identity}){/if}</a>
+	{/if}
+{/template}

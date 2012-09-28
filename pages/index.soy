@@ -7,6 +7,7 @@
 		{param searchengines: true /}
 		{param title}Welcome{/param}
 		{param content}
+<p>{call gnewpg.ui.faq}{param no:3 /}{param showTitle:true /}{/call}</p>
 <div class="index-links {if $ij.req.session.user == null}not{/if}loggedin">
 	<div class="search">
 		<h3>{_('Search for a key')}</h3>

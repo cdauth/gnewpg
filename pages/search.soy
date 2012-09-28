@@ -1,0 +1,28 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param query
+ * @param? results
+ * @param? error
+*/
+{template .search}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title}{_('Search: %s', $query)}{/param}
+		{param content}
+			{if $error}
+{call gnewpg.ui.error}{param message:_($error) /}{/call}
+			{else}
+				{if $results.length == 0}
+{call gnewpg.ui.error}{param message:_('No keys have been found.') /}{/call}
+				{else}
+<ul class="searchResults">
+					{foreach $result in $results}
+	<li>{_('Key')} <a href="key/{$result.id}"><em>{formatKeyId($result.id)}</em></a>{if $result.revokedby} <strong class="revoked">({_('revoked')})</strong>{elseif $result.expired} <strong class="expired">({_('expired')})</strong>{/if}{if $result.identity}, {_('identity')} (<em>{$result.identity}</em>){/if}{if $result.subkey}, {_('subkey')}: <em>{$result.subkey}</em>{/if}</li>
+					{/foreach}
+</ul>
+				{/if}
+			{/if}
+		{/param}
+	{/call}
+{/template}

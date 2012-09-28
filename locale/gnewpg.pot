@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#: ../pages/faq.soy:9 ../pages/faq.soy:11 ../pages/faq.soy:12
-#: ../pages/ui.soy:77 ../pages/upload.soy:63
+#: ../pages/faq.soy:9 ../pages/faq.soy:12 ../pages/key.soy:47
+#: ../pages/key.soy:95 ../pages/key.soy:163 ../pages/key.soy:181
+#: ../pages/ui.soy:78 ../pages/ui.soy:96 ../pages/upload.soy:63
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-22 23:58+0200\n"
+"POT-Creation-Date: 2012-09-28 09:43+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -61,106 +62,229 @@ msgid "[SIG_48]"
 msgstr ""
 
 #: fixedStrings.tmp.js:11
-msgid "[FAQ_1]"
+msgid "[PKALGO_1]"
 msgstr ""
 
 #: fixedStrings.tmp.js:12
+msgid "[PKALGO_2]"
+msgstr ""
+
+#: fixedStrings.tmp.js:13
+msgid "[PKALGO_3]"
+msgstr ""
+
+#: fixedStrings.tmp.js:14
+msgid "[PKALGO_16]"
+msgstr ""
+
+#: fixedStrings.tmp.js:15
+msgid "[PKALGO_17]"
+msgstr ""
+
+#: fixedStrings.tmp.js:16
+msgid "[HASHALGO_1]"
+msgstr ""
+
+#: fixedStrings.tmp.js:17
+msgid "[HASHALGO_2]"
+msgstr ""
+
+#: fixedStrings.tmp.js:18
+msgid "[HASHALGO_3]"
+msgstr ""
+
+#: fixedStrings.tmp.js:19
+msgid "[HASHALGO_8]"
+msgstr ""
+
+#: fixedStrings.tmp.js:20
+msgid "[HASHALGO_9]"
+msgstr ""
+
+#: fixedStrings.tmp.js:21
+msgid "[HASHALGO_10]"
+msgstr ""
+
+#: fixedStrings.tmp.js:22
+msgid "[HASHALGO_11]"
+msgstr ""
+
+#: fixedStrings.tmp.js:23
+msgid "[SECURITY_-1]"
+msgstr ""
+
+#: fixedStrings.tmp.js:24
+msgid "[SECURITY_0]"
+msgstr ""
+
+#: fixedStrings.tmp.js:25
+msgid "[SECURITY_1]"
+msgstr ""
+
+#: fixedStrings.tmp.js:26
+msgid "[SECURITY_2]"
+msgstr ""
+
+#: fixedStrings.tmp.js:27
+msgid "[SECURITY_3]"
+msgstr ""
+
+#: fixedStrings.tmp.js:28
+msgid "[REVOK_0]"
+msgstr ""
+
+#: fixedStrings.tmp.js:29
+msgid "[REVOK_1]"
+msgstr ""
+
+#: fixedStrings.tmp.js:30
+msgid "[REVOK_2]"
+msgstr ""
+
+#: fixedStrings.tmp.js:31
+msgid "[REVOK_3]"
+msgstr ""
+
+#: fixedStrings.tmp.js:32
+msgid "[REVOK_32]"
+msgstr ""
+
+#: fixedStrings.tmp.js:33
+msgid "[FAQ_1]"
+msgstr ""
+
+#: fixedStrings.tmp.js:34
 msgid "[FAQ_1_TITLE]"
 msgstr ""
 
-#: ../i18n.js:13
+#: fixedStrings.tmp.js:35
+msgid "[FAQ_2]"
+msgstr ""
+
+#: fixedStrings.tmp.js:36
+msgid "[FAQ_2_TITLE]"
+msgstr ""
+
+#: fixedStrings.tmp.js:37
+msgid "[FAQ_3]"
+msgstr ""
+
+#: fixedStrings.tmp.js:38
+msgid "[FAQ_3_TITLE]"
+msgstr ""
+
+#: ../i18n.js:16
 msgid "isoUtcDateTime"
 msgstr ""
 
-#: ../pgpUpload.js:8
+#: ../i18n.js:108
 msgid "Internal error"
 msgstr ""
 
-#: ../pgpUpload.js:101 ../pgpUpload.js:122
+#: ../keys.js:136
+#, python-format
+msgid "Key %s does not exist."
+msgstr ""
+
+#: ../keys.js:150 ../keys.js:154 ../keys.js:269 ../keys.js:273
+#, python-format
+msgid "No permission to view key %s."
+msgstr ""
+
+#: ../keys.js:250
+#, python-format
+msgid "Key %s not found."
+msgstr ""
+
+#: ../keysSearch.js:17
+msgid "The search string is too short."
+msgstr ""
+
+#: ../keysUpload.js:92 ../keysUpload.js:108
 msgid "No associated key."
 msgstr ""
 
-#: ../pgpUpload.js:144
+#: ../keysUpload.js:125
 msgid "Signatures without issuer or date information are unacceptable."
 msgstr ""
 
-#: ../pgpUpload.js:150
+#: ../keysUpload.js:131
 msgid "Signature is not exportable."
 msgstr ""
 
-#: ../pgpUpload.js:164
+#: ../keysUpload.js:145
 #, python-format
 msgid "Signature type %s is only acceptable on identities and attributes."
 msgstr ""
 
-#: ../pgpUpload.js:173
+#: ../keysUpload.js:154
 #, python-format
 msgid "Signature type %s is only acceptable on subkeys."
 msgstr ""
 
-#: ../pgpUpload.js:184
+#: ../keysUpload.js:165
 #, python-format
 msgid "Unsupported signature type %s."
 msgstr ""
 
-#: ../pgpUpload.js:219
+#: ../keysUpload.js:200
 msgid "No associated object for signature."
 msgstr ""
 
-#: ../pgpUpload.js:237
-msgid "Unknown packet."
+#: ../keysUpload.js:216
+msgid "Unknown packet type."
 msgstr ""
 
-#: ../pgpUpload.js:276
+#: ../keysUpload.js:255
 msgid "Subkey without signatures."
 msgstr ""
 
-#: ../pgpUpload.js:291
+#: ../keysUpload.js:271
 msgid "Identity without signatures."
 msgstr ""
 
-#: ../pgpUpload.js:307
+#: ../keysUpload.js:297
 msgid "Attribute without signatures."
 msgstr ""
 
-#: ../pgpUpload.js:321
+#: ../keysUpload.js:321
 msgid "Key without signatures, subkeys, identities or attributes."
 msgstr ""
 
-#: ../pgpUpload.js:410 ../pgpUpload.js:441 ../pgpUpload.js:472
+#: ../keysUpload.js:420 ../keysUpload.js:451 ../keysUpload.js:482
 msgid "Bad signature."
 msgstr ""
 
-#: ../pages/login.js:31
+#: ../pages/login.js:32
 msgid "Login failed."
 msgstr ""
 
-#: ../pages/register.js:13
+#: ../pages/register.js:15
 #, python-format
 msgid "The username has to be at least %d character long."
 msgid_plural "The username has to be at least %d characters long."
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../pages/register.js:15
+#: ../pages/register.js:17
 #, python-format
 msgid "The username may be at most %d character long."
 msgid_plural "The username may be at most %d characters long."
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../pages/register.js:23
+#: ../pages/register.js:25
 msgid "This username is already taken."
 msgstr ""
 
-#: ../pages/register.js:25
+#: ../pages/register.js:27
 #, python-format
 msgid "The password has to be at least %d character long."
 msgid_plural "The password has to be at least %d characters long."
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../pages/register.js:27
+#: ../pages/register.js:29
 msgid "The two passwords do not match."
 msgstr ""
 
@@ -168,30 +292,209 @@ msgstr ""
 msgid "FAQ"
 msgstr ""
 
-#: ../pages/index.soy:12
+#: ../pages/index.soy:13
 msgid "Search for a key"
 msgstr ""
 
-#: ../pages/index.soy:18 ../pages/upload.soy:11
+#: ../pages/index.soy:19 ../pages/upload.soy:11
 msgid "Upload a key"
 msgstr ""
 
-#: ../pages/index.soy:19
+#: ../pages/index.soy:20
 msgid ""
 "To receive new signatures for a key that is not publicly searchable, upload "
 "the public key to prove that you posess it."
 msgstr ""
 
-#: ../pages/index.soy:23
+#: ../pages/index.soy:24
 msgid "Your own keys"
 msgstr ""
 
-#: ../pages/index.soy:26
+#: ../pages/index.soy:27 ../pages/keyring.soy:10
 msgid "Your keyring"
 msgstr ""
 
-#: ../pages/index.soy:29
+#: ../pages/index.soy:30
 msgid "Your account"
+msgstr ""
+
+#: ../pages/keyring.soy:15
+msgid "Your keyring is empty."
+msgstr ""
+
+#: ../pages/keyring.soy:22 ../pages/search.soy:21
+msgid "Key"
+msgstr ""
+
+#: ../pages/keyring.soy:23 ../pages/upload.soy:82
+msgid "User ID"
+msgstr ""
+
+#: ../pages/key.soy:14
+#, python-format
+msgid "Key %s"
+msgstr ""
+
+#: ../pages/key.soy:22
+#, python-format
+msgid "Picture #%d"
+msgstr ""
+
+#: ../pages/key.soy:27
+msgid "Fingerprint"
+msgstr ""
+
+#: ../pages/key.soy:30
+msgid "Security"
+msgstr ""
+
+#: ../pages/key.soy:33
+msgid "Creation date"
+msgstr ""
+
+#: ../pages/key.soy:36
+msgid "Expiration date"
+msgstr ""
+
+#: ../pages/key.soy:37 ../pages/key.soy:91 ../pages/key.soy:176
+msgid "never"
+msgstr ""
+
+#: ../pages/key.soy:39
+msgid "Revoked"
+msgstr ""
+
+#: ../pages/key.soy:40
+msgid "no"
+msgstr ""
+
+#: ../pages/key.soy:43
+msgid "Key version"
+msgstr ""
+
+#: ../pages/key.soy:46
+msgid "Public key algorithm"
+msgstr ""
+
+#: ../pages/key.soy:49
+msgid "Key size"
+msgstr ""
+
+#: ../pages/key.soy:50
+#, python-format
+msgid "%d bits"
+msgstr ""
+
+#: ../pages/key.soy:59 ../pages/key.soy:61 ../pages/key.soy:72
+msgid "Details"
+msgstr ""
+
+#: ../pages/key.soy:59
+msgid "on"
+msgstr ""
+
+#: ../pages/key.soy:61
+msgid "off"
+msgstr ""
+
+#: ../pages/key.soy:67
+msgid "Signature"
+msgstr ""
+
+#: ../pages/key.soy:68
+msgid "Issued by"
+msgstr ""
+
+#: ../pages/key.soy:69
+msgid "Date"
+msgstr ""
+
+#: ../pages/key.soy:70
+msgid "Expires/revoked"
+msgstr ""
+
+#: ../pages/key.soy:82
+msgid "Subkeys"
+msgstr ""
+
+#: ../pages/key.soy:84
+msgid "No subkeys."
+msgstr ""
+
+#: ../pages/key.soy:90
+msgid "Subkey"
+msgstr ""
+
+#: ../pages/key.soy:94 ../pages/key.soy:181
+msgid "version"
+msgstr ""
+
+#: ../pages/key.soy:95
+#, python-format
+msgid "%d bit"
+msgstr ""
+
+#: ../pages/key.soy:104
+msgid "Identities"
+msgstr ""
+
+#: ../pages/key.soy:106
+msgid "No identities."
+msgstr ""
+
+#: ../pages/key.soy:112
+msgid "primary"
+msgstr ""
+
+#: ../pages/key.soy:118
+msgid "Attributes"
+msgstr ""
+
+#: ../pages/key.soy:120
+msgid "No attributes."
+msgstr ""
+
+#: ../pages/key.soy:126 ../pages/upload.soy:96
+msgid "Attribute"
+msgstr ""
+
+#: ../pages/key.soy:126
+msgid "picture"
+msgstr ""
+
+#: ../pages/key.soy:146
+msgid "No signatures."
+msgstr ""
+
+#: ../pages/key.soy:166 ../pages/key.soy:213
+msgid "unverified"
+msgstr ""
+
+#: ../pages/key.soy:185
+msgid "Partial trust"
+msgstr ""
+
+#: ../pages/key.soy:187
+msgid "Complete trust"
+msgstr ""
+
+#: ../pages/key.soy:189
+#, python-format
+msgid "%d level"
+msgid_plural "%d levels"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../pages/key.soy:191
+msgid "regexp"
+msgstr ""
+
+#: ../pages/key.soy:195
+msgid "non-revocable"
+msgstr ""
+
+#: ../pages/key.soy:211
+msgid "by"
 msgstr ""
 
 #: ../pages/login.soy:11
@@ -230,6 +533,31 @@ msgstr ""
 msgid "E-mail address"
 msgstr ""
 
+#: ../pages/search.soy:11
+#, python-format
+msgid "Search: %s"
+msgstr ""
+
+#: ../pages/search.soy:17
+msgid "No keys have been found."
+msgstr ""
+
+#: ../pages/search.soy:21
+msgid "revoked"
+msgstr ""
+
+#: ../pages/search.soy:21
+msgid "expired"
+msgstr ""
+
+#: ../pages/search.soy:21
+msgid "identity"
+msgstr ""
+
+#: ../pages/search.soy:21
+msgid "subkey"
+msgstr ""
+
 #: ../pages/ui.soy:28
 #, python-format
 msgid "Logged in as %s"
@@ -237,6 +565,14 @@ msgstr ""
 
 #: ../pages/ui.soy:30
 msgid "Not logged in."
+msgstr ""
+
+#: ../pages/ui.soy:86
+msgid "PGP ASCII-armored format (.asc)"
+msgstr ""
+
+#: ../pages/ui.soy:87
+msgid "PGP binary format (.pgp)"
 msgstr ""
 
 #: ../pages/upload.soy:15
@@ -255,12 +591,16 @@ msgstr ""
 msgid "The following errors occurred:"
 msgstr ""
 
-#: ../pages/upload.soy:39
+#: ../pages/upload.soy:38
 msgid "Upload a file"
 msgstr ""
 
-#: ../pages/upload.soy:42
+#: ../pages/upload.soy:41
 msgid "or paste a key"
+msgstr ""
+
+#: ../pages/upload.soy:45
+msgid "Download keys with updated signatures after uploading as"
 msgstr ""
 
 #: ../pages/upload.soy:46
@@ -284,18 +624,11 @@ msgstr ""
 msgid "Public key"
 msgstr ""
 
-#: ../pages/upload.soy:82
-msgid "User ID"
-msgstr ""
-
 #: ../pages/upload.soy:89
 msgid "Public subkey"
 msgstr ""
 
-#: ../pages/upload.soy:96
-msgid "Attribute"
-msgstr ""
-
 #: ../pages/upload.soy:103
-msgid "Unknown packet"
+#, python-format
+msgid "Packet type %d"
 msgstr ""

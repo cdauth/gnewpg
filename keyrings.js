@@ -144,6 +144,7 @@ function addAttributeToKeyring(keyring, keyId, attributeId, callback, con) {
 }
 
 exports.getKeyringForUser = getKeyringForUser;
+exports.getPseudoKeyringForUploadedKeys = getPseudoKeyringForUploadedKeys;
 exports.keyringContainsKey = keyringContainsKey;
 exports.keyringContainsIdentity = keyringContainsIdentity;
 exports.keyringContainsAttribute = keyringContainsAttribute;

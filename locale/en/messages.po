@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnewpg\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-22 23:58+0200\n"
-"PO-Revision-Date: 2012-09-23 00:30+0100\n"
+"POT-Creation-Date: 2012-09-28 09:43+0200\n"
+"PO-Revision-Date: 2012-09-28 09:44+0100\n"
 "Last-Translator: Candid Dauth <cdauth@cdauth.eu>\n"
 "Language-Team: \n"
 "Language: \n"
@@ -58,109 +58,271 @@ msgid "[SIG_48]"
 msgstr "Certification revocation signature"
 
 #: fixedStrings.tmp.js:11
-msgid "[FAQ_1]"
-msgstr "Currently, the following key formats are supported for upload:\n\n* OpenPGP binary format. Files like that usually end with “.pgp” or “.gpg”. You can upload your entire local keyring by uploading the file .gnupg/pubring.pgp in your home folder.\n* OpenPGP ASCII-armored. Files like that usually end with “.asc” or sometimes just with “.txt”."
+msgid "[PKALGO_1]"
+msgstr "RSA (E, S)"
 
 #: fixedStrings.tmp.js:12
+msgid "[PKALGO_2]"
+msgstr "RSA (E)"
+
+#: fixedStrings.tmp.js:13
+msgid "[PKALGO_3]"
+msgstr "RSA (S)"
+
+#: fixedStrings.tmp.js:14
+msgid "[PKALGO_16]"
+msgstr "ElGamal"
+
+#: fixedStrings.tmp.js:15
+msgid "[PKALGO_17]"
+msgstr "DSA"
+
+#: fixedStrings.tmp.js:16
+msgid "[HASHALGO_1]"
+msgstr "MD5"
+
+#: fixedStrings.tmp.js:17
+msgid "[HASHALGO_2]"
+msgstr "SHA-1"
+
+#: fixedStrings.tmp.js:18
+msgid "[HASHALGO_3]"
+msgstr "RIPE-MD/160"
+
+#: fixedStrings.tmp.js:19
+msgid "[HASHALGO_8]"
+msgstr "SHA256"
+
+#: fixedStrings.tmp.js:20
+msgid "[HASHALGO_9]"
+msgstr "SHA384"
+
+#: fixedStrings.tmp.js:21
+msgid "[HASHALGO_10]"
+msgstr "SHA512"
+
+#: fixedStrings.tmp.js:22
+msgid "[HASHALGO_11]"
+msgstr "SHA224"
+
+#: fixedStrings.tmp.js:23
+msgid "[SECURITY_-1]"
+msgstr "Unknown security"
+
+#: fixedStrings.tmp.js:24
+msgid "[SECURITY_0]"
+msgstr "Unacceptably insecure"
+
+#: fixedStrings.tmp.js:25
+msgid "[SECURITY_1]"
+msgstr "Bad security"
+
+#: fixedStrings.tmp.js:26
+msgid "[SECURITY_2]"
+msgstr "Medium security"
+
+#: fixedStrings.tmp.js:27
+msgid "[SECURITY_3]"
+msgstr "Good security"
+
+#: fixedStrings.tmp.js:28
+msgid "[REVOK_0]"
+msgstr "No reason specified"
+
+#: fixedStrings.tmp.js:29
+msgid "[REVOK_1]"
+msgstr "Key is superseded"
+
+#: fixedStrings.tmp.js:30
+msgid "[REVOK_2]"
+msgstr "Key material has been compromised"
+
+#: fixedStrings.tmp.js:31
+msgid "[REVOK_3]"
+msgstr "Key is retired or no longer in use"
+
+#: fixedStrings.tmp.js:32
+msgid "[REVOK_32]"
+msgstr "User ID information is no longer valid"
+
+#: fixedStrings.tmp.js:33
+msgid "[FAQ_1]"
+msgstr ""
+"Currently, the following key formats are supported for upload:\n"
+"\n"
+"* OpenPGP binary format. Files like that usually end with “.pgp” or “.gpg”. You can upload your entire local keyring by uploading the file .gnupg/pubring.pgp in your home folder.\n"
+"* OpenPGP ASCII-armored. Files like that usually end with “.asc” or sometimes just with “.txt”."
+
+#: fixedStrings.tmp.js:34
 msgid "[FAQ_1_TITLE]"
 msgstr "What key formats are supported?"
 
-#: ../i18n.js:13
+#: fixedStrings.tmp.js:35
+msgid "[FAQ_2]"
+msgstr ""
+"Some people don’t like it when everyone can see who has signed their key, as this might reveal sensitive information about social connections. Because of this, keys that are uploaded to gnewpg are only visible to people who already posess the keys, unless the verified owner of the key explicitly changes its privacy settings. This way, the social connections are only visible to people who the key owner has given the key to.\n"
+"\n"
+"To prove that you already posess the key, you need to upload it to the keyserver. If you are logged in, the key will be saved in the keyring of your account. Otherwise, you can download updated versions of the keys immediately after uploading, but the uploaded keys will not be visible to you."
+
+#: fixedStrings.tmp.js:36
+msgid "[FAQ_2_TITLE]"
+msgstr "Why do I have to upload a key in order to get new signatures?"
+
+#: fixedStrings.tmp.js:37
+msgid "[FAQ_3]"
+msgstr ""
+"gnewpg is a PGP key server that aims to make PGP more secure.\n"
+"\n"
+"### What is PGP? ###\n"
+"\n"
+"PGP (“pretty good privacy”) ([on Wikipedia](http://en.wikipedia.org/wiki/Pretty_Good_Privacy)) is a standard for encrypting and signing messages. Every person using PGP posesses a pair of a private and a public key. The public key you can send to everyone you want to exchange messages with, the private key, which is encrypted with a password, you keep safe. When you send a message to someone else, you can encrypt it using their public key, but it can only be decrypted by the person who posesses the private key belonging to that public key. This way, everyone can encrypt messages addressed to a specific person, but only the person themselves can decrypt it.\n"
+"\n"
+"You can also sign a message with your private key, and everyone can verify with your public key that the message has been signed by you. This way, it can be verified that the author of a message is the actual person they claim to be, as only they who posess the private key can make a signature with it.\n"
+"\n"
+"As everyone can create PGP keys with any name and e-mail address they like, PGP uses the so-called “Web of Trust” to verify that a key actually belongs to the person you want to communicate with. Everyone can sign someone elses key when they are sure (by meeting them in person and possibly checking their government-issued ID card) that the name and e-mail address set in the key are correct. This way, a “chain of trust” can be built: When you have signed a friend’s key and this friend has signed another person’s key, you can be pretty sure that that other person’s key can be trusted.\n"
+"\n"
+"### What is a PGP key server? ###\n"
+"\n"
+"A PGP key server is a website where people can upload their public keys. This makes it easy for people to encrypt messages they send to them, as they can search the key online, and it is not necessary for the recipient to manually send their public key to everyone they want to receive messages from. Also, a key server aggregates key signatures that people upload, which can increase the trustworthiness of keys, as a key is more trustworthy the more keys have signed it that you trust. Without a key server, this amount of trust could only be achieved by re-sending your key to everyone you have given it to every time someone new signs it. This is particularly important for so-called “revocation signatures”. When for example your laptop is stolen, there is a probability that someone has access to your private key, so it is not safe to use it anymore. When you revoke the key and upload the revocation signature to a key server, everyone who wants to send a message to you will see that it is not safe to encrypt it with that key.\n"
+"\n"
+"### What advantages does gnewpg have over other keyservers? ###\n"
+"\n"
+"#### Key privacy settings ####\n"
+"\n"
+"On a traditional key server, everyone can upload any key they like, including all signatures on that key. Some people don’t like it when everyone can see who has signed their key, as this might reveal sensitive information about social connections. This has the effect that among people where privacy is important, key servers are often not used, which decreases security as it gets more difficult to spread new signatures, which is particularly important for revocation signatures. On gnewpg, newly uploaded keys are automatically marked as private, which means that only people who already posess the key will be able to receive new signatures for it. People can prove that they posess a key by uploading it. The privacy settings of a key can be changed by its verified owner.\n"
+"\n"
+"When a registered user uploads a key, the key will be added to the keyring of their user account. This enables them to receive updates for the key without having to upload it every time. Also, each user gets a personal keyserver URL, which they can use in their local PGP application to access not only keys that are public, but also non-public keys in the keyring of their user-account.\n"
+"\n"
+"#### Security information about keys ####\n"
+"\n"
+"Traditional key servers only list keys, but they do not show any information about their trustworthiness. Only after downloading a key from a key server you can see in your local PGP application whether the key can be trusted. gnewpg tries to give as detailed information as possible about whether a key can be trusted, by analysing the security of the algorithms used and by verifying the names and e-mail addresses used in keys.\n"
+"\n"
+"#### Groups ####\n"
+"\n"
+"You can create groups of keys on gnewpg. Each group is accessed by a specific URL, and everyone who posesses this URL can access the group. Depending on what settings the creator of the group makes, either everyone or only specific people can add keys to the group. You can for example create a group for your organisation and give its URL to all members. This way, all members of your organisation can see the keys of all other members, without those keys having to be visible to the whole world."
+
+#: fixedStrings.tmp.js:38
+msgid "[FAQ_3_TITLE]"
+msgstr "What is gnewpg?"
+
+#: ../i18n.js:16
 msgid "isoUtcDateTime"
 msgstr "isoUtcDateTime"
 
-#: ../pgpUpload.js:8
+#: ../i18n.js:108
 msgid "Internal error"
 msgstr "Internal error"
 
-#: ../pgpUpload.js:101
-#: ../pgpUpload.js:122
+#: ../keys.js:136
+#, python-format
+msgid "Key %s does not exist."
+msgstr "Key %s does not exist."
+
+#: ../keys.js:150
+#: ../keys.js:154
+#: ../keys.js:269
+#: ../keys.js:273
+#, python-format
+msgid "No permission to view key %s."
+msgstr "No permission to view key %s."
+
+#: ../keys.js:250
+#, python-format
+msgid "Key %s not found."
+msgstr "Key %s not found."
+
+#: ../keysSearch.js:17
+msgid "The search string is too short."
+msgstr "The search string is too short."
+
+#: ../keysUpload.js:92
+#: ../keysUpload.js:108
 msgid "No associated key."
 msgstr "No associated key."
 
-#: ../pgpUpload.js:144
+#: ../keysUpload.js:125
 msgid "Signatures without issuer or date information are unacceptable."
 msgstr "Signatures without issuer or date information are unacceptable."
 
-#: ../pgpUpload.js:150
+#: ../keysUpload.js:131
 msgid "Signature is not exportable."
 msgstr "Signature is not exportable."
 
-#: ../pgpUpload.js:164
+#: ../keysUpload.js:145
 #, python-format
 msgid "Signature type %s is only acceptable on identities and attributes."
 msgstr "Signature type %s is only acceptable on identities and attributes."
 
-#: ../pgpUpload.js:173
+#: ../keysUpload.js:154
 #, python-format
 msgid "Signature type %s is only acceptable on subkeys."
 msgstr "Signature type %s is only acceptable on subkeys."
 
-#: ../pgpUpload.js:184
+#: ../keysUpload.js:165
 #, python-format
 msgid "Unsupported signature type %s."
 msgstr "Unsupported signature type %s."
 
-#: ../pgpUpload.js:219
+#: ../keysUpload.js:200
 msgid "No associated object for signature."
 msgstr "No associated object for signature."
 
-#: ../pgpUpload.js:237
-msgid "Unknown packet."
-msgstr "Unknown packet."
+#: ../keysUpload.js:216
+msgid "Unknown packet type."
+msgstr "Unknown packet type."
 
-#: ../pgpUpload.js:276
+#: ../keysUpload.js:255
 msgid "Subkey without signatures."
 msgstr "Subkey without signatures."
 
-#: ../pgpUpload.js:291
+#: ../keysUpload.js:271
 msgid "Identity without signatures."
 msgstr "Identity without signatures."
 
-#: ../pgpUpload.js:307
+#: ../keysUpload.js:297
 msgid "Attribute without signatures."
 msgstr "Attribute without signatures."
 
-#: ../pgpUpload.js:321
+#: ../keysUpload.js:321
 msgid "Key without signatures, subkeys, identities or attributes."
 msgstr "Key without signatures, subkeys, identities or attributes."
 
-#: ../pgpUpload.js:410
-#: ../pgpUpload.js:441
-#: ../pgpUpload.js:472
+#: ../keysUpload.js:420
+#: ../keysUpload.js:451
+#: ../keysUpload.js:482
 msgid "Bad signature."
 msgstr "Bad signature."
 
-#: ../pages/login.js:31
+#: ../pages/login.js:32
 msgid "Login failed."
 msgstr "Login failed."
 
-#: ../pages/register.js:13
+#: ../pages/register.js:15
 #, python-format
 msgid "The username has to be at least %d character long."
 msgid_plural "The username has to be at least %d characters long."
 msgstr[0] "The username has to be at least %d character long."
 msgstr[1] "The username has to be at least %d characters long."
 
-#: ../pages/register.js:15
+#: ../pages/register.js:17
 #, python-format
 msgid "The username may be at most %d character long."
 msgid_plural "The username may be at most %d characters long."
 msgstr[0] "The username may be at most %d character long."
 msgstr[1] "The username may be at most %d characters long."
 
-#: ../pages/register.js:23
+#: ../pages/register.js:25
 msgid "This username is already taken."
 msgstr "This username is already taken."
 
-#: ../pages/register.js:25
+#: ../pages/register.js:27
 #, python-format
 msgid "The password has to be at least %d character long."
 msgid_plural "The password has to be at least %d characters long."
 msgstr[0] "The password has to be at least %d character long."
 msgstr[1] "The password has to be at least %d characters long."
 
-#: ../pages/register.js:27
+#: ../pages/register.js:29
 msgid "The two passwords do not match."
 msgstr "The two passwords do not match."
 
@@ -168,30 +330,217 @@ msgstr "The two passwords do not match."
 msgid "FAQ"
 msgstr "FAQ"
 
-#: ../pages/index.soy:12
+#: ../pages/index.soy:13
 msgid "Search for a key"
 msgstr "Search for a key"
 
-#: ../pages/index.soy:18
+#: ../pages/index.soy:19
 #: ../pages/upload.soy:11
 msgid "Upload a key"
 msgstr "Upload a key"
 
-#: ../pages/index.soy:19
+#: ../pages/index.soy:20
 msgid "To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it."
 msgstr "To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it."
 
-#: ../pages/index.soy:23
+#: ../pages/index.soy:24
 msgid "Your own keys"
 msgstr "Your own keys"
 
-#: ../pages/index.soy:26
+#: ../pages/index.soy:27
+#: ../pages/keyring.soy:10
 msgid "Your keyring"
 msgstr "Your keyring"
 
-#: ../pages/index.soy:29
+#: ../pages/index.soy:30
 msgid "Your account"
 msgstr "Your account"
+
+#: ../pages/keyring.soy:15
+msgid "Your keyring is empty."
+msgstr "Your keyring is empty."
+
+#: ../pages/keyring.soy:22
+#: ../pages/search.soy:21
+msgid "Key"
+msgstr "Key"
+
+#: ../pages/keyring.soy:23
+#: ../pages/upload.soy:82
+msgid "User ID"
+msgstr "User ID"
+
+#: ../pages/key.soy:14
+#, python-format
+msgid "Key %s"
+msgstr "Key %s"
+
+#: ../pages/key.soy:22
+#, python-format
+msgid "Picture #%d"
+msgstr "Picture #%d"
+
+#: ../pages/key.soy:27
+msgid "Fingerprint"
+msgstr "Fingerprint"
+
+#: ../pages/key.soy:30
+msgid "Security"
+msgstr "Security"
+
+#: ../pages/key.soy:33
+msgid "Creation date"
+msgstr "Creation date"
+
+#: ../pages/key.soy:36
+msgid "Expiration date"
+msgstr "Expiration date"
+
+#: ../pages/key.soy:37
+#: ../pages/key.soy:91
+#: ../pages/key.soy:176
+msgid "never"
+msgstr "never"
+
+#: ../pages/key.soy:39
+msgid "Revoked"
+msgstr "Revoked"
+
+#: ../pages/key.soy:40
+msgid "no"
+msgstr "no"
+
+#: ../pages/key.soy:43
+msgid "Key version"
+msgstr "Key version"
+
+#: ../pages/key.soy:46
+msgid "Public key algorithm"
+msgstr "Public key algorithm"
+
+#: ../pages/key.soy:49
+msgid "Key size"
+msgstr "Key size"
+
+#: ../pages/key.soy:50
+#, python-format
+msgid "%d bits"
+msgstr "%d bits"
+
+#: ../pages/key.soy:59
+#: ../pages/key.soy:61
+#: ../pages/key.soy:72
+msgid "Details"
+msgstr "Details"
+
+#: ../pages/key.soy:59
+msgid "on"
+msgstr "on"
+
+#: ../pages/key.soy:61
+msgid "off"
+msgstr "off"
+
+#: ../pages/key.soy:67
+msgid "Signature"
+msgstr "Signature"
+
+#: ../pages/key.soy:68
+msgid "Issued by"
+msgstr "Issued by"
+
+#: ../pages/key.soy:69
+msgid "Date"
+msgstr "Date"
+
+#: ../pages/key.soy:70
+msgid "Expires/revoked"
+msgstr "Expires/revoked"
+
+#: ../pages/key.soy:82
+msgid "Subkeys"
+msgstr "Subkeys"
+
+#: ../pages/key.soy:84
+msgid "No subkeys."
+msgstr "No subkeys."
+
+#: ../pages/key.soy:90
+msgid "Subkey"
+msgstr "Subkey"
+
+#: ../pages/key.soy:94
+#: ../pages/key.soy:181
+msgid "version"
+msgstr "version"
+
+#: ../pages/key.soy:95
+#, python-format
+msgid "%d bit"
+msgstr "%d bit"
+
+#: ../pages/key.soy:104
+msgid "Identities"
+msgstr "Identities"
+
+#: ../pages/key.soy:106
+msgid "No identities."
+msgstr "No identities."
+
+#: ../pages/key.soy:112
+msgid "primary"
+msgstr "primary"
+
+#: ../pages/key.soy:118
+msgid "Attributes"
+msgstr "Attributes"
+
+#: ../pages/key.soy:120
+msgid "No attributes."
+msgstr "No attributes."
+
+#: ../pages/key.soy:126
+#: ../pages/upload.soy:96
+msgid "Attribute"
+msgstr "Attribute"
+
+#: ../pages/key.soy:126
+msgid "picture"
+msgstr "picture"
+
+#: ../pages/key.soy:146
+msgid "No signatures."
+msgstr "No signatures."
+
+#: ../pages/key.soy:166
+#: ../pages/key.soy:213
+msgid "unverified"
+msgstr "unverified"
+
+#: ../pages/key.soy:185
+msgid "Partial trust"
+msgstr "Partial trust"
+
+#: ../pages/key.soy:187
+msgid "Complete trust"
+msgstr "Complete trust"
+
+#: ../pages/key.soy:189
+#, python-format
+msgid "%d level"
+msgid_plural "%d levels"
+
+#: ../pages/key.soy:191
+msgid "regexp"
+msgstr "regexp"
+
+#: ../pages/key.soy:195
+msgid "non-revocable"
+msgstr "non-revocable"
+
+#: ../pages/key.soy:211
+msgid "by"
+msgstr "by"
 
 #: ../pages/login.soy:11
 msgid "Login"
@@ -231,6 +580,31 @@ msgstr "Repeat password"
 msgid "E-mail address"
 msgstr "E-mail address"
 
+#: ../pages/search.soy:11
+#, python-format
+msgid "Search: %s"
+msgstr "Search: %s"
+
+#: ../pages/search.soy:17
+msgid "No keys have been found."
+msgstr "No keys have been found."
+
+#: ../pages/search.soy:21
+msgid "revoked"
+msgstr "revoked"
+
+#: ../pages/search.soy:21
+msgid "expired"
+msgstr "expired"
+
+#: ../pages/search.soy:21
+msgid "identity"
+msgstr "identity"
+
+#: ../pages/search.soy:21
+msgid "subkey"
+msgstr "subkey"
+
 #: ../pages/ui.soy:28
 #, python-format
 msgid "Logged in as %s"
@@ -239,6 +613,14 @@ msgstr "Logged in as %s"
 #: ../pages/ui.soy:30
 msgid "Not logged in."
 msgstr "Not logged in."
+
+#: ../pages/ui.soy:86
+msgid "PGP ASCII-armored format (.asc)"
+msgstr "PGP ASCII-armored format (.asc)"
+
+#: ../pages/ui.soy:87
+msgid "PGP binary format (.pgp)"
+msgstr "PGP binary format (.pgp)"
 
 #: ../pages/upload.soy:15
 msgid "Internal errors occurred while uploading the keys."
@@ -256,13 +638,17 @@ msgstr "No keys were successfully uploaded."
 msgid "The following errors occurred:"
 msgstr "The following errors occurred:"
 
-#: ../pages/upload.soy:39
+#: ../pages/upload.soy:38
 msgid "Upload a file"
 msgstr "Upload a file"
 
-#: ../pages/upload.soy:42
+#: ../pages/upload.soy:41
 msgid "or paste a key"
 msgstr "or paste a key"
+
+#: ../pages/upload.soy:45
+msgid "Download keys with updated signatures after uploading as"
+msgstr "Download keys with updated signatures after uploading as"
 
 #: ../pages/upload.soy:46
 msgid "If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so it will only be visible to people who already posess it in order to receive new signatures."
@@ -280,27 +666,35 @@ msgstr "Do not publish uploaded signatures on the server"
 msgid "Public key"
 msgstr "Public key"
 
-#: ../pages/upload.soy:82
-msgid "User ID"
-msgstr "User ID"
-
 #: ../pages/upload.soy:89
 msgid "Public subkey"
 msgstr "Public subkey"
 
-#: ../pages/upload.soy:96
-msgid "Attribute"
-msgstr "Attribute"
-
 #: ../pages/upload.soy:103
-msgid "Unknown packet"
-msgstr "Unknown packet"
+#, python-format
+msgid "Packet type %d"
+msgstr "Packet type %d"
+
+#~ msgid "public key algorithm"
+#~ msgstr "public key algorithm"
+
+#~ msgid "hash algorithm"
+#~ msgstr "hash algorithm"
+
+#~ msgid "expires"
+#~ msgstr "expires"
+
+#~ msgid "by key"
+#~ msgstr "by key"
+
+#~ msgid "Do not show details"
+#~ msgstr "Do not show details"
+
+#~ msgid "Unknown packet"
+#~ msgstr "Unknown packet"
 
 #~ msgid "Upload"
 #~ msgstr "Upload"
-
-#~ msgid "Upload and download with updated signatures"
-#~ msgstr "Upload and download with updated signatures"
 
 #~ msgid "Logout"
 #~ msgstr "Logout"

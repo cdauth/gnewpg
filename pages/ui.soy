@@ -30,6 +30,7 @@
 			{_('Not logged in.')} <a href="/login{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" class="login">Login</a> | <a href="/register" class="register">{_('Register')}</a>
 {/if}
 		</div>
+		<h2>{$title}</h2>
 
 {$content|noAutoescape}
 
@@ -74,6 +75,23 @@
 */
 {template .faq}
 <{if $showTitle}p{else}span{/if} class="faq">
-<a href="/faq/{$no}" target="_blank">{if $showTitle}{_(''+'[FAQ_'+$no+'_TITLE]')}{else}<abbr title="{_('What does this mean?')}">?</abbr>{/if}</a>
+<a href="/faq/{$no}" target="_blank">{if $showTitle}{_(''+'[FAQ_'+$no+'_TITLE]')}{else}<abbr title="{_(''+'[FAQ_'+$no+'_TITLE]')}">?</abbr>{/if}</a>
 </{if $showTitle}p{else}span{/if}>
+{/template}
+
+/**
+*/
+{template .exportFormats}
+<select name="exportFormat" id="i-export-format">
+	<option value="ascii">{_('PGP ASCII-armored format (.asc)')}</option>
+	<option value="binary">{_('PGP binary format (.pgp)')}</option>
+</select>
+{/template}
+
+/**
+ * @param security
+ * @param? content
+*/
+{template .security}
+<span class="security security-{$security}"{if $content} title="{_(''+'[SECURITY_'+$security+']')}"{/if}>{if $content}{$content|noAutoescape}{else}{_(''+'[SECURITY_'+$security+']')}{/if}</span>
 {/template}

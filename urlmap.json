@@ -4,7 +4,10 @@
 		"/login": "login",
 		"/register": "register",
 		"/upload": "upload",
-		"/faq/:no": "faq"
+		"/faq/:no": "faq",
+		"/search" : "search",
+		"/key/:keyId" : "key",
+		"/keyring" : "keyring"
 	},
 	"post" : {
 		"/login": "login",

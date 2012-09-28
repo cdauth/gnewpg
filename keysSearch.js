@@ -47,14 +47,16 @@ function search(string, keyring, con) {
 		else
 			ret._end();
 	}
+	
+	return ret;
 }
 
 function _searchInIdentities(string, keyring, ret, callback, con) {
 	var query = '\
-	SELECT DISTINCT ON ("id", "identity") "keys"."id" AS "id", "keys"."expires" AS "expires", "keys"."revoked" AS "revoked", "found"."id" AS "identity", "found"."perm" AS "perm" FROM (\
+	SELECT DISTINCT ON ("id", "identity") "keys"."id" AS "id", "keys"."expires" AS "expires", "keys"."revokedby" AS "revokedby", "found"."id" AS "identity", "found"."perm" AS "perm" FROM (\
 		      SELECT "id", "key", "perm_namesearch" AS "perm" FROM "keys_identities" WHERE LOWER("name") = LOWER($1)\
 		UNION SELECT "id", "key", "perm_emailsearch" AS "perm" FROM "keys_identities" WHERE LOWER("email") = LOWER($1)\
-		UNION SELECT "id", "key", ( "perm_namesearch" AND "perm_emailsearch" ) AS "perm" FROM "keys_identities" WHERE LOWER("id") = \'%\' || LOWER($1) || \'%\'\
+		UNION SELECT "id", "key", ( "perm_namesearch" AND "perm_emailsearch" ) AS "perm" FROM "keys_identities" WHERE LOWER("id") LIKE \'%\' || LOWER($1) || \'%\'\
 	) AS "found", "keys" WHERE "found"."key" = "keys"."id";';
 	db.fifoQuery(query, [ string ], function(err, identityRecords) {
 		if(err) { callback(err); return; }
@@ -88,39 +90,25 @@ function _searchInIdentities(string, keyring, ret, callback, con) {
 }
 
 function _searchForKeyByShortId(shortId, keyring, ret, callback, con) {
-	_searchForKey('SELECT "id","primary_id","expires","revokedby","perm_idsearch" FROM "keys" WHERE SUBSTRING("id" FROM 8 FOR 8) = $1 AND "perm_idsearch" = true', [ shortId.toUpperCase() ], keyring, ret, callback, con);
+	_searchForKey('SELECT "id","expires","revokedby","perm_idsearch" FROM "keys" WHERE SUBSTRING("id" FROM 9 FOR 8) = $1', [ shortId.toUpperCase() ], keyring, ret, callback, con);
 }
 
 function _searchForKeyByLongId(longId, keyring, ret, callback, con) {
-	_searchForKey('SELECT "id","primary_id","expires","revokedby","perm_idsearch" FROM "keys" WHERE "id" = $1 AND "perm_idsearch" = true', [ shortId.toUpperCase() ], keyring, ret, callback, con);
+	_searchForKey('SELECT "id","expires","revokedby","perm_idsearch" FROM "keys" WHERE "id" = $1', [ shortId.toUpperCase() ], keyring, ret, callback, con);
 }
 
 function _searchForKeyByFingerprint(fingerprint, keyring, ret, callback, con) {
-	_searchForKey('SELECT "id","primary_id","expires","revokedby","perm_idsearch" FROM "keys" WHERE "fingerprint" = $1 AND "perm_idsearch" = true', [ fingerprint.toUpperCase() ], keyring, ret, callback, con);
+	_searchForKey('SELECT "id","expires","revokedby","perm_idsearch" FROM "keys" WHERE "fingerprint" = $1', [ fingerprint.toUpperCase() ], keyring, ret, callback, con);
 }
 
 function _searchForKey(query, args, keyring, ret, callback, con) {
-	db.fifoQuery(query, args, function(err, keyRecords) {
-		if(err) { callback(err); return; }
+	db.fifoQuerySync(query, args, con).forEachSeries(function(keyRecord, cb) {
+		_addKey(keyRecord, keyring, ret, function(err) {
+			if(err) { cb(err); return; }
 		
-		next();
-		function next() {
-			keyRecords.next(function(err, keyRecord) {
-				if(err === true) { callback(null); return; }
-				else if(err) { callback(err); return; }
-				
-				_addKey(keyRecord, function(err) {
-					if(err) { callback(err); return; }
-				
-					checkSubkeys(keyRecord, function(err) {
-						if(err) { callback(err); return; }
-						
-						next();
-					});
-				}, true);
-			});
-		}
-	}, con);
+			checkSubkeys(keyRecord, cb);
+		}, con, true);
+	}, callback);
 	
 	// Check if the found key is a sub-key of another key (or even several ones), if so, list that
 	function checkSubkeys(keyRecord, cb) {
@@ -133,26 +121,26 @@ function _searchForKey(query, args, keyring, ret, callback, con) {
 					if(err === true) { cb(null); return; }
 					else if(err) { cb(err); return; }
 					
-					db.getEntry("keys", [ "id", "primary_id", "expires", "revokedby", "perm_idsearch" ], { id: subkeyRecord.parentkey }, function(err, parentkeyRecord) {
+					db.getEntry("keys", [ "id", "expires", "revokedby", "perm_idsearch" ], { id: subkeyRecord.parentkey }, function(err, parentkeyRecord) {
 						if(err) { cb(err); return; }
 						
 						parentkeyRecord.subkey = keyRecord;
-						addKey(parentkeyRecord, cb, false);
+						_addKey(parentkeyRecord, keyring, ret, cb, con, false);
 					}, con);
 				});
 			}
 		}, con);
-	});
+	}
 }
 
-function _addKey(keyRecord, ret, callback, con, checkShouldList) {
+function _addKey(keyRecord, keyring, ret, callback, con, checkShouldList) {
 	if(checkShouldList)
 	{
 		_shouldListKey(keyRecord.id, function(err, shouldList) {
 			if(err)
 				callback(err);
 			else if(shouldList)
-				_addKey(keyRecord, callback, false);
+				_addKey(keyRecord, keyring, ret, callback, con, false);
 			else
 				callback(null);
 		});
@@ -163,7 +151,7 @@ function _addKey(keyRecord, ret, callback, con, checkShouldList) {
 		doAdd();
 	else if(keyring)
 	{
-		keyrings.keyringContainsKey(keyRecord.id, function(err, contains) {
+		keyrings.keyringContainsKey(keyring, keyRecord.id, function(err, contains) {
 			if(err) { callback(err); return; }
 			
 			if(contains)
@@ -182,7 +170,7 @@ function _addKey(keyRecord, ret, callback, con, checkShouldList) {
 			
 			if(identityRecord != null)
 				keyRecord.identity = identityRecord.id;
-			ret._add(obj);
+			ret._add(keyRecord);
 			callback(null);
 		}, con);
 	}
@@ -224,3 +212,5 @@ function _shouldListKey(keyId, callback, con) {
 		}
 	}, con);
 }
+
+exports.search = search;

@@ -1,0 +1,42 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param? error
+ * @param? keys
+*/
+{template .keyring}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title}{_('Your keyring')}{/param}
+		{param content}
+			{if $error}
+				{call gnewpg.ui.error}{param message}{$error}{/param}{/call}
+			{elseif $keys.length == 0}
+<p><em>{_('Your keyring is empty.')}</em></p>
+			{else}
+<form class="keyring" method="post" action="">
+	<table class="keyring">
+		<thead>
+			<tr>
+				<th class="c-select">&nbsp;</th>
+				<th class="c-key">{_('Key')}</th>
+				<th class="c-userid">{_('User ID')}</th>
+			</tr>
+		</thead>
+		<tbody>
+				{foreach $key in $keys}
+			<tr class="{if $key.expired}expired{/if} {if $key.revokedby}revoked{/if}">
+				<td class="c-select"><input type="checkbox" name="key" value="{$key.id}" /></td>
+				<td class="c-key"><a href="key/{$key.id}">{formatKeyId($key.id)}</a></td>
+				<td class="c-userid">{if $key.primary_identity}{$key.primary_identity.id}{/if}</td>
+			</tr>
+				{/foreach}
+		</tbody>
+	</table>
+	<div class="submit"><input type="submit" value="{_('Export the selected keys')}" /> {call gnewpg.ui.exportFormats /}</div>
+	<div class="submit"><input type="submit" name="remove" value="{_('Remove the selected keys from the keyring')}" onclick="return confirm('{_('Are you sure that you want to remove the selected keys from your keyring? If they are marked as private, you will not be able to access them anymore.')}');" /></div>
+</form>
+			{/if}
+		{/param}
+	{/call}
+{/template}

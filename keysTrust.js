@@ -67,7 +67,7 @@ function _handleVerifiedSignature(keyId, sigInfo, callback, con)
 
 	// Check 2a, 3a
 	if(sigInfo.sigtype == pgp.consts.SIG.KEY_REVOK || sigInfo.sigtype == pgp.consts.SIG.SUBKEY_REVOK)
-		checks.push(function() { _checkRevocationStatus(keyId, nextCheck); });
+		checks.push(function() { _checkRevocationStatus(keyId, nextCheck, con); });
 	// Check 2b, 3c
 	else if([ pgp.consts.SIG.KEY, pgp.consts.SIG.CERT_0, pgp.consts.SIG.CERT_1, pgp.consts.SIG.CERT_2, pgp.consts.SIG.CERT_3 ].indexOf(sigInfo.sigtype) != -1 && sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.REV_KEY])
 	{
@@ -91,7 +91,7 @@ function _handleVerifiedSignature(keyId, sigInfo, callback, con)
 		});
 	}
 	// Check 3b
-	else if(sigInfo.sigtype == pgp.consts.SUBKEY)
+	else if(sigInfo.sigtype == pgp.consts.SIG.SUBKEY)
 		checks.push(function() { _checkRevocationStatus(keyId, nextCheck, con); });
 
 	if([ pgp.consts.SIG.KEY, pgp.consts.SIG.CERT_0, pgp.consts.SIG.CERT_1, pgp.consts.SIG.CERT_2, pgp.consts.SIG.CERT_3, pgp.consts.SIG.CERT_REVOK, pgp.consts.SIG.KEY_BY_SUBKEY ].indexOf(sigInfo.sigtype) != -1)
@@ -114,47 +114,22 @@ function _handleVerifiedSignature(keyId, sigInfo, callback, con)
 function _checkRevocationStatus(keyId, callback, con) {
 	var authorisedKeys = [ ];
 	
-	db.getEntries("keys_signatures", [ "id", "issuer", "sigtype" ], { "key" : keyId, "sigtype": [ pgp.consts.SIG.REVOK, pgp.consts.SIG.SUBKEY_REVOK ], "verified" : true }, function(err, sigRecords) {
-		if(err) { callback(err); return; }
-		
-		next();
-
-		// Walk through each revocation signature and check whether the issuer is authorised
-		function next() {
-			sigRecords.next(function(err, sigRecord) {
-				if(err === true)
-					callback(null);
-				else if(err)
-					callback(err);
-				else if(sigRecord.sigtype == pgp.consts.SIG.SUBKEY_REVOK)
-				{ // If this is a subkey revokation, check the parent key(s) and see if any of them authorises the issuer of the revocation
-					db.getEntries("keys_subkeys", [ "parentkey" ], { id: keyId }, function(err, subkeyRecords) {
-						if(err) { callback(err); return; }
-						
-						checkParentKey();
-						function checkParentKey() {
-							subkeyRecords.next(function(err, subkeyRecord) {
-								if(err === true)
-									next(); // None of the parents authorises the issuer, so continue with the next revocation signature
-								else if(err)
-									callback(err);
-								else
-									check(sigRecord.issuer, sigRecord.id, subkeyRecord.parentkey, checkParentKey, true);
-							});
-						}
-					}, con);
-				}
-				else // If this is a key revokation, check if the key itself authorises the issuer of the revocation
-					check(sigRecord.issuer, sigRecord.id, keyId, next, false);
-			});
+	db.getEntriesSync("keys_signatures", [ "id", "issuer", "sigtype" ], { "key" : keyId, "sigtype": [ pgp.consts.SIG.KEY_REVOK, pgp.consts.SIG.SUBKEY_REVOK ], "verified" : true }, con).forEachSeries(function(sigRecord, cb) {
+		if(sigRecord.sigtype == pgp.consts.SIG.SUBKEY_REVOK)
+		{ // If this is a subkey revokation, check the parent key(s) and see if any of them authorises the issuer of the revocation
+			db.getEntriesSync("keys_subkeys", [ "parentkey" ], { id: keyId }, con).forEachSeries(function(subkeyRecord, cb2) {
+				check(sigRecord.issuer, sigRecord.id, subkeyRecord.parentkey, cb2, true);
+			}, cb);
 		}
-	}, con);
+		else // If this is a key revokation, check if the key itself authorises the issuer of the revocation
+			check(sigRecord.issuer, sigRecord.id, keyId, cb, false);
+	}, callback);
 	
 	// Check if the parent key authorises the issuer key to make a revocation signature
 	// If it does, call revoke(), if it does not, call cb, in case of an error, call callback(err)
 	function check(issuerId, signatureId, parentKeyId, cb, isSubkey) {
-		if(sigRecord.issuer == parentKeyId)
-			revoke();
+		if(issuerId == parentKeyId)
+			revoke(signatureId, isSubkey, issuerId, cb);
 		else
 		{
 			db.getEntry("keys", [ "binary" ], { id: issuerId }, function(err, issuerRecord) {
@@ -167,7 +142,7 @@ function _checkRevocationStatus(keyId, callback, con) {
 						if(err)
 							callback(err);
 						else if(authorised)
-							revoke(signatureId, isSubkey, issuerId);
+							revoke(signatureId, isSubkey, issuerId, cb);
 						else
 							cb();
 					}, con);
@@ -177,11 +152,11 @@ function _checkRevocationStatus(keyId, callback, con) {
 	}
 	
 	// Revoke the key
-	function revoke(signatureId, isSubkey, issuerId) {
+	function revoke(signatureId, isSubkey, issuerId, cb) {
 		if(isSubkey) // Check 3: revoke the subkey binding signatures
-			db.update("keys_signatures", { revokedby: signatureId }, { sigtype: pgp.consts.SIG.SUBKEY, key: keyId, issuer: issuerId }, callback, con);
+			db.update("keys_signatures", { revokedby: signatureId }, { sigtype: pgp.consts.SIG.SUBKEY, key: keyId, issuer: issuerId }, cb, con);
 		else // Check 2: revoke the key
-			db.update("keys", { revokedby: signatureId }, { id: keyId }, callback, con);
+			db.update("keys", { revokedby: signatureId }, { id: keyId }, cb, con);
 	}
 }
 
@@ -354,7 +329,7 @@ function _checkSubkeyExpiration(keyId, parentId, callback, con) {
 							if(err) { callback(err); return; }
 							
 							if(sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE])
-								expire = new Date(keyInfo.date.getTime() + sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE].value*1000);
+								expire = new Date(keyInfo.date.getTime() + sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE][0].value*1000);
 							next();
 						});
 					});
@@ -414,10 +389,10 @@ function verifyKeySignature(signatureId, callback, con) {
 						pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
 							if(err) { callback(err); return; }
 
-							_handleVerifiedSignature(sigRecord.key, sigInfo, function(err) {
+							db.update("keys_signatures", { verified: true }, { id: signatureId }, function(err) {
 								if(err) { callback(err); return; }
-								
-								db.update("keys_signatures", { verified: true }, { id: signatureId }, function(err) {
+
+								_handleVerifiedSignature(sigRecord.key, sigInfo, function(err) {
 									if(err) { callback(err); return; }
 									callback(null, true);
 								}, con);
@@ -472,10 +447,10 @@ function verifyIdentitySignature(signatureId, callback, con) {
 						pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
 							if(err) { callback(err); return; }
 
-							_handleVerifiedSignature(sigRecord.key, sigInfo, function(err) {
+							db.update("keys_identities_signatures", { verified: true }, { id: signatureId }, function(err) {
 								if(err) { callback(err); return; }
 								
-								db.update("keys_identities_signatures", { verified: true }, { id: signatureId }, function(err) {
+								_handleVerifiedSignature(sigRecord.key, sigInfo, function(err) {
 									if(err) { callback(err); return; }
 									callback(null, true);
 								}, con);
@@ -533,10 +508,10 @@ function verifyAttributeSignature(signatureId, callback, con) {
 							pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
 								if(err) { callback(err); return; }
 
-								_handleVerifiedSignature(sigRecord.key, sigInfo, function(err) {
+								db.update("keys_attributes_signatures", { verified: true }, { id: signatureId }, function(err) {
 									if(err) { callback(err); return; }
 									
-									db.update("keys_attributes_signatures", { verified: true }, { id: signatureId }, function(err) {
+									_handleVerifiedSignature(sigRecord.key, sigInfo, function(err) {
 										if(err) { callback(err); return; }
 										callback(null, true);
 									}, con);

@@ -34,19 +34,19 @@
 				{/if}
 			{else}
 <form action="" method="post" class="upload" enctype="multipart/form-data">
-	{call gnewpg.ui.errors}{param errors:$errors/}{/call}
 	<dl class="form">
 		<dt><label for="i-file">{_('Upload a file')}</label></dt>
 		<dd><input id="i-file" name="file" type="file" multiple="multiple" /></dd>
 		
 		<dt><label for="i-paste">{_('or paste a key')}</label></dt>
-		<dd><textarea id="i-paste" name="paste"></textarea></dd>
+		<dd><textarea id="i-paste" name="paste" class="paste"></textarea></dd>
 	</dl>
 	<p>{call gnewpg.ui.faq}{param no:1/}{param showTitle:true/}{/call}</p>
+	<div class="checkbox"><input id="i-downloadupdated" name="downloadupdated" type="checkbox" /><label for="i-downloadupdated"> {_('Download keys with updated signatures after uploading as')}</label> {call gnewpg.ui.exportFormats /} {call gnewpg.ui.faq}{param no:2/}{param showTitle:false/}{/call}</div>
 	<p>{_('If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so it will only be visible to people who already posess it in order to receive new signatures.')}</p>
 	<p>{_('New signatures in the uploaded key will be saved on the server and will be available to everyone who has access to the key.')}</p>
 	<div class="checkbox"><input id="i-donotpublish" name="donotpublish" type="checkbox" /><label for="i-donotpublish"> {_('Do not publish uploaded signatures on the server')}</label></div>
-	<div class="submit"><input type="submit" value="{_('Upload')}" /> <input type="submit" name="downloadupdated" value="{_('Upload and download with updated signatures')}" /></div>
+	<div class="submit"><input type="submit" value="{_('Upload')}" /></div>
 </form>
 			{/if}
 		{/param}
@@ -60,10 +60,10 @@
 	{switch $obj.type}
 
 		{case 2}
-<li>{_(''+'[SIG_'+$obj.sigtype+']')} by <em>{$obj.issuer}</em> on <em>{_($obj.date)}</em>{if $obj.err}: {_($obj.err)}{/if}</li>
+<li>{_(''+'[SIG_'+$obj.sigtype+']')} by <em>{formatKeyId($obj.issuer)}</em> on <em>{_($obj.date)}</em>{if $obj.err}: {_($obj.err)}{/if}</li>
 
 		{case 6}
-<li>{_('Public key')} <em>{$obj.id}</em>{if $obj.err}: {_($obj.err)}{/if}<ul>
+<li>{_('Public key')} <a href="key/{$obj.id}"><em>{formatKeyId($obj.id)}</em></a>{if $obj.err}: {_($obj.err)}{/if}<ul>
 			{foreach $sig in $obj.signatures}
 				{call .printObj}{param obj:$sig /}{/call}
 			{/foreach}
@@ -86,7 +86,7 @@
 </ul></li>
 
 		{case 14}
-<li>{_('Public subkey')} <em>{$obj.id}</em>{if $obj.err}: {_($obj.err)}{/if}<ul>
+<li>{_('Public subkey')} <em>{formatKeyId($obj.id)}</em>{if $obj.err}: {_($obj.err)}{/if}<ul>
 			{foreach $sig in $obj.signatures}
 				{call .printObj}{param obj:$sig /}{/call}
 			{/foreach}
