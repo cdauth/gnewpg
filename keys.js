@@ -60,7 +60,7 @@ function removeEmptyAttribute(keyId, attrId, callback, con) {
 			callback(null, false);
 		else
 		{
-			db.delete("keys_attributes", { key: keyId, attribute: attrId }, function(err) {
+			db.delete("keys_attributes", { key: keyId, id: attrId }, function(err) {
 				if(err)
 					callback(err);
 				else
@@ -70,6 +70,13 @@ function removeEmptyAttribute(keyId, attrId, callback, con) {
 	}, con);
 }
 
+/**
+ * Gets the primary ID for the given key. If no primary ID is set or the set primary ID is non-public and not
+ * contained in the given keyring, returns another ID of the key that can be displayed.
+ * 
+ * The callback function receives (apart from an error object) the database record of the identity, with all
+ * fields, or null if no primary identity could be found.
+*/
 function getPrimaryIdentity(keyId, keyring, callback, con) {
 	db.getEntry("keys", [ "primary_identity" ], { id: keyId }, function(err, keyRecord) {
 		if(err) { callback(err); return; }
@@ -77,14 +84,14 @@ function getPrimaryIdentity(keyId, keyring, callback, con) {
 		
 		if(keyRecord.primary_identity != null)
 		{
-			db.getEntry("identities", "*", { key: keyId, id: keyRecord.primary_identity }, function(err, primaryRecord) {
+			db.getEntry("keys_identities", "*", { key: keyId, id: keyRecord.primary_identity }, function(err, primaryRecord) {
 				if(err) { callback(err); return; }
 				
 				if(primaryRecord.perm_public)
 					callback(null, primaryRecord);
 				else
 				{
-					keyrings.keyringContainsIdentity(keyring, keyId, primaryId, function(err, contains) {
+					keyrings.keyringContainsIdentity(keyring, keyId, primaryRecord.id, function(err, contains) {
 						if(err) { callback(err); return; }
 						
 						if(contains)
@@ -163,22 +170,6 @@ function exportKey(keyId, keyring, selection, con) {
 				}, cb);
 			},
 			function(cb) {
-				db.getEntriesSync("keys_subkeys", [ "id", "binary" ], { parentkey: keyId }, con).forEachSeries(function(subkeyRecord, cb2) {
-					if(!selection || !selection.subkeys || selection.subkeys[subkeyRecord.id])
-					{
-						ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.PUBLIC_SUBKEY, subkeyRecord.binary));
-						
-						db.getEntriesSync("keys_signatures", [ "id", "binary" ], { key: subkeyRecord.id, sigtype: [ pgp.consts.SIG.SUBKEY, pgp.consts.SIG.SUBKEY_REVOK ] }, con).forEachSeries(function(signatureRecord, cb3) {
-							if(!selection || !selection.signatures || selection.signatures[signatureRecord.id])
-								ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, signatureRecord.binary));
-							cb3();
-						}, cb2);
-					}
-					else
-						cb2();
-				}, cb);
-			},
-			function(cb) {
 				db.getEntriesSync("keys_identities_selfsigned", [ "id", "perm_public" ], { key: keyId }, con).forEachSeries(function(identityRecord, cb2) {
 					if(selection && selection.identities && !selection.identities[identityRecord.id])
 						send(null, false);
@@ -234,6 +225,22 @@ function exportKey(keyId, keyring, selection, con) {
 							}, cb2);
 						}
 					}
+				}, cb);
+			},
+			function(cb) { // gnupg sometimes gets confused when the subkeys aren’t at the end
+				db.getEntriesSync("keys_subkeys", [ "id", "binary" ], { parentkey: keyId }, con).forEachSeries(function(subkeyRecord, cb2) {
+					if(!selection || !selection.subkeys || selection.subkeys[subkeyRecord.id])
+					{
+						ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.PUBLIC_SUBKEY, subkeyRecord.binary));
+						
+						db.getEntriesSync("keys_signatures", [ "id", "binary" ], { key: subkeyRecord.id, issuer: keyId, sigtype: [ pgp.consts.SIG.SUBKEY, pgp.consts.SIG.SUBKEY_REVOK ] }, con).forEachSeries(function(signatureRecord, cb3) {
+							if(!selection || !selection.signatures || selection.signatures[signatureRecord.id])
+								ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, signatureRecord.binary));
+							cb3();
+						}, cb2);
+					}
+					else
+						cb2();
 				}, cb);
 			}
 		], function(err) {
@@ -294,7 +301,7 @@ function getKeyWithSubobjects(keyId, keyring, detailed, callback, con) {
 			function(cb) { // Add subkeys and their signatures
 				db.getEntriesSync("keys_subkeys", "*", { parentkey: keyId }, con).forEachSeries(function(subkeyRecord, cb2) {
 					keyRecord.subkeys.push(subkeyRecord);
-					handleSignatures(db.getEntriesSync("keys_signatures", "*", { key: subkeyRecord.id, sigtype: [ pgp.consts.SIG.SUBKEY, pgp.consts.SIG.SUBKEY_REVOK ] }, 'ORDER BY "date" ASC', con), subkeyRecord, function(err) {
+					handleSignatures(db.getEntriesSync("keys_signatures", "*", { key: subkeyRecord.id, issuer: keyId, sigtype: [ pgp.consts.SIG.SUBKEY, pgp.consts.SIG.SUBKEY_REVOK ] }, 'ORDER BY "date" ASC', con), subkeyRecord, function(err) {
 						if(err || !detailed)
 							cb2(err);
 						else
@@ -434,12 +441,20 @@ function getKeyWithSubobjects(keyId, keyring, detailed, callback, con) {
 	};
 	
 	function addPrimaryId(signatureRecord, callback) {
-		getPrimaryIdentity(signatureRecord.issuer, keyring, function(err, primaryIdRecord) {
-			if(err) { callback(err); return }
+		db.getEntry("keys", "*", {id: signatureRecord.issuer}, function(err, issuerRecord) {
+			if(err) { callback(err); return; }
+			if(issuerRecord == null) { callback(null); return; }
 			
-			if(primaryIdRecord)
-				signatureRecord.issuer_primary_identity = primaryIdRecord.id;
-			callback(null);
+			signatureRecord.issuerRecord = issuerRecord;
+			issuerRecord.expired = (issuerRecord.expires && issuerRecord.expires.getTime() <= (new Date()).getTime());
+
+			getPrimaryIdentity(signatureRecord.issuer, keyring, function(err, primaryIdRecord) {
+				if(err) { callback(err); return }
+				
+				if(primaryIdRecord)
+					signatureRecord.issuer_primary_identity = primaryIdRecord.id;
+				callback(null);
+			}, con);
 		}, con);
 	}
 	

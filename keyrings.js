@@ -23,8 +23,17 @@ function getPseudoKeyringForUploadedKeys(uploadedKeys) {
 	return uploadedKeys;
 }
 
+/**
+ * Returns a keyring that has access to all keys.
+*/
+function getUniversalKeyring() {
+	return "UNIVERSAL";
+}
+
 function keyringContainsKey(keyring, keyId, callback, onlyKeyring, con) {
-	if(keyring instanceof Keyring)
+	if(keyring === "UNIVERSAL")
+		callback(null, true);
+	else if(keyring instanceof Keyring)
 	{
 		var filter = { "key" : keyId };
 		filter[keyring.ownerCol] = keyring.ownerId;
@@ -45,7 +54,9 @@ function keyringContainsKey(keyring, keyId, callback, onlyKeyring, con) {
 }
 
 function keyringContainsIdentity(keyring, keyId, identityId, callback, onlyKeyring, con) {
-	if(keyring instanceof Keyring)
+	if(keyring === "UNIVERSAL")
+		callback(null, true);
+	else if(keyring instanceof Keyring)
 	{
 		var filter = { "identityKey" : keyId, "identity" : identityId };
 		filter[keyring.ownerCol] = keyring.ownerId;
@@ -72,7 +83,9 @@ function keyringContainsIdentity(keyring, keyId, identityId, callback, onlyKeyri
 }
 
 function keyringContainsAttribute(keyring, keyId, attributeId, callback, onlyKeyring, con) {
-	if(keyring instanceof Keyring)
+	if(keyring === "UNIVERSAL")
+		callback(null, true);
+	else if(keyring instanceof Keyring)
 	{
 		var filter = { "attributeKey" : keyId, "attribute" : attributeId };
 		filter[keyring.ownerCol] = keyring.ownerId;
@@ -145,6 +158,7 @@ function addAttributeToKeyring(keyring, keyId, attributeId, callback, con) {
 
 exports.getKeyringForUser = getKeyringForUser;
 exports.getPseudoKeyringForUploadedKeys = getPseudoKeyringForUploadedKeys;
+exports.getUniversalKeyring = getUniversalKeyring;
 exports.keyringContainsKey = keyringContainsKey;
 exports.keyringContainsIdentity = keyringContainsIdentity;
 exports.keyringContainsAttribute = keyringContainsAttribute;

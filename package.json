@@ -23,6 +23,8 @@
     "dateformat": "x.x.x",
     "node-markdown": "x.x.x",
     "sprintf": "x.x.x",
-    "async": "x.x.x"
+    "async": "x.x.x",
+    "nodemailer": "x.x.x",
+    "mailcomposer": "x.x.x"
   }
 }

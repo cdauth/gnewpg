@@ -5,7 +5,7 @@
 {template .index}
 	{call gnewpg.ui.html}
 		{param searchengines: true /}
-		{param title}Welcome{/param}
+		{param title:'Welcome' /}
 		{param content}
 <p>{call gnewpg.ui.faq}{param no:3 /}{param showTitle:true /}{/call}</p>
 <div class="index-links {if $ij.req.session.user == null}not{/if}loggedin">

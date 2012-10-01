@@ -14,16 +14,21 @@ table tr.sub-heading td + td { border-left:1px dashed #aaa; }
 
 div.submit { padding-top:.5em; }
 
+.revoked,.expired { text-decoration:line-through; }
+
 
 /* ui.soy */
 
 #login-bar { position:absolute; top:5px; right:5px; }
 #login-bar form.logout { display:inline; }
 
-.security-0 { background-color:#f22; color:#400; }
-.security-1,.security--1 { background-color:#fca; }
-.security-2 { background-color:#ffb; }
-.security-3 { background-color:#e8ffe8; }
+.security-0 { background-color:#f22; color:#400; box-shadow:0 0 3px #d00; }
+.security-1,.security--1 { background-color:#fca; box-shadow:0 0 3px #da8; }
+.security-2 { background-color:#ffb; box-shadow:0 0 3px #dd9; }
+.security-3 { background-color:#e8ffe8; box-shadow:0 0 3px #d0e8d0; }
+
+p.success { background-color:#e0ffe0; padding:5px; box-shadow:0 0 5px #e0ffe0; font-weight:bold; color:#030; }
+p.error { background-color:#fca; padding:5px; box-shadow:0 0 5px #fca; font-weight:bold; color:#300; }
 
 
 /* key.soy */
@@ -36,8 +41,6 @@ div.submit { padding-top:.5em; }
 
 .key-details { clear:both; margin-top:2em; }
 .key-details .c-indentation { border-left-style:none; border-top-style:none; border-bottom-style:none; }
-.key-details tr.revoked td.c-object,.key-details tr.revoked td.c-signature,.key-details tr.revoked td.c-issuer,.key-details tr.revoked td.c-date { text-decoration:line-through; }
-.key-details tr.expired td.c-object,.key-details tr.expired td.c-signature,.key-details tr.expired td.c-issuer,.key-details tr.expired td.c-date { text-decoration:line-through; }
 .key-details td.c-checkbox,.key-details th.c-checkbox { border-style:none; background-color:transparent; }
 .key-details tr.heading td + td,.key-details tr.sub-heading td.c-object { border-left:1px solid #888; }
 
@@ -47,8 +50,6 @@ div.submit { padding-top:.5em; }
 .index-links { text-align:center; width:50em; margin:0 auto; }
 .index-links > div { width:20em; display:inline-block; border:1px solid #000; margin:1em; padding:1em; vertical-align:top; }
 .index-links > div > h3,.index-links > div > a { font-size:1.7em; font-weight:bold; margin-top:0; padding-top:0; }
-
-.keyring tr.revoked td,.keyring tr.expired td { text-decoration:line-through; }
 
 
 /* upload.soy */

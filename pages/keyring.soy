@@ -7,10 +7,10 @@
 {template .keyring}
 	{call gnewpg.ui.html}
 		{param searchengines: false /}
-		{param title}{_('Your keyring')}{/param}
+		{param title:_('Your keyring') /}
 		{param content}
 			{if $error}
-				{call gnewpg.ui.error}{param message}{$error}{/param}{/call}
+				{call gnewpg.ui.error}{param message:_($error)/}{/call}
 			{elseif $keys.length == 0}
 <p><em>{_('Your keyring is empty.')}</em></p>
 			{else}

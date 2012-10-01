@@ -1,0 +1,17 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param keyId
+*/
+{template .claimkey}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title:_('Claim key %s', $keyId) /}
+		{param content}
+			<p>{_('You are about to verify yourself as the owner of the key %s. An encrypted e-mail will be sent to the primary e-mail address of the key. Click the confirmation key in that e-mail to verify that the key belongs to you.', formatKeyId(keyId))}</p>
+			<form action="" method="post">
+				<input type="submit" value="{_('Send verification e-mail')}" />
+			</form>
+		{/param}
+	{/call}
+{/template}

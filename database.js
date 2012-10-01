@@ -271,6 +271,8 @@ function _filterToCondition(filter, args) {
 			});
 			ret += ')';
 		}
+		else if(filter[j] == null)
+			ret += '"'+j+'" IS NULL';
 		else
 		{
 			ret += '"'+j+'" = $'+(i++);

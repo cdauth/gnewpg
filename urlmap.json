@@ -8,12 +8,14 @@
 		"/search" : "search",
 		"/key/:keyId" : "key",
 		"/key/:keyId/export" : "exportKey",
-		"/keyring" : "keyring"
+		"/keyring" : "keyring",
+		"/claimkey" : "claimkey"
 	},
 	"post" : {
 		"/login": "login",
 		"/register": "register",
 		"/logout": "logout",
-		"/upload": "upload"
+		"/upload": "upload",
+		"/claimkey" : "claimkey"
 	}
 }

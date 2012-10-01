@@ -6,6 +6,8 @@ var urlmap = require("./urlmap");
 var i18n = require("./i18n");
 var config = require("./config");
 var fs = require("fs");
+var mails = require("./mails");
+var async = require("async");
 
 if(!fs.existsSync(config.tmpDir))
 	fs.mkdirSync(config.tmpDir, 0700);
@@ -14,19 +16,32 @@ if(!fs.existsSync(config.tmpDir+"/upload"))
 
 var app = express();
 
-sessions.scheduleInactiveSessionCleaning();
-app.use(express.bodyParser({ uploadDir: config.tmpDir+"/upload" })); // For POST requests
-app.use(express.cookieParser());
-app.use(sessions.sessionMiddleware);
-app.use("/static", express.static(__dirname+"/static"));
-app.use(i18n.middleware);
+async.series([
+	function(cb) {
+		sessions.scheduleInactiveSessionCleaning();
+		
+		app.use(express.bodyParser({ uploadDir: config.tmpDir+"/upload" })); // For POST requests
+		app.use(express.cookieParser());
+		app.use(sessions.sessionMiddleware);
+		app.use("/static", express.static(__dirname+"/static"));
+		app.use(i18n.middleware);
+		
+		for(var i in urlmap.get)
+			app.get(i, _request("get", urlmap.get[i]));
+		for(var i in urlmap.post)
+			app.post(i, _request("post", urlmap.post[i]));
 
-soynode.setOptions({
-	"classpath" : __dirname+"/soyFunctions/SoyFunctionsModule.jar",
-	"pluginModules" : [ "gnewpg.SoyFunctionsModule" ],
-	"additionalArguments" : [ "--isUsingIjData" ]
-});
-soynode.compileTemplates(__dirname+"/pages", function(err) {
+		soynode.setOptions({
+			"classpath" : __dirname+"/soyFunctions/SoyFunctionsModule.jar",
+			"pluginModules" : [ "gnewpg.SoyFunctionsModule" ],
+			"additionalArguments" : [ "--isUsingIjData" ]
+		});
+
+		soynode.compileTemplates(__dirname+"/pages", cb);
+	}, function(cb) {
+		mails.loadPrivateKey(cb);
+	}
+], function(err) {
 	if(err)
 		throw err;
 
@@ -35,7 +50,7 @@ soynode.compileTemplates(__dirname+"/pages", function(err) {
 	console.log("Server started");
 });
 
-function request(method, template) {
+function _request(method, template) {
 	var module = null;
 	try {
 		module = require.resolve("./pages/"+template);
@@ -60,8 +75,3 @@ function request(method, template) {
 			send();
 	};
 }
-
-for(var i in urlmap.get)
-	app.get(i, request("get", urlmap.get[i]));
-for(var i in urlmap.post)
-	app.post(i, request("post", urlmap.post[i]));

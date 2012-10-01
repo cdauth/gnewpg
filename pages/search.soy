@@ -8,7 +8,7 @@
 {template .search}
 	{call gnewpg.ui.html}
 		{param searchengines: false /}
-		{param title}{_('Search: %s', $query)}{/param}
+		{param title:_('Search: %s', $query) /}
 		{param content}
 			{if $error}
 {call gnewpg.ui.error}{param message:_($error) /}{/call}

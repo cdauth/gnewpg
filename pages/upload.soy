@@ -8,11 +8,19 @@
 {template .upload}
 	{call gnewpg.ui.html}
 		{param searchengines: false /}
-		{param title}{_('Upload a key')}{/param}
+		{param title:_('Upload a key') /}
 		{param content}
 			{if $uploadedKeys}
 				{if $errors.length > 0}
 {call gnewpg.ui.error}{param message:_('Internal errors occurred while uploading the keys.') /}{/call}
+				{/if}
+				{if $failed.length > 0}
+{call gnewpg.ui.error}{param message:_('The following errors occurred:') /}{/call}
+<ul>
+					{foreach $obj in $failed}
+{call .printObj}{param obj:$obj /}{/call}
+					{/foreach}
+</ul>
 				{/if}
 				{if $uploadedKeys.length > 0}
 {call gnewpg.ui.success}{param message:_('The following keys were successfully uploaded:') /}{/call}
@@ -23,14 +31,6 @@
 </ul>
 				{else}
 {call gnewpg.ui.error}{param message:_('No keys were successfully uploaded.') /}{/call}
-				{/if}
-				{if $failed.length > 0}
-{call gnewpg.ui.error}{param message:_('The following errors occurred:') /}{/call}
-<ul>
-					{foreach $obj in $failed}
-{call .printObj}{param obj:$obj /}{/call}
-					{/foreach}
-</ul>
 				{/if}
 			{else}
 <form action="" method="post" class="upload" enctype="multipart/form-data">

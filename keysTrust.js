@@ -50,6 +50,8 @@ var db = require("./database");
  *        the key itself, its subkeys, its identities and its attributes, mark the signature as sensitive.
  *     b) a key is revoked by check 2 or 3 [or 4]. Check if the revoker has been authorised using a sensitive revocation authorisation signature, if so
  *        mark it as non-sensitive.
+ * 8. Make sure that the security level of a key is inherited to the signatures it makes.
+ *     a) A signature is verified. Set its security level to the lowest among its own and that of the key.
 */
 
 function _handleVerifiedSignature(keyId, sigInfo, callback, con)
@@ -250,59 +252,49 @@ function _checkSelfSignatures(keyId, callback, con) {
 
 		pgp.packetContent.getPublicKeyPacketInfo(keyRecord.binary, function(err, keyInfo) {
 			if(err) { callback(err); return; }
-
-			db.getEntries("keys_signatures_all", [ "id", "binary", "table" ], { key: keyId, issuer: keyId, verified: true, sigtype: [ pgp.consts.SIG.KEY, pgp.consts.SIG.CERT_0, pgp.consts.SIG.CERT_1, pgp.consts.SIG.CERT_2, pgp.consts.SIG.CERT_3 ], revokedby: null }, 'ORDER BY "date" ASC', function(err, sigRecords) {
+			
+			var expire = keyInfo.expires;
+			var primary = null;
+			
+			db.getEntriesSync("keys_signatures_all", [ "id", "binary", "table" ], { key: keyId, issuer: keyId, verified: true, sigtype: [ pgp.consts.SIG.KEY, pgp.consts.SIG.CERT_0, pgp.consts.SIG.CERT_1, pgp.consts.SIG.CERT_2, pgp.consts.SIG.CERT_3 ], revokedby: null }, 'ORDER BY "date" ASC', con).forEachSeries(function(sigRecord, cb) {
+				pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
+					if(err) { cb(err); return; }
+					
+					if(sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE])
+						expire = new Date(keyInfo.date.getTime() + sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE][0].value*1000);
+					if(sigRecord.table == "keys_identities_signatures" && sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.PRIMARY_UID] && sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.PRIMARY_UID][0].value)
+						primary = sigRecord.id;
+					
+					cb();
+				});
+			}, function(err) {
 				if(err) { callback(err); return; }
+
+				var updates = { };
+				if(expire == null || expire == 0)
+					updates.expires = null;
+				else
+					updates.expires = expire;
 				
-				var expire = keyInfo.expires;
-				var primary = null;
-				
-				next();
-				function next() {
-					sigRecords.next(function(err, sigRecord) {
-						if(err === true) { end(); return; }
+				if(primary != null)
+				{
+					db.getEntry("keys_identities_signatures", [ "identity" ], { id: primary }, function(err, sigRecord) {
 						if(err) { callback(err); return; }
 						
-						pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
-							if(err) { callback(err); return; }
-							
-							if(sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE])
-								expire = new Date(keyInfo.date.getTime() + sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.KEY_EXPIRE][0].value*1000);
-							if(sigRecord.table == "keys_identities_signatures" && sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.PRIMARY_UID] && sigInfo.hashedSubPackets[pgp.consts.SIGSUBPKT.PRIMARY_UID][0].value)
-								primary = sigRecord.id;
-							
-							next();
-						});
-					});
+						updates.primary_identity = sigRecord.identity;
+						update();
+					}, con);
+				}
+				else
+				{
+					updates.primary_identity = null;
+					update();
 				}
 				
-				function end() {
-					var updates = { };
-					if(expire == null || expire == 0)
-						updates.expires = null;
-					else
-						updates.expires = expire;
-					
-					if(primary != null)
-					{
-						db.getEntry("keys_signatures", [ "identity" ], { id: primary }, function(err, sigRecord) {
-							if(err) { callback(err); return; }
-							
-							updates.primary_identity = sigRecord.identity;
-							update();
-						}, con);
-					}
-					else
-					{
-						updates.primary_identity = null;
-						update();
-					}
-					
-					function update() {
-						db.update("keys", updates, { id: keyId }, callback, con);
-					}
+				function update() {
+					db.update("keys", updates, { id: keyId }, callback, con);
 				}
-			}, con);
+			});
 		});
 	}, con);
 }
@@ -353,16 +345,16 @@ function _checkSubkeyExpiration(keyId, parentId, callback, con) {
 */
 
 function verifyKeySignature(signatureId, callback, con) {
-	db.getEntry("keys_signatures", [ "key", "issuer", "sigtype", "binary" ], { id: signatureId }, function(err, sigRecord) {
+	db.getEntry("keys_signatures", [ "key", "issuer", "sigtype", "binary", "security" ], { id: signatureId }, function(err, sigRecord) {
 		if(err) { callback(err); return; }
 
-		db.getEntry("keys", [ "binary" ], { id: sigRecord.key }, function(err, keyRecord) {
+		db.getEntry("keys", [ "binary", "security" ], { id: sigRecord.key }, function(err, keyRecord) {
 			if(err) { callback(err); return; }
 			
 			if(sigRecord.key == sigRecord.issuer)
 				getIssuer(null, keyRecord);
 			else
-				db.getEntry("keys", [ "binary" ], { id: sigRecord.issuer }, getIssuer, con);
+				db.getEntry("keys", [ "binary", "security" ], { id: sigRecord.issuer }, getIssuer, con);
 			
 			function getIssuer(err, issuerRecord) {
 				if(err) { callback(err); return; }
@@ -389,7 +381,8 @@ function verifyKeySignature(signatureId, callback, con) {
 						pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
 							if(err) { callback(err); return; }
 
-							db.update("keys_signatures", { verified: true }, { id: signatureId }, function(err) {
+							                                               // Check 8a
+							db.update("keys_signatures", { verified: true, security: Math.min(issuerRecord.security, sigRecord.security) }, { id: signatureId }, function(err) {
 								if(err) { callback(err); return; }
 
 								_handleVerifiedSignature(sigRecord.key, sigInfo, function(err) {
@@ -416,16 +409,16 @@ function verifyKeySignature(signatureId, callback, con) {
 */
 
 function verifyIdentitySignature(signatureId, callback, con) {
-	db.getEntry("keys_identities_signatures", [ "key", "identity", "issuer", "binary" ], { id: signatureId }, function(err, sigRecord) {
+	db.getEntry("keys_identities_signatures", [ "key", "identity", "issuer", "binary", "security" ], { id: signatureId }, function(err, sigRecord) {
 		if(err) { callback(err); return; }
 
-		db.getEntry("keys", [ "binary" ], { id: sigRecord.key }, function(err, keyRecord) {
+		db.getEntry("keys", [ "binary", "security" ], { id: sigRecord.key }, function(err, keyRecord) {
 			if(err) { callback(err); return; }
 			
 			if(sigRecord.key == sigRecord.issuer)
 				getIssuer(null, keyRecord);
 			else
-				db.getEntry("keys", [ "binary" ], { id: sigRecord.issuer }, getIssuer, con);
+				db.getEntry("keys", [ "binary", "security" ], { id: sigRecord.issuer }, getIssuer, con);
 			
 			function getIssuer(err, issuerRecord) {
 				if(err) { callback(err); return; }
@@ -447,7 +440,8 @@ function verifyIdentitySignature(signatureId, callback, con) {
 						pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
 							if(err) { callback(err); return; }
 
-							db.update("keys_identities_signatures", { verified: true }, { id: signatureId }, function(err) {
+							                                                          // Check 8a
+							db.update("keys_identities_signatures", { verified: true, security: Math.min(issuerRecord.security, sigRecord.security) }, { id: signatureId }, function(err) {
 								if(err) { callback(err); return; }
 								
 								_handleVerifiedSignature(sigRecord.key, sigInfo, function(err) {
@@ -474,10 +468,10 @@ function verifyIdentitySignature(signatureId, callback, con) {
 */
 
 function verifyAttributeSignature(signatureId, callback, con) {
-	db.getEntry("keys_attributes_signatures", [ "key", "attribute", "issuer", "binary" ], { id: signatureId }, function(err, sigRecord) {
+	db.getEntry("keys_attributes_signatures", [ "key", "attribute", "issuer", "binary", "security" ], { id: signatureId }, function(err, sigRecord) {
 		if(err) { callback(err); return; }
 		
-		db.getEntry("keys", [ "binary" ], { id: sigRecord.key }, function(err, keyRecord) {
+		db.getEntry("keys", [ "binary", "security" ], { id: sigRecord.key }, function(err, keyRecord) {
 			if(err) { callback(err); return; }
 			
 			db.getEntry("keys_attributes", [ "binary" ], { id: sigRecord.attribute, key: sigRecord.key }, function(err, attributeRecord) {
@@ -486,7 +480,7 @@ function verifyAttributeSignature(signatureId, callback, con) {
 				if(sigRecord.key == sigRecord.issuer)
 					getIssuer(null, keyRecord);
 				else
-					db.getEntry("keys", [ "binary" ], { id: sigRecord.issuer }, getIssuer, con);
+					db.getEntry("keys", [ "binary", "security" ], { id: sigRecord.issuer }, getIssuer, con);
 				
 				function getIssuer(err, issuerRecord) {
 					if(err) { callback(err); return; }
@@ -508,7 +502,8 @@ function verifyAttributeSignature(signatureId, callback, con) {
 							pgp.packetContent.getSignaturePacketInfo(sigRecord.binary, function(err, sigInfo) {
 								if(err) { callback(err); return; }
 
-								db.update("keys_attributes_signatures", { verified: true }, { id: signatureId }, function(err) {
+								                                                          // Check 8a
+								db.update("keys_attributes_signatures", { verified: true, security: Math.min(issuerRecord.security, sigRecord.security) }, { id: signatureId }, function(err) {
 									if(err) { callback(err); return; }
 									
 									_handleVerifiedSignature(sigRecord.key, sigInfo, function(err) {

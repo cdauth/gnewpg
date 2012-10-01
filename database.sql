@@ -46,7 +46,7 @@ CREATE TABLE "keys_identities" (
 	"id" TEXT NOT NULL, -- The ID is simply the text of the identity, thus only unique per key
 	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
 	"name" TEXT NOT NULL,
-	"email" TEXT NOT NULL,
+	"email" TEXT,
 	"perm_public" BOOLEAN NOT NULL DEFAULT false, -- Identity is visible to people who do not know about it yet
 	"perm_namesearch" BOOLEAN NOT NULL DEFAULT false, -- The key can be found by searching for the name stated in this identity
 	"perm_emailsearch" BOOLEAN NOT NULL DEFAULT false, -- The key can be found by searching for the e-mail address stated in this identity
