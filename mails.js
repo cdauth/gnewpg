@@ -7,10 +7,15 @@ var async = require("async");
 var keyrings = require("./keyrings");
 var keys = require("./keys");
 var mailcomposer = require("mailcomposer");
+var mimelib = require("mimelib");
+var Mime = require("./mailsMime");
 
 var privateKey;
+var transport;
 
 function loadPrivateKey(callback) {
+	transport = nodemailer.createTransport(config.mailTransport, config.mailTransportOptions);
+
 	pgp.formats.decodeKeyFormat(fs.createReadStream(config.notificationPrivateKey)).readUntilEnd(function(err, notificationPrivateKey) {
 		if(err) { callback(err); return; }
 
@@ -24,6 +29,13 @@ function loadPrivateKey(callback) {
 				callback(new Error("Signing failed."));
 			else
 			{
+				var m = new mailcomposer.MailComposer();
+				m.setMessageOptions({ to: "bla@bla.com" });
+				m.streamMessage();
+				new pgp.BufferedStream(m).readUntilEnd(function(err, data) {
+					console.log(err, data);
+				});
+
 				console.log("Success.");
 				callback(null);
 			}
@@ -31,63 +43,55 @@ function loadPrivateKey(callback) {
 	});
 }
 
-function sendEncryptedMail(text, keyId, callback) {
+function getMailRecipient(keyId, callback) {
 	async.waterfall([
-		function(cb) {
-			keys.getPrimaryId(keyId, keyrings.getUniversalKeyring(), function(err, primaryIdRecord) {
-				if(err)
-					return cb(err);
-				
-				if(primaryIdRecord.email && utils.isEmailAddress(primaryIdRecord.email))
-					return cb(null, primaryIdRecord.id);
-				
+		async.apply(keys.getPrimaryId, keyId, keyrings.getUniversalKeyring()),
+		function(primaryIdRecord, cb) {
+			if(primaryIdRecord.email && utils.isEmailAddress(primaryIdRecord.email))
+				cb(primaryIdRecord.email);
+			else
+			{
 				db.fifoQuerySync('SELECT "id","email" FROM "keys_identities_selfsigned" WHERE "key" = $1 AND "email" IS NOT NULL AND "expires" > $2 AND "revokedby" IS NULL AND "email_blacklisted" = FALSE', [ keyId, new Date() ]).forEachSeries(function(idRecord, cb2) {
 					if(utils.isEmailAddress(idRecord.email))
 						cb(null, idRecord.id);
 					else
 						cb2();
 				}, function(err) {
-					callback(err, new i18n.Error_("This key does not contain any valid e-mail addresses."));
+					cb(err || new i18n.Error_("This key does not contain any valid e-mail addresses."));
 				});
-			});
-		},
-		function(id, cb) {
-			var composer = new mailcomposer.MailComposer();
-	
-			var boundary = "gnewpg-"+utils.generateRandomString(44);
-			
-			_encryptTo(messageText, toKeyId, function(err, encrypted) {
-				if(err)
-					return callback(err);
-				
-				pgp.formats.enarmor(encrypted, pgp.consts.ARMORED_MESSAGE.MESSAGE).readUntilEnd(function(err, armored) {
-					if(err)
-						return callback(err);
-
-					var encryptedMessage = "Content-Type: multipart/encrypted;\r\n" +
-						" protocol=\"application/pgp-encrypted\";\r\n" +
-						" boundary=\""+boundary+"\"\r\n" +
-						"\r\n" +
-						"--"+boundary+"\r\n" +
-						"Content-Type: application/gpg-encrypted\r\n" +
-						"\r\n" +
-						"Version: 1\r\n" +
-						"\r\n" +
-						"--"+boundary+"\r\n" +
-						"Content-Type: application/octet-stream\r\n" +
-						"\r\n" +
-						armored + // Contains newline at end
-						"\r\n" +
-						"--"+boundary;
-					
-					callback(null, encryptedMessage);
-				});
-			});
+			}
 		}
 	], callback);
-	
-	function to() {
-	
+}
+
+function sendSignedMail(to, subject, text, callback) {
+	async.waterfall([
+		async.apply(_signMessage, text),
+		async.apply(_sendMail)
+	], callback);
+}
+
+function sendSignedAndEncryptedMail(toKeyId, subject, text, callback) {
+	async.auto({
+		recipient: async.apply(getMailRecipient, toKeyId),
+		sign: async.apply(_signMessage, text),
+		encrypt: [ "sign", function(cb, res) { _encryptMessage(res.sign.toString(), toKeyId, cb); } ],
+		send: [ "recipient", "encrypt", function(cb, res) { _sendMail(res.recipient, subject, res.encrypt, cb); } ]
+	}, callback);
+}
+
+function _sendMail(to, subject, mime, callback) {
+	mime.headers["To"] = to;
+	mime.headers["Subject"] = subject;
+	mime.headers["Mime-Version"] = "1.0";
+
+	var composer = new mailcomposer.MailComposer();
+	composer.streamMessage = function() {
+		this.emit("data", new Buffer(mime.toString(), "utf8"));
+		this.emit("end");
+	};
+	transport.sendMailWithTransport(composer, callback);
+}
 
 function _encryptTo(text, toKeyId, callback) {
 	keys.exportKey(toKeyId, keyrings.getUniversalKeyring(), { attributes: [ ] }).readUntilEnd(function(err, key) {
@@ -100,41 +104,30 @@ function _encryptTo(text, toKeyId, callback) {
 
 
 function _signMessage(messageText, callback) {
-	var signedPart = "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n";
-	signedPart += mimelib.encodeQuotedPrintable(messageText);
+	var signedPart = new Mime("text/plain; charset=utf-8", messageText, { }, "quoted-printable");
 
-	pgp.signing.detachedSignText(signedPart, privateKey, function(err, signature) {
+	pgp.signing.detachedSignText(signedPart.toString(), privateKey, function(err, signature) {
 		if(err)
 			return callback(err);
 		
 		pgp.formats.enarmor(signature, pgp.consts.ARMORED_MESSAGE.MESSAGE).readUntilEnd(function(err, armored) {
 			if(err)
 				return callback(err);
-			
-			var boundary = "gnewpg-"+utils.generateRandomString(44);
-			
-			var signedMessage = "Content-Type: multipart/signed;\r\n" +
-				" boundary=\""+boundary+"\";\r\n" +
-				" micalg=pgp-sha256;\r\n" +
-				" protocol=\"application/pgp-signature\"\r\n" +
-				"\r\n" +
-				"--"+boundary+"\r\n" +
-				signedPart+"\r\n" +
-				"--"+boundary+"\r\n" +
-				"Content-Type: application/pgp-signature\r\n" +
-				"\r\n" +
-				armored + // Contains newline at end
-				"\r\n" +
-				"--"+boundary+"--";
-			
-			callback(message);
+
+			var signedMessageMime = new Mime(
+				"multipart/signed; micalg=pgp-sha256; protocol=\"application/pgp-signature\"",
+				[
+					signedPart,
+					new Mime("application/pgp-signature", armored)
+				]
+			);
+
+			callback(signedMessageMime);
 		});
 	});
 }
 
 function _encryptMessage(messageText, toKeyId, callback) {
-	var boundary = "gnewpg-"+utils.generateRandomString(44);
-	
 	_encryptTo(messageText, toKeyId, function(err, encrypted) {
 		if(err)
 			return callback(err);
@@ -143,25 +136,20 @@ function _encryptMessage(messageText, toKeyId, callback) {
 			if(err)
 				return callback(err);
 
-			var encryptedMessage = "Content-Type: multipart/encrypted;\r\n" +
-				" protocol=\"application/pgp-encrypted\";\r\n" +
-				" boundary=\""+boundary+"\"\r\n" +
-				"\r\n" +
-				"--"+boundary+"\r\n" +
-				"Content-Type: application/gpg-encrypted\r\n" +
-				"\r\n" +
-				"Version: 1\r\n" +
-				"\r\n" +
-				"--"+boundary+"\r\n" +
-				"Content-Type: application/octet-stream\r\n" +
-				"\r\n" +
-				armored + // Contains newline at end
-				"\r\n" +
-				"--"+boundary;
+			var encryptedMessageMime = new Mime(
+				"multipart/encrypted; protocol=\"application/pgp-encrypted\"",
+				[
+					new Mime("application/pgp-encrypted", "Version: 1"),
+					new Mime("application/octet-stream", armored)
+				]
+			);
 			
-			callback(null, encryptedMessage);
+			callback(null, encryptedMessageMime);
 		});
 	});
 }
 
 exports.loadPrivateKey = loadPrivateKey;
+exports.getMailRecipient = getMailRecipient;
+exports.sendSignedMail = sendSignedMail;
+exports.sendSignedAndEncryptedMail = sendSignedAndEncryptedMail;

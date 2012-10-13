@@ -5,5 +5,8 @@
 	"usernameMinLength" : 4,
 	"usernameMaxLength" : 20,
 	"passwordMinLength" : 8,
-	"notificationPrivateKey" : "./privateNotificationKey.asc"
+	"notificationPrivateKey" : "./privateNotificationKey.asc",
+	"tmpDir" : "/tmp/gnewpg",
+	"mailTransport" : "SENDMAIL",
+	"mailTransportOptions" : { }
 }
