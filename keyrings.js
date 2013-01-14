@@ -360,6 +360,12 @@ pgp.utils.extend(UserKeyring.prototype, {
 
 			db.insert(this._con, "users_keyrings_attributes", { user: this._user, attributeKey: keyId, attribute: attributeInfo.id }, callback);
 		}));
+	},
+
+	listKeyring : function() {
+		return pgp.Fifo.map(db.getEntries(this._con, "users_keyrings_keys", [ "key" ], { user: this._user }), function(it, cb) {
+			cb(null, it.key);
+		});
 	}
 });
 

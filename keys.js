@@ -125,4 +125,22 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 	}
 }
 
+function resolveKeyList(keyring, list) {
+	return pgp.Fifo.map(list, function(keyId, cb) {
+		keyring.getKey(keyId, function(err, keyInfo) {
+			if(err)
+				return cb(err);
+
+			keyInfo.expired = (keyInfo.expires && keyInfo.expires.getTime() <= (new Date()).getTime());
+
+			keyring.getPrimaryIdentity(keyId, function(err, identityInfo) {
+				keyInfo.primary_identity = identityInfo.id;
+
+				cb(null, keyInfo);
+			}, [ "id" ]);
+		}, [ "id", "revoked", "expires" ]);
+	});
+}
+
 exports.getKeyWithSubobjects = getKeyWithSubobjects;
+exports.resolveKeyList = resolveKeyList;

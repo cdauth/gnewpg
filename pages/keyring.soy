@@ -12,7 +12,7 @@
 			{if $error}
 				{call gnewpg.ui.error}{param message:_($error)/}{/call}
 			{elseif $keys.length == 0}
-<p><em>{_('Your keyring is empty.')}</em></p>
+<p class="nothingtodo"><em>{_('Your keyring is empty.')}</em></p>
 			{else}
 <form class="keyring" method="post" action="">
 	<table class="keyring">
@@ -28,7 +28,7 @@
 			<tr class="{if $key.expired}expired{/if} {if $key.revokedby}revoked{/if}">
 				<td class="c-select"><input type="checkbox" name="key" value="{$key.id}" /></td>
 				<td class="c-key"><a href="key/{$key.id}">{formatKeyId($key.id)}</a></td>
-				<td class="c-userid">{if $key.primary_identity}{$key.primary_identity.id}{/if}</td>
+				<td class="c-userid">{if $key.primary_identity}{$key.primary_identity}{/if}</td>
 			</tr>
 				{/foreach}
 		</tbody>
