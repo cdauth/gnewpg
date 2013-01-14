@@ -58,7 +58,7 @@ function cleanInactiveSessions() {
 			if(err)
 				console.warn("Error cleaning inactive sessions", err);
 
-			//con.end();
+			con.end();
 		});
 	});
 }
@@ -72,7 +72,7 @@ function cleanInactivePersistentSessions() {
 			if(err)
 				console.warn("Error cleaning inactive sessions", err);
 
-			//con.end();
+			con.end();
 		});
 	});
 }
