@@ -21,7 +21,7 @@ async.series([
 	function(cb) {
 		sessions.scheduleInactiveSessionCleaning();
 		
-		app.use(express.bodyParser({ uploadDir: config.tmpDir+"/upload" })); // For POST requests
+		app.use(express.bodyParser({ uploadDir: config.tmpDir+"/upload", maxFieldsSize: config.maxUploadSize })); // For POST requests
 		app.use(express.cookieParser());
 		app.use(db.middleware);
 		app.use(sessions.sessionMiddleware);

@@ -8,5 +8,6 @@
 	"notificationPrivateKey" : "./privateNotificationKey.asc",
 	"tmpDir" : "/tmp/gnewpg",
 	"mailTransport" : "SENDMAIL",
-	"mailTransportOptions" : { }
+	"mailTransportOptions" : { },
+	"maxUploadSize" : 20000000
 }
