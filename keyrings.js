@@ -85,17 +85,23 @@ pgp.utils.extend(FilteredKeyring.prototype, {
 
 	searchByShortKeyId : function(keyId) {
 		var ret = FilteredKeyring.super_.prototype.searchByShortKeyId.apply(this, arguments);
-		return pgp.Fifo.grep(ret, p(this, this._maySeeKey));
+		return pgp.Fifo.grep(ret, p(this, function(keyInfo, cb) {
+			this._maySeeKey(keyInfo.id, cb);
+		}));
 	},
 
 	searchByLongKeyId : function(keyId) {
 		var ret = FilteredKeyring.super_.prototype.searchByLongKeyId.apply(this, arguments);
-		return pgp.Fifo.grep(ret, p(this, this._maySeeKey));
+		return pgp.Fifo.grep(ret, p(this, function(keyInfo, cb) {
+			this._maySeeKey(keyInfo.id, cb);
+		}));
 	},
 
 	searchByFingerprint : function(keyId) {
 		var ret = FilteredKeyring.super_.prototype.searchByFingerprint.apply(this, arguments);
-		return pgp.Fifo.grep(ret, p(this, this._maySeeKey));
+		return pgp.Fifo.grep(ret, p(this, function(keyInfo, cb) {
+			this._maySeeKey(keyInfo.id, cb);
+		}));
 	}
 });
 
