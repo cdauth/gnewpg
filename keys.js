@@ -4,494 +4,125 @@ var keyrings = require("./keyrings");
 var async = require("async");
 var i18n = require("./i18n");
 
-function removeEmptyKey(keyId, callback, con) {
-	db.entryExists("keys_signatures", { key: keyId }, function(err, exists) {
-		if(err) callback(err);
-		else if(exists) callback(null, false);
-		else
-		{
-			db.entryExists("keys_identities", { key: keyId }, function(err, exists) {
-				if(err) callback(err);
-				else if(exists) callback(null, false);
-				else
-				{
-					db.entryExists("keys_attributes", { key: keyId }, function(err, exists) {
-						if(err) callback(err);
-						else if(exists) callback(null, false);
-						else
-						{
-							db.delete("keys", { id: keyId }, function(err) {
-								if(err)
-									callback(err);
-								else
-									callback(null, true);
-							}, con);
-						}
-					}, con);
-				}
-			}, con);
-		}
-	}, con);
-}
+function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
+	var keyFields = [ "id", "fingerprint", "security", "date", "expires", "revoked" ].concat(detailed ? [ "versionSecurity", "version", "pkalgo", "sizeSecurity", "size" ] : [ ]);
+	var signatureFields = [ "id", "expires", "revoked", "security", "sigtype", "verified", "issuer", "date" ].concat(detailed ? [ "version", "hashalgoSecurity", "hashalgo", "hashedSubPackets" ] : [ ]);
+	var subkeyFields = [ "id", "revoked", "expires", "security" ].concat(detailed ? [ "versionSecurity", "version", "sizeSecurity", "size", "pkalgo" ] : [ ]);
+	var identityFields = [ "id", "revoked", "expires", "security" ];
+	var attributeFields = [ "id", "revoked", "expires", "security", "subPackets" ];
 
-function removeEmptyIdentity(keyId, id, callback, con) {
-	db.entryExists("keys_identities_signatures", { key: keyId, identity: id }, function(err, exists) {
+	keyring.getKey(keyId, function(err, keyInfo) {
 		if(err)
-			callback(err);
-		else if(exists)
-			callback(null, false);
-		else
-		{
-			db.delete("keys_identities", { key: keyId, id: id }, function(err) {
-				if(err)
-					callback(err);
-				else
-					callback(null, true);
-			}, con);
-		}
-	}, con);
-}
+			return callback(err);
+		if(keyInfo == null)
+			return callback(new i18n.Error_("Key %s not found.", keyId));
 
-function removeEmptyAttribute(keyId, attrId, callback, con) {
-	db.entryExists("keys_attributes_signatures", { key: keyId, attribute: attrId }, function(err, exists) {
-		if(err)
-			callback(err);
-		else if(exists)
-			callback(null, false);
-		else
-		{
-			db.delete("keys_attributes", { key: keyId, id: attrId }, function(err) {
-				if(err)
-					callback(err);
-				else
-					callback(null, true);
-			}, con);
-		}
-	}, con);
-}
+		keyInfo.signatures = [ ];
+		keyInfo.subkeys = [ ];
+		keyInfo.identities = [ ];
+		keyInfo.attributes = [ ];
 
-/**
- * Gets the primary ID for the given key. If no primary ID is set or the set primary ID is non-public and not
- * contained in the given keyring, returns another ID of the key that can be displayed.
- * 
- * The callback function receives (apart from an error object) the database record of the identity, with all
- * fields, or null if no primary identity could be found.
-*/
-function getPrimaryIdentity(keyId, keyring, callback, con) {
-	db.getEntry("keys", [ "primary_identity" ], { id: keyId }, function(err, keyRecord) {
-		if(err) { callback(err); return; }
-		else if(keyRecord == null) { callback(null, null); return; }
-		
-		if(keyRecord.primary_identity != null)
-		{
-			db.getEntry("keys_identities", "*", { key: keyId, id: keyRecord.primary_identity }, function(err, primaryRecord) {
-				if(err) { callback(err); return; }
-				
-				if(primaryRecord.perm_public)
-					callback(null, primaryRecord);
-				else
-				{
-					keyrings.keyringContainsIdentity(keyring, keyId, primaryRecord.id, function(err, contains) {
-						if(err) { callback(err); return; }
-						
-						if(contains)
-							callback(null, primaryRecord);
-						else
-							findOther();
-					}, false, con);
-				}
-			}, con);
-		}
-		else
-			findOther();
-		
-		function findOther() {
-			db.getEntries("keys_identities_selfsigned", "*", { key: keyId }, function(err, identityRecords) {
-				if(err) { callback(err); return; }
-				
-				next();
-				function next() {
-					identityRecords.next(function(err, identityRecord) {
-						if(err === true) { callback(null, null); return; }
-						else if(err) { callback(err); return; }
-						
-						if(identityRecord.perm_public)
-							callback(null, identityRecord);
-						else
-						{
-							keyrings.keyringContainsIdentity(keyring, keyId, identityRecord.id, function(err, contains) {
-								if(err) { callback(err); return; }
-								
-								if(contains)
-									callback(null, identityRecord);
-								else
-									next();
-							}, false, con);
-						}
+		async.series([
+			function(next) {
+				resolveRevokedBy(keyInfo, next);
+			},
+			function(next) {
+				handleSignatures(keyInfo, keyring.getKeySignatures(keyId, null, signatureFields), next);
+			},
+			function(next) {
+				keyring.getSelfSignedSubkeys(keyId, null, subkeyFields).forEachSeries(function(subkeyInfo, next) {
+					keyInfo.subkeys.push(subkeyInfo);
+
+					resolveRevokedBy(subkeyInfo, function(err) {
+						if(err)
+							return next(err);
+
+						handleSignatures(subkeyInfo, keyring.getSubkeySignatures(keyId, subkeyInfo.id), next);
 					});
-				}
+				}, next);
+			},
+			function(next) {
+				keyring.getSelfSignedIdentities(keyId, null, identityFields).forEachSeries(function(identityInfo, next) {
+					keyInfo.identities.push(identityInfo);
+
+					resolveRevokedBy(identityInfo, function(err) {
+						if(err)
+							return next(err);
+
+						handleSignatures(identityInfo, keyring.getIdentitySignatures(keyId, identityInfo.id), next);
+					});
+				}, next);
+			},
+			function(next) {
+				keyring.getSelfSignedAttributes(keyId, null, attributeFields).forEachSeries(function(attributeInfo, next) {
+					keyInfo.attributes.push(attributeInfo);
+
+					resolveRevokedBy(attributeInfo, function(err) {
+						if(err)
+							return next(err);
+
+						handleSignatures(attributeInfo, keyring.getAttributeSignatures(keyId, attributeInfo.id), next);
+					});
+				}, next);
+			}
+		], function(err) {
+			callback(err, keyInfo);
+		});
+	}, keyFields);
+
+	function handleSignatures(objInfo, signatures, callback) {
+		if(!objInfo.signatures)
+			objInfo.signatures = [ ];
+
+		signatures.forEachSeries(function(signatureInfo, next) {
+			resolveIssuer(signatureInfo, function(err) {
+				if(err)
+					return next(err);
+
+				resolveRevokedBy(signatureInfo, function(err) {
+					if(err)
+						return next(err);
+
+					objInfo.signatures.push(signatureInfo);
+					next();
+				});
 			});
-		}
-	}, con);
-}
+		}, callback);
+	}
 
-function exportKey(keyId, keyring, selection, con) {
-	var ret = new pgp.BufferedStream();
-	
-	db.getEntry("keys", [ "binary", "perm_idsearch" ], { id: keyId }, function(err, keyRecord) {
-		if(err) { ret._endData(err); return; }
-		else if(keyRecord == null) { ret._endData(new i18n.Error_("Key %s does not exist.", keyId)); return; }
-		
-		async.series([
-			function(cb) {
-				if(keyRecord.perm_idsearch)
-					cb();
-				else if(keyring)
-				{
-					keyrings.keyringContainsKey(keyring, keyId, function(err, contains) {
-						if(err)
-							cb(err);
-						else if(contains)
-							cb();
-						else
-							cb(new i18n.Error_("No permission to view key %s.", keyId));
-					}, con);
-				}
-				else
-					cb(new i18n.Error_("No permission to view key %s.", keyId));
-			},
-			function(cb) {
-				ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.PUBLIC_KEY, keyRecord.binary));
-				
-				db.getEntriesSync("keys_signatures", [ "id", "binary" ], { key: keyId, sigtype: [ pgp.consts.SIG.KEY_BY_SUBKEY, pgp.consts.SIG.KEY, pgp.consts.SIG.KEY_REVOK ] }, con).forEachSeries(function(signatureRecord, cb2) {
-					if(!selection || !selection.signatures || selection.signatures[signatureRecord.id])
-						ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, signatureRecord.binary));
-					cb2();
-				}, cb);
-			},
-			function(cb) {
-				db.getEntriesSync("keys_identities_selfsigned", [ "id", "perm_public" ], { key: keyId }, con).forEachSeries(function(identityRecord, cb2) {
-					if(selection && selection.identities && !selection.identities[identityRecord.id])
-						send(null, false);
-					else if(identityRecord.perm_public)
-						send(null, true);
-					else if(keyring)
-						keyrings.keyringContainsIdentity(keyring, keyId, identityRecord.id, send, con);
-					else
-						send(null, false);
+	function resolveIssuer(signatureInfo, callback) {
+		keyring.getKey(signatureInfo.issuer, function(err, keyInfo) {
+			if(err || keyInfo == null)
+				return callback(err);
 
-					function send(err, perm) {
-						if(err)
-							cb2(err);
-						else if(!perm)
-							cb2();
-						else
-						{
-							ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.USER_ID, new Buffer(identityRecord.id, "utf8")));
-							
-							db.getEntriesSync("keys_identities_signatures", [ "id", "binary" ], { key: keyId, identity: identityRecord.id }, con).forEachSeries(function(signatureRecord, cb3) {
-								if(!selection || !selection.signatures || selection.signatures[signatureRecord.id])
-									ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, signatureRecord.binary));
-								cb3();
-							}, cb2);
-						}
-					}
-				}, cb);
-			},
-			function(cb) {
-				db.getEntriesSync("keys_attributes_selfsigned", [ "id", "binary", "perm_public" ], { key: keyId }, con).forEachSeries(function(attributeRecord, cb2) {
-					if(selection && selection.attributes && !selection.attributes[attributeRecord.id])
-						send(null, false);
-					else if(attributeRecord.perm_public)
-						send(null, true);
-					else if(keyring)
-						keyrings.keyringContainsAttribute(keyring, keyId, attributeRecord.id, send, con);
-					else
-						send(null, false);
+			keyInfo.expired = (keyInfo.expires && keyInfo.expires.getTime() <= (new Date()).getTime());
+			signatureInfo.issuerRecord = keyInfo;
 
-					function send(err, perm) {
-						if(err)
-							cb2(err);
-						else if(!perm)
-							cb2();
-						else
-						{
-							ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.ATTRIBUTE, attributeRecord.binary));
-							
-							db.getEntriesSync("keys_attributes_signatures", [ "id", "binary" ], { key: keyId, attribute: attributeRecord.id }, con).forEachSeries(function(attributeRecord, cb3) {
-								if(!selection || !selection.signatures || selection.signatures[signatureRecord.id])
-									ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, attributeRecord.binary));
-								cb3();
-							}, cb2);
-						}
-					}
-				}, cb);
-			},
-			function(cb) { // gnupg sometimes gets confused when the subkeys aren’t at the end
-				db.getEntriesSync("keys_subkeys", [ "id", "binary" ], { parentkey: keyId }, con).forEachSeries(function(subkeyRecord, cb2) {
-					if(!selection || !selection.subkeys || selection.subkeys[subkeyRecord.id])
-					{
-						ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.PUBLIC_SUBKEY, subkeyRecord.binary));
-						
-						db.getEntriesSync("keys_signatures", [ "id", "binary" ], { key: subkeyRecord.id, issuer: keyId, sigtype: [ pgp.consts.SIG.SUBKEY, pgp.consts.SIG.SUBKEY_REVOK ] }, con).forEachSeries(function(signatureRecord, cb3) {
-							if(!selection || !selection.signatures || selection.signatures[signatureRecord.id])
-								ret._sendData(pgp.packets.generatePacket(pgp.consts.PKT.SIGNATURE, signatureRecord.binary));
-							cb3();
-						}, cb2);
-					}
-					else
-						cb2();
-				}, cb);
-			}
-		], function(err) {
-			ret._endData(err);
-		});
-	}, con);
-	
-	return ret;
-}
+			keyring.getPrimaryIdentity(signatureInfo.issuer, function(err, identityInfo) {
+				if(err || identityInfo == null)
+					return callback(err);
 
-function getKeyWithSubobjects(keyId, keyring, detailed, callback, con) {
-	db.getEntry("keys", "*", { id: keyId }, function(err, keyRecord) {
-		if(err) { callback(err); return; }
-		if(keyRecord == null) { callback(new i18n.Error_("Key %s not found.", keyId)); return; }
-		
-		keyRecord.signatures = [ ];
-		keyRecord.subkeys = [ ];
-		keyRecord.identities = [ ];
-		keyRecord.attributes = [ ];
-		
-		async.series([
-			function(cb) { // Check if key is public or in keyring
-				if(keyRecord.perm_public)
-					cb();
-				else if(keyring)
-				{
-					keyrings.keyringContainsKey(keyring, keyId, function(err, contains) {
-						if(err)
-							cb(err);
-						else if(contains)
-							cb();
-						else
-							cb(new i18n.Error_("No permission to view key %s.", keyId));
-					});
-				}
-				else
-					cb(new i18n.Error_("No permission to view key %s.", keyId));
-			},
-			function(cb) { // If detailed, add key packet info
-				if(!detailed)
-					cb();
-				else
-				{
-					pgp.packetContent.getPublicKeyPacketInfo(keyRecord.binary, function(err, keyInfo) {
-						if(err)
-							cb(err);
-						else
-						{
-							keyRecord.info = keyInfo;
-							cb();
-						}
-					});
-				}
-			},
-			function(cb) { // Add key signatures
-				handleSignatures(db.getEntriesSync("keys_signatures", "*", { key: keyId, sigtype: [ pgp.consts.SIG.KEY_BY_SUBKEY, pgp.consts.SIG.KEY, pgp.consts.SIG.KEY_REVOK ] }, 'ORDER BY "date" ASC', con), keyRecord, cb);
-			},
-			function(cb) { // Add subkeys and their signatures
-				db.getEntriesSync("keys_subkeys", "*", { parentkey: keyId }, con).forEachSeries(function(subkeyRecord, cb2) {
-					keyRecord.subkeys.push(subkeyRecord);
-					handleSignatures(db.getEntriesSync("keys_signatures", "*", { key: subkeyRecord.id, issuer: keyId, sigtype: [ pgp.consts.SIG.SUBKEY, pgp.consts.SIG.SUBKEY_REVOK ] }, 'ORDER BY "date" ASC', con), subkeyRecord, function(err) {
-						if(err || !detailed)
-							cb2(err);
-						else
-						{
-							pgp.packetContent.getPublicSubkeyPacketInfo(subkeyRecord.binary, function(err, subkeyInfo) {
-								if(err)
-									cb2(err);
-								else
-								{
-									subkeyRecord.info = subkeyInfo;
-									cb2();
-								}
-							});
-						}
-					});
-				}, cb);
-			},
-			function(cb) { // Add identities and their signatures
-				db.getEntriesSync("keys_identities_selfsigned", "*", { key: keyId }, con).forEachSeries(function(identityRecord, cb2) {
-					async.series([
-						function(cb3) { // Check if identity is public or in keyring
-							if(identityRecord.perm_public)
-								cb3();
-							else if(keyring)
-							{
-								keyrings.keyringContainsIdentity(keyring, keyId, identityRecord.id, function(err, contains) {
-									if(err || contains)
-										cb3(err);
-									else
-										cb2(); // Skip identity
-								});
-							}
-							else
-								cb2(); // Skip identity
-						},
-						function(cb3) { // Add details
-							keyRecord.identities.push(identityRecord);
-
-							if(!detailed)
-								cb3();
-							else
-							{
-								pgp.packetContent.getIdentityPacketInfo(identityRecord.id, function(err, identityInfo) {
-									if(err)
-										cb3(err);
-									else
-									{
-										identityRecord.info = identityInfo;
-										cb3();
-									}
-								});
-							}
-						},
-						function(cb3) { // Add signatures
-							handleSignatures(db.getEntriesSync("keys_identities_signatures", "*", { key: keyId, identity: identityRecord.id }, 'ORDER BY "date" ASC', con), identityRecord, cb3);
-						}
-					], cb2);
-				}, cb);
-			},
-			function(cb) { // Add attributes and their signatures
-				db.getEntriesSync("keys_attributes_selfsigned", "*", { key: keyId }, con).forEachSeries(function(attributeRecord, cb2) {
-					async.series([
-						function(cb3) { // Check if attribute is public or in keyring
-							if(attributeRecord.perm_public)
-								cb3();
-							else if(keyring)
-							{
-								keyrings.keyringContainsAttribute(keyring, keyId, attributeRecord.id, function(err, contains) {
-									if(err || contains)
-										cb3(err);
-									else
-										cb2(); // Skip attribute
-								});
-							}
-							else
-								cb2(); // Skip attribute
-						},
-						function(cb3) { // Add details
-							keyRecord.attributes.push(attributeRecord);
-
-							if(!detailed)
-								cb3();
-							else
-							{
-								pgp.packetContent.getAttributePacketInfo(attributeRecord.binary, function(err, attributeInfo) {
-									if(err)
-										cb3(err);
-									else
-									{
-										attributeRecord.info = attributeInfo;
-										cb3();
-									}
-								});
-							}
-						},
-						function(cb3) { // Add signatures
-							handleSignatures(db.getEntriesSync("keys_attributes_signatures", "*", { key: keyId, attribute: attributeRecord.id }, 'ORDER BY "date" ASC', con), attributeRecord, cb3);
-						}
-					], cb2);
-				}, cb);
-			}
-		], function(err) {
-			if(err)
-				callback(err);
-			else
-				callback(null, keyRecord);
-		});
-	}, con);
-	
-	function handleSignatures(signatureRecords, objRecord, callback) {
-		if(!objRecord.signatures)
-			objRecord.signatures = [ ];
-
-		handleRevokedBy(objRecord, function(err) {
-			if(err) { callback(err); return; }
-
-			signatureRecords.forEachSeries(function(signatureRecord, cb) {
-				objRecord.signatures.push(signatureRecord);
-
-				async.waterfall([
-					async.apply(addPrimaryId, signatureRecord),
-					async.apply(handleRevokedBy, signatureRecord),
-					function(cb2) {
-						if(detailed)
-							pgp.packetContent.getSignaturePacketInfo(signatureRecord.binary, cb2);
-						else
-							cb2(null, null);
-					},
-					function(signatureInfo, cb2) {
-						if(signatureInfo)
-							signatureRecord.info = signatureInfo;
-						cb2();
-					}
-				], cb);
-			}, callback);
-		});
-	};
-	
-	function addPrimaryId(signatureRecord, callback) {
-		db.getEntry("keys", "*", {id: signatureRecord.issuer}, function(err, issuerRecord) {
-			if(err) { callback(err); return; }
-			if(issuerRecord == null) { callback(null); return; }
-			
-			signatureRecord.issuerRecord = issuerRecord;
-			issuerRecord.expired = (issuerRecord.expires && issuerRecord.expires.getTime() <= (new Date()).getTime());
-
-			getPrimaryIdentity(signatureRecord.issuer, keyring, function(err, primaryIdRecord) {
-				if(err) { callback(err); return }
-				
-				if(primaryIdRecord)
-					signatureRecord.issuer_primary_identity = primaryIdRecord.id;
-				callback(null);
-			}, con);
-		}, con);
+				keyInfo.primary_identity = identityInfo.id;
+				callback();
+			}, [ "id" ]);
+		}, [ "revoked", "expires" ])
 	}
 	
-	function handleRevokedBy(objRecord, callback) {
-		objRecord.expired = (objRecord.expires && objRecord.expires.getTime() <= (new Date()).getTime());
+	function resolveRevokedBy(objInfo, callback) {
+		objInfo.expired = (objInfo.expires && objInfo.expires.getTime() <= (new Date()).getTime());
 
-		if(!objRecord.revokedby)
-			callback();
-		else
-		{
-			async.waterfall([
-				function(cb) {
-					db.getEntry("keys_signatures_all", "*", { id: objRecord.revokedby }, cb, con);
-				},
-				function(signatureRecord, cb) {
-					objRecord.revokedby = signatureRecord;
-					addPrimaryId(signatureRecord, cb);
-				},
-				function(cb) {
-					if(!detailed)
-						cb(null, null);
-					else
-						pgp.packetContent.getSignaturePacketInfo(objRecord.revokedby.binary, cb);
-				},
-				function(signatureInfo, cb) {
-					if(signatureInfo)
-						objRecord.revokedby.info = signatureInfo;
-					cb();
-				}
-			], callback);
-		}
+		if(!objInfo.revoked)
+			return callback();
+
+		keyring.getSignatureById(objInfo.revoked, function(err, signatureInfo) {
+			if(err || signatureInfo == null)
+				return callback(err);
+
+			objInfo.revokedby = signatureInfo;
+
+			resolveIssuer(objInfo.revokedby, callback);
+		}, [ "date", "verified", "issuer" ]);
 	}
 }
 
-exports.removeEmptyKey = removeEmptyKey;
-exports.removeEmptyIdentity = removeEmptyIdentity;
-exports.removeEmptyAttribute = removeEmptyAttribute;
-exports.getPrimaryIdentity = getPrimaryIdentity;
-exports.exportKey = exportKey;
 exports.getKeyWithSubobjects = getKeyWithSubobjects;

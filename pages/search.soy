@@ -18,7 +18,7 @@
 				{else}
 <ul class="searchResults">
 					{foreach $result in $results}
-	<li>{_('Key')} <a href="key/{$result.id}"><em>{formatKeyId($result.id)}</em></a>{if $result.revokedby} <strong class="revoked">({_('revoked')})</strong>{elseif $result.expired} <strong class="expired">({_('expired')})</strong>{/if}{if $result.identity}, {_('identity')} (<em>{$result.identity}</em>){/if}{if $result.subkey}, {_('subkey')}: <em>{$result.subkey}</em>{/if}</li>
+	<li>{_('Key')} <a href="key/{$result.id}"><em>{formatKeyId($result.id)}</em></a>{if $result.revokedby} <strong class="revoked">({_('revoked')})</strong>{elseif $result.expired} <strong class="expired">({_('expired')})</strong>{/if}{if $result.identity} (<em>{$result.identity.id}</em>){/if}{if $result.subkey}, {_('subkey')}: <em>{$result.subkey.id}</em>{/if}</li>
 					{/foreach}
 </ul>
 				{/if}

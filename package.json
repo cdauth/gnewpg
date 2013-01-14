@@ -20,6 +20,7 @@
     "gettext": "x.x.x",
     "connect-i18n": "x.x.x",
     "node-pgp": "git://github.com/cdauth/node-pgp.git",
+	"node-pgp-postgres": "git://github.com/cdauth/node-pgp-postgres.git",
     "dateformat": "x.x.x",
     "node-markdown": "x.x.x",
     "sprintf": "x.x.x",

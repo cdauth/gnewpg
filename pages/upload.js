@@ -1,5 +1,4 @@
 var keys = require("../keys");
-var keysUpload = require("../keysUpload");
 var fs = require("fs");
 var keyrings = require("../keyrings");
 var async = require("async");
@@ -16,15 +15,11 @@ module.exports.post = function(req, res, next) {
 	var uploadedKeys = [ ];
 	var errors = [ ];
 	var failed = [ ];
-	
-	var keyring = null;
-	if(req.session.user)
-		keyring = keyrings.getKeyringForUser(req.session.user.id);
-	
+
 	async.series([
 		function(cb) {
 			async.forEachSeries(f, function(it, cb2) {
-				keysUpload.uploadKey(fs.createReadStream(it.path), function(err, uploaded) {
+				req.keyring.importKeys(fs.createReadStream(it.path), function(err, uploaded) {
 					if(err)
 					{
 						console.warn("Error while uploading key", err);
@@ -32,7 +27,7 @@ module.exports.post = function(req, res, next) {
 					}
 					else
 					{
-						uploadedKeys = uploadedKeys.concat(uploaded.uploadedKeys);
+						uploadedKeys = uploadedKeys.concat(uploaded.keys);
 						failed = failed.concat(uploaded.failed);
 					}
 					
@@ -44,11 +39,11 @@ module.exports.post = function(req, res, next) {
 						}
 						cb2();
 					});
-				}, keyring);
+				});
 			}, cb);
 		},
 		function(cb) {
-			keysUpload.uploadKey(req.body.paste || "", function(err, uploaded) {
+			req.keyring.importKeys(req.body.paste || "", function(err, uploaded) {
 				if(err)
 				{
 					console.warn("Error while uploading key", err);
@@ -56,7 +51,7 @@ module.exports.post = function(req, res, next) {
 				}
 				else
 				{
-					uploadedKeys = uploadedKeys.concat(uploaded.uploadedKeys);
+					uploadedKeys = uploadedKeys.concat(uploaded.keys);
 					failed = failed.concat(uploaded.failed);
 				}
 				
@@ -65,22 +60,21 @@ module.exports.post = function(req, res, next) {
 				req.params.errors = errors;
 				
 				cb();
-			}, keyring);
+			});
 		}
 	], function(err) {
-		if(err) { next(err); return; }
+		if(err)
+			return end(err);
 		
 		if(req.body.downloadupdated)
 		{
 			var formatInfo = utils.getInfoForFormat(req.body.exportFormat);
 			res.attachment("gnewpgUploadedKeys"+formatInfo.extension);
 			res.type(formatInfo.mimetype);
-			
-			var pseudoKeyring = keyring || keyrings.getPseudoKeyringForUploadedKeys(uploadedKeys);
-			
+
 			var all = new pgp.BufferedStream();
 			async.forEachSeries(uploadedKeys, function(it, cb) {
-				keys.exportKey(it.id, pseudoKeyring).whilst(function(data, cb2) {
+				req.keyring.exportKey(it.id).whilst(function(data, cb2) {
 					all._sendData(data);
 					cb2();
 				}, cb);
@@ -91,14 +85,27 @@ module.exports.post = function(req, res, next) {
 			utils.encodeToFormat(all, req.body.exportFormat).whilst(function(data, cb) {
 				res.write(data, "binary");
 				cb();
-			}, function(err) {
-				if(err)
-					next(err);
+			}, end);
+		}
+		else
+			end();
+	});
+
+	function end(err) {
+		if(err)
+		{
+			req.keyring.revertChanges(function(err2) {
+				next(err);
+			});
+		}
+		else
+		{
+			req.keyring[req.body.donotpublish ? "revertChanges" : "saveChanges"](function(err2) {
+				if(err2 || !req.body.downloadupdated)
+					next(err2);
 				else
 					res.end();
 			});
 		}
-		else
-			next();
-	});
+	}
 }

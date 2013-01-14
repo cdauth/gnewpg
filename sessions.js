@@ -1,5 +1,7 @@
 var db = require("./database");
 var config = require("./config");
+var keyrings = require("./keyrings");
+var users = require("./users");
 
 var COOKIE_NAME = "gnewpg_sid";
 
@@ -9,66 +11,74 @@ function Session(id, user, persistent) {
 	this.persistent = persistent;
 }
 
-function createSession(user, persistent, callback) {
-	db.getUniqueRandomString(43, "sessions", "id", function(err, id) {
+function createSession(con, user, persistent, callback) {
+	db.getUniqueRandomString(con, 43, "sessions", "id", function(err, id) {
 		if(err)
-			callback(err);
-		else
-		{
-			var ret = new Session(id, user);
-			db.insert("sessions", { id: ret.id, user: ret.user.id, last_access: new Date(), persistent: persistent }, function(err) {
-				if(err)
-					callback(err);
-				else
-					callback(null, ret);
-			});
-		}
+			return callback(err);
+
+		var ret = new Session(id, user, persistent);
+		db.insert(con, "sessions", { id: ret.id, user: ret.user.id, last_access: new Date(), persistent: persistent }, function(err) {
+			if(err)
+				callback(err);
+			else
+				callback(null, ret);
+		});
 	});
 }
 
-function destroySession(session, callback) {
-	db.delete("sessions", { id: session.id }, callback);
+function destroySession(con, session, callback) {
+	db.remove(con, "sessions", { id: session.id }, callback);
 }
 
-function getSession(id, callback) {
-	db.getEntry("sessions", [ "id", "user", "persistent" ], { id: id }, function(err, sessionRecord) {
-		if(err)
-			callback(err);
-		else if(!sessionRecord)
-			callback(null, null);
-		else
-		{
-			db.update("sessions", { last_access : new Date() }, { id: id }, function(err) {
-				if(err)
-					console.warn("Error updating session last_access time.", err);
-			});
+function getSession(con, id, callback) {
+	db.getEntry(con, "sessions", [ "id", "user", "persistent" ], { id: id }, function(err, sessionRecord) {
+		if(err || !sessionRecord)
+			return callback(err, null);
 
-			db.getEntry("users", "*", { id: sessionRecord.user }, function(err, userRecord) {
-				if(err)
-					callback(err);
-				else
-					callback(null, new Session(sessionRecord.id, userRecord, sessionRecord.persistent));
-			});
-		}
+		db.update(con, "sessions", { last_access : new Date() }, { id: id }, function(err) {
+			if(err)
+				console.warn("Error updating session last_access time.", err);
+		});
+
+		users.getUser(con, sessionRecord.user, function(err, userRecord) {
+			if(err)
+				callback(err);
+			else
+				callback(null, new Session(sessionRecord.id, userRecord, sessionRecord.persistent));
+		});
 	});
 }
 
 function cleanInactiveSessions() {
-	db.query('DELETE FROM "sessions" WHERE NOT "persistent" AND $1 - "last_access" > $2', [ new Date(), config.sessionTimeout ], function(err) {
+	db.getConnection(function(err, con) {
 		if(err)
-			console.warn("Error cleaning inactive sessions", err);
+			return console.warn("Error cleaning inactive sessions", err);
+
+		con.query('DELETE FROM "sessions" WHERE NOT "persistent" AND $1 - "last_access" > $2', [ new Date(), config.sessionTimeout ], function(err) {
+			if(err)
+				console.warn("Error cleaning inactive sessions", err);
+
+			//con.end();
+		});
 	});
 }
 
 function cleanInactivePersistentSessions() {
-	db.query('DELETE FROM "sessions" WHERE "persistent" AND $1 - "last_access" > $2', [ new Date(), config.persistentSessionTimeout ], function(err) {
+	db.getConnection(function(err, con) {
 		if(err)
-			console.warn("Error cleaning inactive permanent sessions", err);
+			return console.warn("Error cleaning inactive sessions", err);
+
+		con.query('DELETE FROM "sessions" WHERE "persistent" AND $1 - "last_access" > $2', [ new Date(), config.persistentSessionTimeout ], function(err) {
+			if(err)
+				console.warn("Error cleaning inactive sessions", err);
+
+			//con.end();
+		});
 	});
 }
 
 function scheduleInactiveSessionCleaning() {
-	setInterval(function() { cleanInactiveSessions(); cleanInactivePersistentSessions(); }, Math.ceil(config.sessionTimeout*100));
+	setInterval(function() { cleanInactiveSessions(); cleanInactivePersistentSessions(); }, config.sessionTimeout*100);
 }
 
 function sessionMiddleware(req, res, next) {
@@ -78,18 +88,19 @@ function sessionMiddleware(req, res, next) {
 		else
 		{
 			req.session = session || { };
+			req.keyring = req.session.user ? new keyrings.UserKeyring(req.dbCon, req.session.user.id) : new keyrings.TemporaryUploadKeyring(req.dbCon);
 			next();
 		}
 	};
 	
 	if(req.cookies[COOKIE_NAME])
-		getSession(req.cookies[COOKIE_NAME], cb);
+		getSession(req.dbCon, req.cookies[COOKIE_NAME], cb);
 	else
 		cb();
 }
 
 function startSession(req, res, user, persistent, callback) {
-	createSession(user, persistent, function(err, session) {
+	createSession(req.dbCon, user, persistent, function(err, session) {
 		if(err)
 			callback && callback(err);
 		else
@@ -107,7 +118,7 @@ function startSession(req, res, user, persistent, callback) {
 function stopSession(req, res, callback) {
 	if(req.session.user)
 	{
-		destroySession(req.session, function(err) {
+		destroySession(req.dbCon, req.session, function(err) {
 			if(err)
 				callback && callback(err);
 			else

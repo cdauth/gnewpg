@@ -1,6 +1,7 @@
 var sessions = require("../sessions");
 var utils = require("../utils");
 var db = require("../database");
+var users = require("../users");
 
 module.exports.get = function(req, res, next) {
 	if(req.session.user)
@@ -12,7 +13,7 @@ module.exports.get = function(req, res, next) {
 module.exports.post = function(req, res, next) {
 	req.params.username = req.body.username;
 
-	db.getEntry("users", "*", { id: req.body.username || "" }, function(err, user) {
+	users.getUser(req.dbCon, req.body.username || "", function(err, user) {
 		if(err)
 			next(err);
 		else if(user != null && user.password == utils.encodePassword(req.body.password || ""))

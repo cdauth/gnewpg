@@ -1,5 +1,5 @@
 var pgp = require("node-pgp");
-var config = require("./config");
+var config = require("./config.json");
 var fs = require("fs");
 var utils = require("./utils");
 var db = require("./database");
@@ -9,6 +9,7 @@ var keys = require("./keys");
 var mailcomposer = require("mailcomposer");
 var mimelib = require("mimelib");
 var Mime = require("./mailsMime");
+var nodemailer = require("nodemailer");
 
 var privateKey;
 var transport;
@@ -25,17 +26,8 @@ function loadPrivateKey(callback) {
 		pgp.signing.detachedSignText("test", privateKey, function(err, ret) {
 			if(err)
 				callback(err);
-			else if(ret.length == 0)
-				callback(new Error("Signing failed."));
 			else
 			{
-				var m = new mailcomposer.MailComposer();
-				m.setMessageOptions({ to: "bla@bla.com" });
-				m.streamMessage();
-				new pgp.BufferedStream(m).readUntilEnd(function(err, data) {
-					console.log(err, data);
-				});
-
 				console.log("Success.");
 				callback(null);
 			}

@@ -1,158 +1,3 @@
-CREATE TABLE "keys" (
-	"id" CHAR(16) PRIMARY KEY, -- Long ID of the key
-	"fingerprint" VARCHAR(40) NOT NULL UNIQUE, -- Fingerprint of the key, 32 chars for v2/v3 keys, 40 chars for v4 keys
-	"binary" bytea NOT NULL,
-	"date" TIMESTAMP NOT NULL,
-	"perm_idsearch" BOOLEAN NOT NULL DEFAULT false, -- Key should be findable by searching for its ID
-	"perm_searchengines" BOOLEAN NOT NULL DEFAULT false, -- Key might be listed in search engines
-	"expires" TIMESTAMP DEFAULT NULL,
-	"revokedby" CHAR(27) DEFAULT NULL, -- This can reference all three signature tables
-	"security" SMALLINT NOT NULL
-	-- "primary_identity" TEXT DEFAULT NULL, -- Added later, table "identities" is not defined yet here
-	-- "user" TEXT REFERENCES "users"("name") DEFAULT NULL ON UPDATE CASCADE ON DELETE SET DEFAULT; -- Added later, table "users" is not defined yet here
-);
-
-CREATE INDEX "keys_shortid_idx" ON "keys" (SUBSTRING("id" FROM 8 FOR 8));
-
-CREATE TABLE "keys_signatures" (
-	"id" CHAR(27) PRIMARY KEY,
-	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
-	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be a subkey or unknown
-	"date" TIMESTAMP NOT NULL,
-	"binary" bytea NOT NULL,
-	"verified" BOOLEAN NOT NULL DEFAULT false,
-	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (25, 31, 32, 24, 40, 48)), -- 0x19, 0x1F, 0x20, 0x18, 0x28, 0x30
-	"expires" TIMESTAMP,
-	"revokedby" CHAR(27) REFERENCES "keys_signatures" ("id") DEFAULT NULL,
-	"security" SMALLINT NOT NULL
-);
-
-CREATE INDEX "keys_signatures_key_idx" ON "keys_signatures" ("key");
-CREATE INDEX "keys_signatures_issuer_idx" ON "keys_signatures" ("issuer");
-
-CREATE VIEW "keys_subkeys" AS SELECT DISTINCT
-	"keys"."id" AS "id",
-	"keys"."binary" AS "binary",
-	"keys_signatures"."issuer" AS "parentkey",
-	"keys_signatures"."expires" AS "expires",
-	"keys_signatures"."revokedby" AS "revokedby",
-	LEAST("keys_signatures"."security", "keys"."security") AS "security"
-	FROM "keys", "keys_signatures" WHERE "keys_signatures"."key" = "keys"."id" AND "keys_signatures"."verified" = true AND "keys_signatures"."sigtype" = 24 AND "keys_signatures"."security" > 0 -- 24 == 0x18
-;
-
------------------------------------------------------
-	
-CREATE TABLE "keys_identities" (
-	"id" TEXT NOT NULL, -- The ID is simply the text of the identity, thus only unique per key
-	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
-	"name" TEXT NOT NULL,
-	"email" TEXT,
-	"perm_public" BOOLEAN NOT NULL DEFAULT false, -- Identity is visible to people who do not know about it yet
-	"perm_namesearch" BOOLEAN NOT NULL DEFAULT false, -- The key can be found by searching for the name stated in this identity
-	"perm_emailsearch" BOOLEAN NOT NULL DEFAULT false, -- The key can be found by searching for the e-mail address stated in this identity
-	"email_blacklisted" TIMESTAMP DEFAULT NULL, -- If a date is set, the recipient of an e-mail verification mail stated that the key does not belong to them
-
-	PRIMARY KEY("id", "key")
-);
-
-CREATE INDEX "keys_identities_name_idx" ON "keys_identities"("name");
-CREATE INDEX "keys_identities_email_idx" ON "keys_identities"("email");
-
-CREATE TABLE "keys_identities_signatures" (
-	"id" CHAR(27) PRIMARY KEY,
-	"identity" TEXT NOT NULL,
-	"key" CHAR(16) NOT NULL,
-	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be unknown
-	"date" TIMESTAMP NOT NULL,
-	"binary" bytea NOT NULL,
-	"verified" BOOLEAN NOT NULL DEFAULT false,
-	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (16, 17, 18, 19, 48)), --0x10, 0x11, 0x12, 0x13, 0x30
-	"expires" TIMESTAMP,
-	"revokedby" CHAR(27) REFERENCES "keys_identities_signatures" ("id") DEFAULT NULL,
-	"security" SMALLINT NOT NULL,
-
-	FOREIGN KEY ("identity", "key") REFERENCES "keys_identities" ( "id", "key" )
-);
-
-CREATE INDEX "keys_identities_signatures_key_idx" ON "keys_identities_signatures" ("key");
-CREATE INDEX "keys_identities_signatures_issuer_idx" ON "keys_identities_signatures" ("issuer");
-
-CREATE VIEW "keys_identities_selfsigned" AS
-	SELECT DISTINCT ON ( "id", "key" )
-		"keys_identities"."id" AS "id", "keys_identities"."key" AS "key", "keys_identities"."name" AS "name", "keys_identities"."email" AS "email",
-		"keys_identities"."perm_public" AS "perm_public", "keys_identities"."perm_namesearch" AS "perm_namesearch",
-		"keys_identities"."perm_emailsearch" AS "perm_emailsearch", "keys_identities"."email_blacklisted" AS "email_blacklisted",
-		"keys_identities_signatures"."expires" AS "expires", "keys_identities_signatures"."revokedby" AS "revokedby",
-		"keys_identities_signatures"."security" AS "security"
-		FROM "keys_identities", "keys_identities_signatures"
-		WHERE "keys_identities"."key" = "keys_identities_signatures"."key" AND "keys_identities"."id" = "keys_identities_signatures"."identity"
-			AND "keys_identities"."key" = "keys_identities_signatures"."issuer" AND "keys_identities_signatures"."verified" = true
-			AND "keys_identities_signatures"."sigtype" IN (16, 17, 18, 19)
-			AND "keys_identities_signatures"."security" > 0
-		ORDER BY "keys_identities"."id" ASC, "keys_identities"."key" ASC, "keys_identities_signatures"."date" DESC
-;
-
-ALTER TABLE "keys"
-	ADD COLUMN "primary_identity" TEXT DEFAULT NULL,
-	ADD FOREIGN KEY ("primary_identity", "id") REFERENCES "keys_identities" ("id", "key");
-
------------------------------------------------------
-
-CREATE TABLE "keys_attributes" (
-	"id" CHAR(27) NOT NULL, -- The ID is the sha1sum of the content, thus only unique per key
-	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
-	"binary" BYTEA NOT NULL,
-	"perm_public" BOOLEAN NOT NULL DEFAULT false, -- Identity is visible to people who do not know about it yet
-
-	PRIMARY KEY("id", "key")
-);
-
-CREATE TABLE "keys_attributes_signatures" (
-	"id" CHAR(27) PRIMARY KEY,
-	"attribute" CHAR(27) NOT NULL,
-	"key" CHAR(16) NOT NULL,
-	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be unknown
-	"date" TIMESTAMP NOT NULL,
-	"binary" bytea NOT NULL,
-	"verified" BOOLEAN NOT NULL DEFAULT false,
-	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (16, 17, 18, 19, 48)), --0x10, 0x11, 0x12, 0x13, 0x30
-	"expires" TIMESTAMP,
-	"revokedby" CHAR(27) REFERENCES "keys_attributes_signatures" ("id") DEFAULT NULL,
-	"security" SMALLINT NOT NULL,
-	
-	FOREIGN KEY ("attribute", "key") REFERENCES "keys_attributes"("id", "key")
-);
-
-CREATE INDEX "keys_identities_attributes_key_idx" ON "keys_attributes_signatures" ("key");
-CREATE INDEX "keys_attributes_attributes_issuer_idx" ON "keys_attributes_signatures" ("issuer");
-
-CREATE VIEW "keys_attributes_selfsigned" AS
-	SELECT DISTINCT ON ( "id", "key" )
-		"keys_attributes"."id" AS "id", "keys_attributes"."key" AS "key", "keys_attributes"."binary" AS "binary",
-		"keys_attributes"."perm_public" AS "perm_public", "keys_attributes_signatures"."expires" AS "expires",
-		"keys_attributes_signatures"."revokedby" AS "revokedby", "keys_attributes_signatures"."security" AS "security"
-		FROM "keys_attributes", "keys_attributes_signatures"
-		WHERE "keys_attributes"."key" = "keys_attributes_signatures"."key" AND "keys_attributes"."id" = "keys_attributes_signatures"."attribute"
-			AND "keys_attributes"."key" = "keys_attributes_signatures"."issuer" AND "keys_attributes_signatures"."verified" = true
-			AND "keys_attributes_signatures"."sigtype" IN (16, 17, 18, 19)
-			AND "keys_attributes_signatures"."security" > 0
-		ORDER BY "keys_attributes"."id" ASC, "keys_attributes"."key" ASC, "keys_attributes_signatures"."date" DESC
-;
-
------------------------------------------------------
-
-CREATE VIEW "keys_signatures_all" AS
-	      SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby", 'keys_signatures' AS "table", NULL AS "objectcol" FROM "keys_signatures"
-	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby", 'keys_identities_signatures' AS "table", 'identity' AS "objectcol" FROM "keys_identities_signatures"
-	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revokedby", 'keys_attributes_signatures' AS "table", 'attribute' AS "objectcol" FROM "keys_attributes_signatures"
-;
-
-
---===================================================
---===================================================
---===================================================
-
-
 CREATE TABLE "users" (
 	"id" TEXT PRIMARY KEY,
 	"password" CHAR(43) NOT NULL,
@@ -171,7 +16,7 @@ CREATE TABLE "users_keyrings_keys" (
 
 CREATE VIEW "users_keyrings_keys_with_keys" AS
 	SELECT "keys"."id" AS "id", "keys"."fingerprint" AS "fingerprint", "keys"."binary" AS "binary", "keys"."date" AS "date",
-		"keys"."expires" AS "expires", "keys"."revokedby" AS "revokedby", "keys"."primary_identity" AS "primary_identity",
+		"keys"."expires" AS "expires", "keys"."revoked" AS "revoked", "keys"."primary_identity" AS "primary_identity",
 		"users_keyrings_keys"."user" AS "user"
 	FROM "keys", "users_keyrings_keys" WHERE "keys"."id" = "users_keyrings_keys"."key";
 
@@ -200,9 +45,9 @@ CREATE TABLE "users_email_verification" (
 );
 
 
---===================================================
---===================================================
---===================================================
+-----------------------------------------------------
+-----------------------------------------------------
+-----------------------------------------------------
 
 
 CREATE TABLE "groups" (
@@ -261,9 +106,9 @@ CREATE VIEW "users_keyrings_with_groups_attributes" AS
 		WHERE "users"."id" = "groups_users"."user" AND "groups_users"."group" = "groups_keyrings_attributes"."group";
 
 
---===================================================
---===================================================
---===================================================
+-----------------------------------------------------
+-----------------------------------------------------
+-----------------------------------------------------
 
 
 CREATE TABLE "sessions" (
@@ -276,10 +121,36 @@ CREATE TABLE "sessions" (
 CREATE INDEX "sessions_time_idx" ON "sessions"("persistent", "last_access");
 
 
---===================================================
---===================================================
---===================================================
+-----------------------------------------------------
+-----------------------------------------------------
+-----------------------------------------------------
 
 
-ALTER TABLE "keys"
-	ADD COLUMN "user" TEXT DEFAULT NULL REFERENCES "users"("id") ON UPDATE CASCADE ON DELETE SET DEFAULT;
+CREATE TABLE "keys_settings" (
+	"id" CHAR(16) REFERENCES "keys"("id") PRIMARY KEY,
+
+	"user" TEXT REFERENCES "users"("id") ON UPDATE CASCADE ON DELETE CASCADE,
+	"perm_idsearch" BOOLEAN NOT NULL DEFAULT false, -- Key should be findable by searching for its ID
+	"perm_searchengines" BOOLEAN NOT NULL DEFAULT false -- Key might be listed in search engines
+);
+
+CREATE TABLE "keys_identities_settings" (
+	"key" CHAR(16),
+	"id" TEXT,
+
+	"perm_public" BOOLEAN NOT NULL DEFAULT false, -- Identity is visible to people who do not know about it yet
+	"perm_namesearch" BOOLEAN NOT NULL DEFAULT false, -- The key can be found by searching for the name stated in this identity
+	"perm_emailsearch" BOOLEAN NOT NULL DEFAULT false, -- The key can be found by searching for the e-mail address stated in this identity
+	"email_blacklisted" TIMESTAMP DEFAULT NULL, -- If a date is set, the recipient of an e-mail verification mail stated that the key does not belong to them
+
+	PRIMARY KEY("key", "id")
+);
+
+CREATE TABLE "keys_attributes_settings" (
+	"key" CHAR(16),
+	"id" CHAR(27),
+
+	"perm_public" BOOLEAN NOT NULL DEFAULT false, -- Identity is visible to people who do not know about it yet
+
+	PRIMARY KEY("key", "id")
+);

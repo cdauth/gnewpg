@@ -2,12 +2,13 @@ var express = require("express");
 var soynode = require("soynode");
 var utils = require("./utils");
 var sessions = require("./sessions");
-var urlmap = require("./urlmap");
+var urlmap = require("./urlmap.json");
 var i18n = require("./i18n");
-var config = require("./config");
+var config = require("./config.json");
 var fs = require("fs");
 var mails = require("./mails");
 var async = require("async");
+var db = require("./database");
 
 if(!fs.existsSync(config.tmpDir))
 	fs.mkdirSync(config.tmpDir, 0700);
@@ -22,6 +23,7 @@ async.series([
 		
 		app.use(express.bodyParser({ uploadDir: config.tmpDir+"/upload" })); // For POST requests
 		app.use(express.cookieParser());
+		app.use(db.middleware);
 		app.use(sessions.sessionMiddleware);
 		app.use("/static", express.static(__dirname+"/static"));
 		app.use(i18n.middleware);
@@ -38,9 +40,10 @@ async.series([
 		});
 
 		soynode.compileTemplates(__dirname+"/pages", cb);
-	}, function(cb) {
+	}, /*function(cb) {
 		mails.loadPrivateKey(cb);
-	}
+	},*/
+	db.initialise
 ], function(err) {
 	if(err)
 		throw err;
@@ -60,7 +63,7 @@ function _request(method, template) {
 	}
 	if(module)
 		module = require(module);
-	
+
 	return function(req, res, next) {
 		var send = function(err) {
 			if(err)

@@ -1,4 +1,4 @@
-var db = require("../database");
+/*var db = require("../database");
 var keys = require("../keys");
 var keyrings = require("../keyrings");
 
@@ -33,4 +33,4 @@ exports.get = function(req, res, next) {
 			req.params.keys = keyringKeys;
 		next()
 	});
-}
+}*/

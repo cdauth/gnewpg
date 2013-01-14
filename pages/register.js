@@ -16,7 +16,7 @@ module.exports.post = function(req, res, next) {
 	else if(req.body.username.length > config.usernameMaxLength)
 		errors.push(req.ngettext("The username may be at most %d character long.", "The username may be at most %d characters long.", config.usernameMaxLength, config.usernameMaxLength));
 	
-	db.entryExists("users", { id: req.body.username }, function(err, exists) {
+	users.userExists(req.dbCon, req.body.username, function(err, exists) {
 		if(err)
 			next(err);
 		else
@@ -30,7 +30,7 @@ module.exports.post = function(req, res, next) {
 		
 			if(errors.length == 0)
 			{
-				users.createUser(req.body.username, req.body.password, req.body.email, null, function(err) {
+				users.createUser(req.dbCon, req.body.username, req.body.password, req.body.email, null, function(err) {
 					if(err)
 						next(err);
 					else

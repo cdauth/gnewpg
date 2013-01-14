@@ -1,17 +1,19 @@
-var keysSearch = require("../keysSearch");
-var keyrings = require("../keyrings");
+var i18n = require("../i18n");
 
 module.exports.get = function(req, res, next) {
-	var keyring = null;
-	if(req.session.user)
-		keyring = keyrings.getKeyringForUser(req.session.user.id);
-	
 	var now = (new Date()).getTime();
 
 	req.params.query = req.query.q || "";
 	req.params.results = [ ];
 	req.params.error = null;
-	keysSearch.search(req.params.query, keyring).forEachSeries(function(it, cb) {
+
+	if(req.params.query.length < 3)
+	{
+		req.params.error = new i18n.Error_("The search string is too short.");
+		return next();
+	}
+
+	req.keyring.search(req.params.query).forEachSeries(function(it, cb) {
 		it.expired = (it.expires && it.expires.getTime() < now);
 		req.params.results.push(it);
 		cb();

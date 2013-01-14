@@ -1,4 +1,4 @@
-var config = require("./config");
+var config = require("./config.json");
 var fs = require("fs");
 var pgp = require("node-pgp");
 
@@ -13,16 +13,7 @@ function generateRandomString(length) {
 	for(var i=0; i<length; i++)
 		ret += RANDOM_CHARS.charAt(Math.floor(Math.random()*RANDOM_CHARS.length));
 	return ret;
-};
-
-function extend(obj1, obj2) {
-	for(var i=1; i<arguments.length; i++)
-	{
-		for(var j in arguments[i])
-			obj1[j] = arguments[i][j];
-	}
-	return obj1;
-};
+}
 
 function encodePassword(password) {
 	return pgp.utils.hash(password, "sha256", "base64").substring(0, 43);
@@ -65,7 +56,7 @@ function isEmailAddress(str) {
 }
 
 exports.generateRandomString = generateRandomString;
-exports.extend = extend;
+exports.extend = pgp.utils.extend;
 exports.encodePassword = encodePassword;
 exports.encodeToFormat = encodeToFormat;
 exports.getInfoForFormat = getInfoForFormat;

@@ -1,4 +1,4 @@
-var utils = require("../utils");
+/*var utils = require("../utils");
 var keyrings = require("../keyrings");
 var keys = require("../keys");
 
@@ -46,4 +46,4 @@ exports.get = function(req, res, next) {
 		else
 			res.end();
 	});
-}
+}*/
