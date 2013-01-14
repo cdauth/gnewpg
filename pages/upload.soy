@@ -54,16 +54,17 @@
 {/template}
 
 /**
+ * Note: If the object does not have an ID, it is an errorneous packet.
  * @param obj
 */
 {template .printObj}
 	{switch $obj.type}
 
 		{case 2}
-<li>{_(''+'[SIG_'+$obj.sigtype+']')} by <em>{formatKeyId($obj.issuer)}</em> on <em>{_($obj.date)}</em>{if $obj.err}: {_($obj.err)}{/if}</li>
+<li>{if not $obj.id}{_('Signature')}{else}{_(''+'[SIG_'+$obj.sigtype+']')} by <em>{formatKeyId($obj.issuer)}</em> on <em>{_($obj.date)}</em>{/if}{if $obj.err}: {_($obj.err)}{/if}</li>
 
 		{case 6}
-<li>{_('Public key')} <a href="key/{$obj.id}"><em>{formatKeyId($obj.id)}</em></a>{if $obj.err}: {_($obj.err)}{/if}<ul>
+<li>{_('Public key')}{if $obj.id} <a href="key/{$obj.id}"><em>{formatKeyId($obj.id)}</em></a>{/if}{if $obj.err}: {_($obj.err)}{/if}<ul>
 			{foreach $sig in $obj.signatures}
 				{call .printObj}{param obj:$sig /}{/call}
 			{/foreach}
@@ -79,14 +80,14 @@
 </ul></li>
 
 		{case 13}
-<li>{_('User ID')} <em>{$obj.id}</em>{if $obj.err}: {_($obj.err)}{/if}<ul>
+<li>{_('User ID')}{if $obj.id} <em>{$obj.id}</em>{/if}{if $obj.err}: {_($obj.err)}{/if}<ul>
 			{foreach $sig in $obj.signatures}
 				{call .printObj}{param obj:$sig /}{/call}
 			{/foreach}
 </ul></li>
 
 		{case 14}
-<li>{_('Public subkey')} <em>{formatKeyId($obj.id)}</em>{if $obj.err}: {_($obj.err)}{/if}<ul>
+<li>{_('Public subkey')}{if $obj.id} <em>{formatKeyId($obj.id)}</em>{/if}{if $obj.err}: {_($obj.err)}{/if}<ul>
 			{foreach $sig in $obj.signatures}
 				{call .printObj}{param obj:$sig /}{/call}
 			{/foreach}
