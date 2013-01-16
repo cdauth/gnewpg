@@ -46,10 +46,9 @@ pgp.utils.extend(FilteredKeyring.prototype, {
 	getIdentities : __filterGetMultiple("getIdentities", "_maySeeIdentity", 1),
 	getAttributes : __filterGetMultiple("getAttributes", "_maySeeAttribute", 1),
 
-	// Not filtering *Exists functions to prevent already-existing keys from being uploaded
-	/*keyExists : __filterExists("keyExists", "_maySeeKey", 1),
+	keyExists : __filterExists("keyExists", "_maySeeKey", 1),
 	identityExists : __filterExists("identityExists", "_maySeeIdentity", 2),
-	attributeExists : __filterExists("attributeExists", "_maySeeAttribute", 2),*/
+	attributeExists : __filterExists("attributeExists", "_maySeeAttribute", 2),
 
 	getKey : __filterGetSingle("getKey", "_maySeeKey", 1),
 	getIdentity : __filterGetSingle("getIdentity", "_maySeeIdentity", 2),
@@ -135,13 +134,15 @@ function __filterExists(existsFuncName, mayFuncName, argNo) {
 	return function() {
 		var t = this;
 		var args = pgp.utils.toProperArray(arguments);
+		var _isTryingToAdd = args[argNo+1]; // Hack: If the exists function is called from the add() function to prevent
+		                                    // duplicate addition, we ignore our restrictions
 
 		FilteredKeyring.super_.prototype[existsFuncName].apply(t, args.slice(0, argNo).concat([ function(err, exists) {
-			if(err || !exists)
+			if(err || !exists || _isTryingToAdd)
 				return args[argNo](err, exists);
 
 			t[mayFuncName].apply(t, args);
-		}]));
+		}]), _isTryingToAdd);
 	};
 }
 
