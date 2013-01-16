@@ -24,6 +24,15 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 
 		async.series([
 			function(next) {
+				keyring.getPrimaryIdentity(keyId, function(err, identityInfo) {
+					if(err)
+						return next(err);
+
+					keyInfo.primary_identity = identityInfo.id;
+					next();
+				}, [ "id" ]);
+			},
+			function(next) {
 				resolveRevokedBy(keyInfo, next);
 			},
 			function(next) {

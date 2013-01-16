@@ -11,7 +11,7 @@
 {template .key}
 	{call gnewpg.ui.html}
 		{param searchengines: $searchengines /}
-		{param title:_('Key %s', $keyId) /}
+		{param title:$keyDetails ? _('Key %s (%s)', $keyId, $keyDetails.primary_identity) : _('Key %s', $keyId) /}
 		{param content}
 			{if $error}
 {call gnewpg.ui.error}{param message:_($error)/}{/call}
