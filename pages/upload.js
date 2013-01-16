@@ -65,6 +65,15 @@ module.exports.post = function(req, res, next) {
 	], function(err) {
 		if(err)
 			return end(err);
+
+		for(var i=0; i<req.params.failed.length; i++)
+		{
+			if(req.params.failed[i].type == pgp.consts.PKT.RING_TRUST)
+			{
+				req.params.failed = req.params.failed.slice(0, i).concat(req.params.failed.slice(i+1));
+				i--;
+			}
+		}
 		
 		if(req.body.downloadupdated)
 		{
