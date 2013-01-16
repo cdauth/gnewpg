@@ -163,7 +163,7 @@ function __filterGetSingle(getFuncName, mayFuncName, argNo) {
 				else
 					args[argNo](null, null);
 			}]));
-		}]));
+		}, args[argNo+1]]));
 	};
 }
 
