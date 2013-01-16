@@ -40,7 +40,7 @@ CREATE TABLE "users_email_verification" (
 	"token" CHAR(43) PRIMARY KEY,
 	"identity" TEXT NOT NULL,
 	"identityKey" CHAR(16) NOT NULL,
-	"date" TIMESTAMP,
+	"date" TIMESTAMP WITH TIME ZONE,
 	FOREIGN KEY ( "identity", "identityKey" ) REFERENCES "keys_identities" ( "id", "key" )
 );
 
@@ -114,7 +114,7 @@ CREATE VIEW "users_keyrings_with_groups_attributes" AS
 CREATE TABLE "sessions" (
 	"id" CHAR(43) PRIMARY KEY,
 	"user" TEXT NOT NULL REFERENCES "users"("id") ON UPDATE CASCADE ON DELETE CASCADE,
-	"last_access" TIMESTAMP NOT NULL,
+	"last_access" TIMESTAMP WITH TIME ZONE NOT NULL,
 	"persistent" BOOLEAN
 );
 
@@ -141,7 +141,7 @@ CREATE TABLE "keys_identities_settings" (
 	"perm_public" BOOLEAN NOT NULL DEFAULT false, -- Identity is visible to people who do not know about it yet
 	"perm_namesearch" BOOLEAN NOT NULL DEFAULT false, -- The key can be found by searching for the name stated in this identity
 	"perm_emailsearch" BOOLEAN NOT NULL DEFAULT false, -- The key can be found by searching for the e-mail address stated in this identity
-	"email_blacklisted" TIMESTAMP DEFAULT NULL, -- If a date is set, the recipient of an e-mail verification mail stated that the key does not belong to them
+	"email_blacklisted" TIMESTAMP WITH TIME ZONE DEFAULT NULL, -- If a date is set, the recipient of an e-mail verification mail stated that the key does not belong to them
 
 	PRIMARY KEY("key", "id")
 );
