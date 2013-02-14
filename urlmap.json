@@ -9,6 +9,7 @@
 		"/key/:keyId" : "key",
 		"/key/:keyId/export" : "exportKey",
 		"/keyring" : "keyring",
+		"/keyring/export" : "exportKey",
 		"/claimkey" : "claimkey"
 	},
 	"post" : {

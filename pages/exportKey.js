@@ -1,9 +1,20 @@
 var utils = require("../utils");
 var keys = require("../keys");
+var pgp = require("node-pgp");
 
 exports.get = function(req, res, next) {
+	var keys = req.params.keyId || req.query.key;
+	if(!keys)
+		return res.redirect(303, "/keyring");
+
+	if(!Array.isArray(keys))
+		keys = [ keys ];
+
 	var formatInfo = utils.getInfoForFormat(req.query.exportFormat);
-	res.attachment("0x"+req.params.keyId+formatInfo.extension);
+	if(keys.length == 1)
+		res.attachment("0x"+keys[0]+formatInfo.extension);
+	else
+		res.attachment("keys"+formatInfo.extension);
 	res.type(formatInfo.mimetype);
 
 	var selection = null;
@@ -31,8 +42,12 @@ exports.get = function(req, res, next) {
 			}
 		}
 	}
+
+	var streams = [ ];
+	for(var i=0; i<keys.length; i++)
+		streams.push(req.keyring.exportKey(keys[i], selection));
 	
-	utils.encodeToFormat(req.keyring.exportKey(req.params.keyId, selection), req.query.exportFormat).whilst(function(data, cb) {
+	utils.encodeToFormat(pgp.BufferedStream.prototype.concat.apply(streams.shift(), streams), req.query.exportFormat).whilst(function(data, cb) {
 		res.write(data, "binary");
 		cb();
 	}, function(err) {

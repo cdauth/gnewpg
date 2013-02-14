@@ -14,7 +14,7 @@
 			{elseif $keys.length == 0}
 <p class="nothingtodo"><em>{_('Your keyring is empty.')}</em></p>
 			{else}
-<form class="keyring" method="post" action="">
+<form class="keyring" method="get" action="keyring/export">
 	<table class="keyring table table-condensed table-checkbox">
 		<thead>
 			<tr>
@@ -35,7 +35,7 @@
 	</table>
 
 	<div>
-		<input type="submit" value="{_('Export the selected keys')}" class="btn" /> {call gnewpg.ui.exportFormats /}
+		<input type="submit" value="{_('Export the selected keys')}" class="btn btn-info" /> {call gnewpg.ui.exportFormats /}
 	</div>
 
 	<div>
