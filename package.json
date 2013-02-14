@@ -17,7 +17,7 @@
     "soynode": "git://github.com/cdauth/soynode.git",
     "pg": "x.x.x",
     "connect-pg": "x.x.x",
-    "gettext": "x.x.x",
+    "gettext": "git://github.com/cdauth/node-gettext.git",
     "connect-i18n": "x.x.x",
     "node-pgp": "git://github.com/cdauth/node-pgp.git",
 	"node-pgp-postgres": "git://github.com/cdauth/node-pgp-postgres.git",
