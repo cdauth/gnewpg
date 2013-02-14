@@ -15,22 +15,41 @@
 			{if $success}
 {call gnewpg.ui.success}{param message}{_('You have successfully registered. You can now log in.')}{/param}{/call}
 			{else}
-<form action="" method="post">
+<form action="" method="post" class="form-horizontal">
 	{call gnewpg.ui.errors}{param errors:$errors/}{/call}
-	<dl class="form">
-		<dt><label for="i-username">{_('Desired username')}</label></dt>
-		<dd><input id="i-username" name="username" type="text"{if $username} value="{$username}"{/if} /> {call gnewpg.ui.required/}</dd>
-		
-		<dt><label for="i-password">{_('Password')}</label></dt>
-		<dd><input id="i-password" name="password" type="password" autocomplete="off" /> {call gnewpg.ui.required/}</dd>
-		
-		<dt><label for="i-password-2">{_('Repeat password')}</label></dt>
-		<dd><input id="i-password-2" name="password2" type="password" autocomplete="off" /> {call gnewpg.ui.required/}</dd>
-		
-		<dt><label for="i-email">{_('E-mail address')}</label></dt>
-		<dd><input id="i-email" name="email" type="text"{if $email} value="{$email}"{/if} /></dd>
-	</dl>
-	<div class="submit"><input type="submit" value="{_('Register')}" /></div>
+	<div class="control-group">
+		<label class="control-label" for="i-username">{_('Desired username')}</label>
+		<div class="controls">
+			<input id="i-username" name="username" type="text"{if $username} value="{$username}"{/if} required="required" pattern=".{lb}{$ij.config.usernameMinLength},{rb}" maxlength="{$ij.config.usernameMaxLength}" title="{_('Minimum %s characters', $ij.config.usernameMinLength)}" /> {call gnewpg.ui.required/}
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label" for="i-password">{_('Password')}</label>
+		<div class="controls">
+			<input id="i-password" name="password" type="password" autocomplete="off" required="required" pattern=".{lb}{$ij.config.passwordMinLength},{rb}" title="{_('Minimum %s characters', $ij.config.passwordMinLength)}" onchange="$('#i-password-2').prop('pattern', quoteRegexp(this.value))" /> {call gnewpg.ui.required/}
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label" for="i-password-2">{_('Repeat password')}</label>
+		<div class="controls">
+			<input id="i-password-2" name="password2" type="password" autocomplete="off" required="required" title="{_('Both passwords need to match')}" /> {call gnewpg.ui.required/}
+		</div>
+	</div>
+	
+	<div class="control-group">
+		<label class="control-label" for="i-email">{_('E-mail address')}</label>
+		<div class="controls">
+			<input id="i-email" name="email" type="email"{if $email} value="{$email}"{/if} />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<div class="controls">
+			<input type="submit" value="{_('Register')}" class="btn" />
+		</div>
+	</div>
 </form>
 			{/if}
 		{/param}

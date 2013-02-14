@@ -7,29 +7,42 @@
 		{param searchengines: true /}
 		{param title:'Welcome' /}
 		{param content}
-<p>{call gnewpg.ui.faq}{param no:3 /}{param showTitle:true /}{/call}</p>
-<div class="index-links {if $ij.req.session.user == null}not{/if}loggedin">
-	<div class="search">
-		<h3>{_('Search for a key')}</h3>
-		<form action="search" method="get">
-			<input type="text" name="q" /> <input type="submit" value="{_('Submit')}" />
-		</form>
-	</div>
-	<div class="upload">
-		<a href="upload">{_('Upload a key')}</a>
-		<p>{_('To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it.')}</p>
-	</div>
+<div class="span6 offset3">
+	<ul class="thumbnails index-links {if $ij.req.session.user == null}not{/if}loggedin">
+		<li class="span3 search">
+			<div class="thumbnail">
+				<h4>{_('Search for a key')}</h4>
+				<form action="search" method="get" class="form-search">
+					<input type="text" name="q" class="input-medium" /> <input type="submit" value="{_('Submit')}" class="btn" />
+				</form>
+			</div>
+		</li>
+		<li class="span3 upload">
+			<div class="thumbnail">
+				<h4><a href="upload">{_('Upload a key')}</a></h4>
+				<p>{_('To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it.')}</p>
+			</div>
+		</li>
+
 			{if $ij.req.session.user}
-	<div class="ownkeys">
-		<a href="ownkeys">{_('Your own keys')}</a>
-	</div>
-	<div class="keyring">
-		<a href="keyring">{_('Your keyring')}</a>
-	</div>
-	<div class="settings">
-		<a href="settings">{_('Your account')}</a>
-	</div>
+		<li class="span3 ownkeys">
+			<div class="thumbnail">
+				<h4><a href="ownkeys">{_('Your own keys')}</a></h4>
+			</div>
+		</li>
+		<li class="span3 keyring">
+			<div class="thumbnail">
+				<h4><a href="keyring">{_('Your keyring')}</a></h4>
+			</div>
+		</li>
+		<li class="span3 settings">
+			<div class="thumbnail">
+				<h4><a href="settings">{_('Your account')}</a></h4>
+			</div>
+		</li>
 			{/if}
+	</ul>
+</div>
 		{/param}
 	{/call}
 {/template}

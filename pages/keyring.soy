@@ -15,7 +15,7 @@
 <p class="nothingtodo"><em>{_('Your keyring is empty.')}</em></p>
 			{else}
 <form class="keyring" method="post" action="">
-	<table class="keyring">
+	<table class="keyring table table-condensed table-checkbox">
 		<thead>
 			<tr>
 				<th class="c-select">&nbsp;</th>
@@ -33,8 +33,14 @@
 				{/foreach}
 		</tbody>
 	</table>
-	<div class="submit"><input type="submit" value="{_('Export the selected keys')}" /> {call gnewpg.ui.exportFormats /}</div>
-	<div class="submit"><input type="submit" name="remove" value="{_('Remove the selected keys from the keyring')}" onclick="return confirm('{_('Are you sure that you want to remove the selected keys from your keyring? If they are marked as private, you will not be able to access them anymore.')}');" /></div>
+
+	<div>
+		<input type="submit" value="{_('Export the selected keys')}" class="btn" /> {call gnewpg.ui.exportFormats /}
+	</div>
+
+	<div>
+		<input type="submit" name="remove" class="btn btn-danger" value="{_('Remove the selected keys from the keyring')}" onclick="return confirm('{_('Are you sure that you want to remove the selected keys from your keyring? If they are marked as private, you will not be able to access them anymore.')}');" />
+	</div>
 </form>
 			{/if}
 		{/param}

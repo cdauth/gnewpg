@@ -11,19 +11,24 @@
 {template .key}
 	{call gnewpg.ui.html}
 		{param searchengines: $searchengines /}
-		{param title:$keyDetails ? _('Key %s (%s)', $keyId, $keyDetails.primary_identity) : _('Key %s', $keyId) /}
+		{param title:$keyDetails ? _('Key %s (%s)', formatKeyId($keyId), $keyDetails.primary_identity) : _('Key %s', $keyId) /}
 		{param content}
 			{if $error}
 {call gnewpg.ui.error}{param message:_($error)/}{/call}
 			{else}
 				{if $pictures.length > 0}
-<ul class="keyPictures">
+<ul class="keyPictures pull-right thumbnails">
 					{foreach $picture in $pictures}
-	<li class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}"><img src="{$picture.src|noAutoescape}" alt="" /> <span>{_('Picture #%d', $picture.idx)}</span></li>
+	<li>
+		<div class="thumbnail">
+			<img src="{$picture.src|noAutoescape}" alt="" />
+			<p class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}">{_('Picture #%d', $picture.idx)}</p>
+		</div>
+	</li>
 					{/foreach}
 </ul>
 				{/if}
-<dl>
+<dl class="dl-horizontal">
 	<dt>{_('Fingerprint')}</dt>
 	<dd>{formatFingerprint($keyDetails.fingerprint)}</dd>
 	
@@ -53,23 +58,26 @@
 				{if $ij.req.session.user}
 <form action="../claimkey" method="get">
 	<input type="hidden" name="id" value="{$keyId}" />
-	<input type="submit" value="{_('This key belongs to me!')}" />
+	<input type="submit" value="{_('This key belongs to me!')}" class="btn btn-success" />
 </form>
 				{/if}
 
 <form action="{$keyId}/export" method="get">
-	<div class="submit"><input type="submit" value="{_('Export this key')}" /> {call gnewpg.ui.exportFormats /}</div>
+	<div>
+		<input type="submit" value="{_('Export this key')}" class="btn btn-info" /> {call gnewpg.ui.exportFormats /}
+	</div>
 
-				{if $details == 2}
-	<input type="hidden" name="selection" value="true" />
-{_('Details')}: <strong>{_('expert')}</strong> | <a href="{$keyId}?details=1">{_('on')}</a> | <a href="{$keyId}">{_('off')}</a>
-				{elseif $details == 1}
-{_('Details')}: <a href="{$keyId}?details=2">{_('expert')}</a> | <strong>{_('on')}</strong> | <a href="{$keyId}">{_('off')}</a>
-				{else}
-{_('Details')}: <a href="{$keyId}?details=2">{_('expert')}</a> | <a href="{$keyId}?details=1">{_('on')}</a> | <strong>{_('off')}</strong>
-				{/if}
+	<div class="btn-group">
+		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">{_('Details')}: {switch $details}{case '2'}{_('expert')}{case '1'}{_('on')}{default}{_('off')}{/switch} <span class="caret"></span></a>
+		<ul class="dropdown-menu">
+			<li{if $details != 1 and $details != 2} class="active"{/if}><a href="{$keyId}">{_('off')}</a></li>
+			<li{if $details == 1} class="active"{/if}><a href="{$keyId}?details=1">{_('on')}</a></li>
+			<li{if $details == 2} class="active"{/if}><a href="{$keyId}?details=2">{_('expert')}</a></li>
+		</ul>
+	</div>
 
-<table class="key-details">
+	<div class="clearfix"></div> <!-- Cannot apply to table due to Chromium bug -->
+<table class="table key-details">
 	<thead>
 		<tr>
 				{if $details == 2}
@@ -86,9 +94,21 @@
 		</tr>
 	</thead>
 	<tbody>
+		<tr class="heading">
+			{if $details == 2}
+			<td class="c-checkbox">&nbsp;</td>
+				{/if}
+			<td colspan="{if $details == 2}6{else}5{/if}">
+				<h3>{_('Key signatures')}</h3>
+				{if $keyDetails.signatures.length == 0}
+				<p><em>{_('No key signatures.')}</em></p>
+				{/if}
+			</td>
+		</tr>
 				{foreach $sig in $keyDetails.signatures}
 					{call .signature}{param sig:$sig/}{param details:$details/}{/call}
 				{/foreach}
+
 		<tr class="heading">
 				{if $details == 2}
 			<td class="c-checkbox">&nbsp;</td>
@@ -105,7 +125,7 @@
 					{if $details == 2}
 			<td class="c-checkbox"><input type="checkbox" name="subkeys" value="{$subkey.id}" checked="checked" /></td>
 					{/if}
-			<td colspan="4" class="c-object{if $subkey.revokedby} revoked{/if}{if $subkey.expired} expired{/if}">{call gnewpg.ui.security}{param security:$subkey.security/}{param content}<em>{_('Subkey')} {formatKeyId($subkey.id)}</em>{/param}{/call}</td>
+			<td colspan="4" class="c-object{if $subkey.revokedby} revoked{/if}{if $subkey.expired} expired{/if}"><h4>{call gnewpg.ui.security}{param security:$subkey.security/}{param content}{_('Subkey')} {formatKeyId($subkey.id)}{/param}{/call}</h4></td>
 			<td class="c-expires">{if $subkey.revokedby}{call .revokedby}{param sig:$subkey.revokedby/}{/call}{else}{if $subkey.expires}{_($subkey.expires)}{else}<em>{_('never')}</em>{/if}{/if}
 					{if $details == 2}
 			<td class="c-details">
@@ -133,7 +153,7 @@
 					{if $details == 2}
 			<td class="c-checkbox"><input type="checkbox" name="identities" value="{$identity.id}" checked="checked" /></td>
 					{/if}
-			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $identity.revokedby} revoked{/if}{if $identity.expired} expired{/if}">{call gnewpg.ui.security}{param security:$identity.security/}{param content}<em>{$identity.id}</em>{if $identity.id == $keyDetails.primary_identity} ({_('primary')}){/if}{/param}{/call}</td>
+			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $identity.revokedby} revoked{/if}{if $identity.expired} expired{/if}"><h4>{call gnewpg.ui.security}{param security:$identity.security/}{param content}{$identity.id}{if $identity.id == $keyDetails.primary_identity} <small>({_('primary')})</small>{/if}{/param}{/call}</h4></td>
 		</tr>
 		{call .signatures}{param sigs:$identity.signatures/}{param details:$details/}{/call}
 				{/foreach}
@@ -153,7 +173,7 @@
 					{if $details == 2}
 			<td class="c-checkbox"><input type="checkbox" name="attributes" value="{$attribute.id}" checked="checked" /></td>
 					{/if}
-			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $attribute.revokedby} revoked{/if}{if $attribute.expired} expired{/if}">{call gnewpg.ui.security}{param security:$attribute.security/}{param content}<em>{_('Attribute')}</em>{if $attribute.pictures} ({_('picture')} {$attribute.pictures}){/if}{/param}{/call}</td>
+			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $attribute.revokedby} revoked{/if}{if $attribute.expired} expired{/if}"><h4>{call gnewpg.ui.security}{param security:$attribute.security/}{param content}{_('Attribute')}{if $attribute.pictures} <small>({_('picture')} {$attribute.pictures})</small>{/if}{/param}{/call}</h4></td>
 		</tr>
 		{call .signatures}{param sigs:$attribute.signatures/}{param details:$details/}{/call}
 				{/foreach}
@@ -179,7 +199,7 @@
 </tr>
 	{else}
 		{foreach $sig in $sigs}
-{call .signature}{param sig:$sig/}{param more:true/}{param details:$details/}{/call}</li>
+{call .signature}{param sig:$sig/}{param more:true/}{param details:$details/}{/call}
 		{/foreach}
 	{/if}
 {/template}

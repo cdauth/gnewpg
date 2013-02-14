@@ -18,35 +18,71 @@
 {call gnewpg.ui.error}{param message:_('The following errors occurred:') /}{/call}
 <ul>
 					{foreach $obj in $failed}
-{call .printObj}{param obj:$obj /}{/call}
+{call .printErrObj}{param obj:$obj /}{/call}
 					{/foreach}
 </ul>
 				{/if}
 				{if $uploadedKeys.length > 0}
 {call gnewpg.ui.success}{param message:_('The following keys were successfully uploaded:') /}{/call}
-<ul>
+<ul class="thumbnails">
 					{foreach $key in $uploadedKeys}
-{call .printObj}{param obj:$key /}{/call}
+	<li class="span4">
+		<div class="thumbnail">
+			<h3><a href="key/{$key.id}">{formatKeyId($key.id)}</a></h3>
+			<ul class="unstyled">
+						{foreach $subkey in $key.subkeys}
+				<li>{_('Subkey')} {formatKeyId($subkey.id)}</li>
+						{/foreach}
+						{foreach $identity in $key.identities}
+				<li>{$identity.id}</li>
+						{/foreach}
+			</ul>
+		</div>
+	</li>
 					{/foreach}
 </ul>
 				{else}
 {call gnewpg.ui.error}{param message:_('No keys were successfully uploaded.') /}{/call}
 				{/if}
 			{else}
-<form action="" method="post" class="upload" enctype="multipart/form-data">
-	<dl class="form">
-		<dt><label for="i-file">{_('Upload a file')}</label></dt>
-		<dd><input id="i-file" name="file" type="file" multiple="multiple" /></dd>
-		
-		<dt><label for="i-paste">{_('or paste a key')}</label></dt>
-		<dd><textarea id="i-paste" name="paste" class="paste"></textarea></dd>
-	</dl>
-	<p>{call gnewpg.ui.faq}{param no:1/}{param showTitle:true/}{/call}</p>
-	<div class="checkbox"><input id="i-downloadupdated" name="downloadupdated" type="checkbox" /><label for="i-downloadupdated"> {_('Download keys with updated signatures after uploading as')}</label> {call gnewpg.ui.exportFormats /} {call gnewpg.ui.faq}{param no:2/}{param showTitle:false/}{/call}</div>
-	<p>{_('If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so it will only be visible to people who already posess it in order to receive new signatures.')}</p>
-	<p>{_('New signatures in the uploaded key will be saved on the server and will be available to everyone who has access to the key.')}</p>
-	<div class="checkbox"><input id="i-donotpublish" name="donotpublish" type="checkbox" /><label for="i-donotpublish"> {_('Do not publish uploaded signatures on the server')}</label></div>
-	<div class="submit"><input type="submit" value="{_('Upload')}" /></div>
+<form action="" method="post" class="upload form-horizontal" enctype="multipart/form-data">
+	<div class="control-group">
+		<label class="control-label" for="i-file">{_('Upload a file')}</label>
+		<div class="controls">
+			<input id="i-file" name="file" type="file" multiple="multiple" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label" for="i-paste">{_('or paste a key')}</label>
+		<div class="controls">
+			<textarea id="i-paste" name="paste" class="input-block-level" rows="20"></textarea>
+			<span class="help-block">{call gnewpg.ui.faq}{param no:1/}{param showTitle:true/}{/call}</span>
+		</div>
+	</div>
+
+	<div class="control-group">
+		<div class="controls">
+			<div class="checkbox">
+				<input id="i-downloadupdated" name="downloadupdated" type="checkbox" /><label for="i-downloadupdated"> {_('Download keys with updated signatures after uploading as')} </label>{call gnewpg.ui.exportFormats /} {call gnewpg.ui.faq}{param no:2/}{param showTitle:false/}{/call}
+			</div>
+		</div>
+	</div>
+
+	<div class="control-group">
+		<div class="controls">
+			<p>{_('If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so only people who prove that they already posess the key can access it. New signatures in the uploaded key will be saved on the server and will be available to everyone who has permission to access the key.')}</p>
+			<label class="checkbox">
+				<input name="donotpublish" type="checkbox" /> {_('Do not save anything on the server, only download updated keys')}
+			</label>
+		</div>
+	</div>
+
+	<div class="control-group">
+		<div class="controls">
+			<input type="submit" value="{_('Upload')}" class="btn" />
+		</div>
+	</div>
 </form>
 			{/if}
 		{/param}
@@ -54,54 +90,28 @@
 {/template}
 
 /**
- * Note: If the object does not have an ID, it is an errorneous packet.
  * @param obj
 */
-{template .printObj}
+{template .printErrObj}
 	{switch $obj.type}
 
 		{case 2}
-<li>{if not $obj.id}{_('Signature')}{else}{_(''+'[SIG_'+$obj.sigtype+']')} by <em>{formatKeyId($obj.issuer)}</em> on <em>{_($obj.date)}</em>{/if}{if $obj.err}: {_($obj.err)}{/if}</li>
+<li>{if not $obj.id}{_('Signature')}{else}{_(''+'[SIG_'+$obj.sigtype+']')} by <em>{formatKeyId($obj.issuer)}</em> on <em>{_($obj.date)}</em>{/if}: {_($obj.err)}</li>
 
 		{case 6}
-<li>{_('Public key')}{if $obj.id} <a href="key/{$obj.id}"><em>{formatKeyId($obj.id)}</em></a>{/if}{if $obj.err}: {_($obj.err)}{/if}<ul>
-			{foreach $sig in $obj.signatures}
-				{call .printObj}{param obj:$sig /}{/call}
-			{/foreach}
-			{foreach $subkey in $obj.subkeys}
-				{call .printObj}{param obj:$subkey /}{/call}
-			{/foreach}
-			{foreach $id in $obj.identities}
-				{call .printObj}{param obj:$id /}{/call}
-			{/foreach}
-			{foreach $attr in $obj.attributes}
-				{call .printObj}{param obj:$attr /}{/call}
-			{/foreach}
-</ul></li>
+<li>{_('Public key')}{if $obj.id} <a href="key/{$obj.id}"><em>{formatKeyId($obj.id)}</em></a>{/if}: {_($obj.err)}</li>
 
 		{case 13}
-<li>{_('User ID')}{if $obj.id} <em>{$obj.id}</em>{/if}{if $obj.err}: {_($obj.err)}{/if}<ul>
-			{foreach $sig in $obj.signatures}
-				{call .printObj}{param obj:$sig /}{/call}
-			{/foreach}
-</ul></li>
+<li>{_('User ID')}{if $obj.id} <em>{$obj.id}</em>{/if}: {_($obj.err)}</li>
 
 		{case 14}
-<li>{_('Public subkey')}{if $obj.id} <em>{formatKeyId($obj.id)}</em>{/if}{if $obj.err}: {_($obj.err)}{/if}<ul>
-			{foreach $sig in $obj.signatures}
-				{call .printObj}{param obj:$sig /}{/call}
-			{/foreach}
-</ul></li>
+<li>{_('Public subkey')}{if $obj.id} <em>{formatKeyId($obj.id)}</em>{/if}: {_($obj.err)}</li>
 
 		{case 17}
-<li>{_('Attribute')}{if $obj.err}: {_($obj.err)}{/if}<ul>
-			{foreach $sig in $obj.signatures}
-				{call .printObj}{param obj:$sig /}{/call}
-			{/foreach}
-</ul></li>
+<li>{_('Attribute')}: {_($obj.err)}</li>
 
 		{default}
-<li>{_('Packet type %d', $obj.type)}{if $obj.err}: {_($obj.err)}{/if}</li>
+<li>{_('Packet type %d', $obj.type)}: {_($obj.err)}</li>
 
 	{/switch}
 {/template}

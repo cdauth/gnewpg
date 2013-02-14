@@ -6,6 +6,7 @@ var utils = require("./utils");
 var markdown = require("node-markdown").Markdown;
 var sprintf = require("sprintf").sprintf;
 var pgp = require("node-pgp");
+var config = require("./config.json");
 
 gettextModule.loadLocaleDirectory(__dirname+"/locale");
 
@@ -73,11 +74,13 @@ function middleware(req, res, next) {
 			var ret = [ ];
 			for(var i = 0; i<str.length; i+=4)
 				ret.push(str.substr(i, 4));
-			return ret.join("\u00a0");
+			return { contentKind : 0, content : "<span class=\"fingerprint\">"+ret.join("&nbsp;")+"</span>", toString: function() { return ret.join("\u00a0"); } };
 		};
 		
 		req.formatKeyId = function(keyId) {
-			return { contentKind : 0, content : keyId.substr(0, 8)+"<strong>"+keyId.substr(8, 16)+"</strong>" };
+			var p1 = keyId.substr(0, 8);
+			var p2 = keyId.substr(8, 16);
+			return { contentKind : 0, content : "<span class=\"keyid\">"+p1+"&nbsp;<strong>"+p2+"</strong></span>", toString: function(){ return p1+"\u2009"+p2; } };
 		};
 
 		next();
@@ -91,6 +94,7 @@ function injectMethods(req, toObj) {
 	toObj.formatFingerprint = req.formatFingerprint;
 	toObj.formatKeyId = req.formatKeyId;
 	toObj.consts = pgp.consts;
+	toObj.config = config;
 
 	return toObj;
 }

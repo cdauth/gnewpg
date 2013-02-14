@@ -19,21 +19,39 @@
 {/if}
 
 		<title>{$title} – gnewpg</title>
+
+		<link rel="stylesheet" href="/static/bootstrap-2.3.0/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="/static/bootstrap-2.3.0/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="/static/bootstrap-2.3.0/css/bootstrap-responsive.min.css" />
 		<link rel="stylesheet" href="/static/styles.css" type="text/css" />
 	</head>
 	<body>
-		<h1><a href="/">gnewpg</a></h1>
-		<div id="login-bar">
+		<script src="/static/jquery-1.9.1.min.js"></script>
+		<script src="/static/bootstrap-2.3.0/js/bootstrap.min.js"></script>
+		<script src="/static/scripts.js"></script>
+		<div class="container">
+		<div class="row">
+			<div class="span3">
+				<h1><a href="/">gnewpg</a></h1>
+			</div>
+			<div class="span3">
+				{call gnewpg.ui.faq}{param no:3 /}{param showTitle:true /}{/call}
+			</div>
+			<div id="login-bar" class="span6 text-right">
 {if $ij.req.session.user}
-			{_('Logged in as %s', '<strong class="username">'+$ij.req.session.user.id+'</strong>')|noAutoescape}. <form action="/logout{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" method="post" class="logout"><input type="submit" value="{_('Logout')}" /></form>
+				<form action="/logout{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" method="post" class="logout form-inline">{_('Logged in as %s', '<strong class="username">'+$ij.req.session.user.id+'</strong>')|noAutoescape}. <input type="submit" value="{_('Logout')}" class="btn" /></form>
 {else}
-			{_('Not logged in.')} <a href="/login{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" class="login">Login</a> | <a href="/register" class="register">{_('Register')}</a>
+				{_('Not logged in.')} <a href="/login{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" class="login btn">Login</a> <a href="/register" class="register btn">{_('Register')}</a>
 {/if}
+			</div>
 		</div>
-		<h2>{$title}</h2>
+		<div class="page-header">
+			<h2>{$title}</h2>
+		</div>
 
 {$content|noAutoescape}
 
+		</div>
 </body>
 </html>
 {/template}
@@ -41,7 +59,7 @@
 /**
 */
 {template .required}
-<abbr title="{_('Required')}" class="required">*</abbr>
+<span class="help-inline"><abbr title="{_('Required')}" class="required">*</abbr></span>
 {/template}
 
 /**
@@ -59,14 +77,14 @@
  * @param message
 */
 {template .error}
-<p class="error">{$message}</p>
+<p class="alert alert-error">{$message}</p>
 {/template}
 
 /**
  * @param message
 */
 {template .success}
-<p class="success">{$message}</p>
+<p class="alert alert-success">{$message}</p>
 {/template}
 
 /**
