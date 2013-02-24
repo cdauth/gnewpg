@@ -5,13 +5,19 @@ var pgp = require("node-pgp");
 
 var p = pgp.utils.proxy;
 
+function UnfilteredKeyring(con) {
+	UnfilteredKeyring.super_.call(this, con);
+}
+
+util.inherits(UnfilteredKeyring, keyringPg._KeyringPostgres);
+
 ///////////////////////////////////////////////////////////////////////////////
 
 function FilteredKeyring(con) {
 	FilteredKeyring.super_.call(this, con);
 }
 
-util.inherits(FilteredKeyring, keyringPg._KeyringPostgres);
+util.inherits(FilteredKeyring, UnfilteredKeyring);
 
 pgp.utils.extend(FilteredKeyring.prototype, {
 	_maySeeKey : function(keyId, callback) {
@@ -423,6 +429,7 @@ pgp.utils.extend(GroupKeyring.prototype, {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+exports.UnfilteredKeyring = UnfilteredKeyring;
 exports.AnonymousKeyring = AnonymousKeyring;
 exports.SearchEngineKeyring = SearchEngineKeyring;
 exports.TemporaryUploadKeyring = TemporaryUploadKeyring;

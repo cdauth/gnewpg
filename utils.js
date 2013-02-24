@@ -2,19 +2,6 @@ var config = require("./config.json");
 var fs = require("fs");
 var pgp = require("node-pgp");
 
-var RANDOM_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-/**
- * Generates a random string of the specified length made of letters and numbers.
- * @param length {Number}
-*/
-function generateRandomString(length) {
-	var ret = "";
-	for(var i=0; i<length; i++)
-		ret += RANDOM_CHARS.charAt(Math.floor(Math.random()*RANDOM_CHARS.length));
-	return ret;
-}
-
 function encodePassword(password) {
 	return pgp.utils.hash(password, "sha256", "base64").substring(0, 43);
 }
@@ -50,14 +37,7 @@ function getInfoForFormat(format) {
 	}
 }
 
-function isEmailAddress(str) {
-	// http://www.regular-expressions.info/email.html
-	return str.match(/(?:[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/);
-}
-
-exports.generateRandomString = generateRandomString;
 exports.extend = pgp.utils.extend;
 exports.encodePassword = encodePassword;
 exports.encodeToFormat = encodeToFormat;
 exports.getInfoForFormat = getInfoForFormat;
-exports.isEmailAddress = isEmailAddress;

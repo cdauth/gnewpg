@@ -1,5 +1,6 @@
 var utils = require("./utils");
 var config = require("./config.json");
+var pgp = require("node-pgp");
 var pgKeyring = require("node-pgp-postgres");
 var pgKeyringDatabase = require("node-pgp-postgres/lib/database");
 var pgKeyringStructure = require("node-pgp-postgres/lib/structure");
@@ -51,7 +52,7 @@ function middleware(req, res, next) {
 }
 
 function getUniqueRandomString(con, length, table, field, callback) {
-	var randomStr = utils.generateRandomString(length);
+	var randomStr = pgp.utils.generateRandomString(length);
 	con.query("SELECT "+field+" FROM "+table+" WHERE "+field+" = $1 LIMIT 1", [ randomStr ], function(err, res) {
 		if(err)
 			callback(err);

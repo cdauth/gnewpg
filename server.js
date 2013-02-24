@@ -40,9 +40,9 @@ async.series([
 		});
 
 		soynode.compileTemplates(__dirname+"/pages", cb);
-	}, /*function(cb) {
+	}, function(cb) {
 		mails.loadPrivateKey(cb);
-	},*/
+	},
 	db.initialise
 ], function(err) {
 	if(err)
