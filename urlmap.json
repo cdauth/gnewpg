@@ -8,6 +8,7 @@
 		"/search" : "search",
 		"/key/:keyId" : "key",
 		"/key/:keyId/export" : "exportKey",
+		"/key/:keyId/settings" : "keySettings",
 		"/keyring" : "keyring",
 		"/keyring/export" : "exportKey",
 		"/claimkey/:keyId" : "claimkey"
@@ -17,6 +18,7 @@
 		"/register": "register",
 		"/logout": "logout",
 		"/upload": "upload",
+		"/key/:keyId/settings" : "keySettings",
 		"/claimkey/:keyId" : "claimkey"
 	}
 }

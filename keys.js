@@ -158,12 +158,12 @@ function resolveKeyList(keyring, list) {
 	});
 }
 
-function getKeySettings(con, keyId, callback) {
-	db.getEntry(con, "keys_settings", "*", { key: keyId }, function(err, settings) {
+function getKeySettings(con, keyId, callback, fields) {
+	db.getEntry(con, "keys_settings", fields || "*", { key: keyId }, function(err, settings) {
 		if(err)
 			return callback(err);
 
-		callback(null, settings || { });
+		callback(null, settings || { key: keyId });
 	});
 }
 
@@ -179,7 +179,53 @@ function updateKeySettings(con, keyId, fields, callback) {
 	});
 }
 
+function getIdentitySettings(con, keyId, identityId, callback, fields) {
+	db.getEntry(con, "keys_identities_settings", fields || "*", { key: keyId, id: identityId }, function(err, settings) {
+		if(err)
+			return callback(err);
+
+		callback(null, settings || { key: keyId, id: identityId });
+	});
+}
+
+function updateIdentitySettings(con, keyId, identityId, fields, callback) {
+	db.entryExists(con, "keys_identities_settings", { key: keyId, id: identityId }, function(err, exists) {
+		if(err)
+			return callback(err);
+
+		if(exists)
+			db.update(con, "keys_identities_settings", fields, { key: keyId, id: identityId }, callback);
+		else
+			db.insert(con, "keys_identities_settings", utils.extend({ key: keyId, id: identityId }, fields), callback);
+	});
+}
+
+function getAttributeSettings(con, keyId, attributeId, callback, fields) {
+	db.getEntry(con, "keys_attributes_settings", fields || "*", { key: keyId, id: attributeId }, function(err, settings) {
+		if(err)
+			return callback(err);
+
+		callback(null, settings || { key: keyId, id: attributeId });
+	});
+}
+
+function updateAttributeSettings(con, keyId, attributeId, fields, callback) {
+	db.entryExists(con, "keys_attributes_settings", { key: keyId, id: attributeId }, function(err, exists) {
+		if(err)
+			return callback(err);
+
+		if(exists)
+			db.update(con, "keys_attributes_settings", fields, { key: keyId, id: attributeId }, callback);
+		else
+			db.insert(con, "keys_attributes_settings", utils.extend({ key: keyId, id: attributeId }, fields), callback);
+	});
+}
+
 exports.getKeyWithSubobjects = getKeyWithSubobjects;
 exports.resolveKeyList = resolveKeyList;
 exports.getKeySettings = getKeySettings;
 exports.updateKeySettings = updateKeySettings;
+exports.getIdentitySettings = getIdentitySettings;
+exports.updateIdentitySettings = updateIdentitySettings;
+exports.getAttributeSettings = getAttributeSettings;
+exports.updateAttributeSettings = updateAttributeSettings;

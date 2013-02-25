@@ -24,7 +24,7 @@
                     {if not $keySettings.user}
 	<div><a href="../claimkey/{$keyId}" class="btn btn-success">{_('This key belongs to me!')}</a></div>
                     {elseif $keySettings.user == $ij.req.session.user.id}
-	<p><strong>{_('You are the verified owner of this key.')}</strong></p>
+	<p><strong>{_('You are the verified owner of this key.')}</strong> <a href="{$keyId}/settings" class="btn btn-success">{_('Edit privacy settings')}</a></p>
                     {/if}
                 {/if}
 

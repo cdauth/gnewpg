@@ -1,0 +1,77 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param keyId
+ * @param keySettings
+ * @param identities
+ * @param attributes
+*/
+{template .keySettings}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title:_('Privacy settings for key %s', $keyId) /}
+		{param content}
+<form action="" method="post">
+	<p>{_('By default, only those may access the key who have uploaded it once before and have thus proven that they already posess it. People who have access to the key will be provided with all updates concerning the key itself, such as revocation signatures.')}</p>
+	<p>{_('The permissions for the identities and attributes are handled independently. By default, people who have permission to a key will only see those identities and attributes that they have uploaded before, so those who they already posess. Users who have access to an identity or attribute can see all their certification signatures, which might reveal information about social connections to some extent.')}</p>
+	<h5>{_('Key %s', $keyId)}</h5>
+	<div class="control-group">
+		<div class="controls">
+			<label class="checkbox">
+				<input type="checkbox" checked="checked" disabled="disabled" /> {_('Key may be seen by people who already have it in their keyring')}
+			</label>
+			<label class="checkbox">
+				<input name="perm_idsearch" type="checkbox"{if $keySettings.perm_idsearch} checked="checked"{/if} /> {_('Key can be found by everyone, by searching for its ID or by clicking a link')}
+			</label>
+			<label class="checkbox">
+				<input name="perm_searchengines" type="checkbox"{if $keySettings.perm_searchengines} checked="checked"{/if} /> {_('The page of this key may be indexed by search engines')}
+			</label>
+		</div>
+	</div>
+			{foreach $identity in $identities}
+	<h5>{_('Identity %s', $identity.id)}</h5>
+	<div class="control-group">
+		<div class="controls">
+			<label class="checkbox">
+				<input type="checkbox" checked="checked" disabled="disabled" /> {_('Identity may be seen by people who already have it in their keyring')}
+			</label>
+			<label class="checkbox">
+				<input name="perm_public-{$identity.hash}" type="checkbox"{if $identity.perm_public} checked="checked"{/if} /> {_('Identity may be seen by everyone who can access the key.')}
+			</label>
+			<label class="checkbox">
+				<input name="perm_namesearch-{$identity.hash}" type="checkbox"{if $identity.perm_namesearch} checked="checked"{/if} /> {_('The key may be found by searching for this identity’s name.')}
+			</label>
+			<label class="checkbox">
+				<input name="perm_emailsearch-{$identity.hash}" type="checkbox"{if $identity.perm_emailsearch} checked="checked"{/if} /> {_('The key may be found by searching for this identity’s e-mail address.')}
+			</label>
+		</div>
+	</div>
+			{/foreach}
+			{foreach $attribute in $attributes}
+    <h5>{_('Attribute')}</h5>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" checked="checked" disabled="disabled" /> {_('Attribute may be seen by people who already have it in their keyring')}
+            </label>
+            <label class="checkbox">
+                <input name="perm_public-{$attribute.id}" type="checkbox"{if $attribute.perm_public} checked="checked"{/if} /> {_('Attribute may be seen by everyone who can access the key.')}
+            </label>
+        </div>
+    </div>
+            {/foreach}
+	<div class="control-group">
+		<div class="controls">
+			<input type="submit" value="{_('Save')}" class="btn btn-info" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<div class="controls">
+			<input type="submit" name="dropownership" value="{_('Give up the ownership of this key')}" class="btn btn-danger" onclick="return confirm('{_('After giving up the ownership of the key, the privacy settings cannot by changed anymore, unless someone re-claims the ownership. Are you sure?')}');" />
+		</div>
+	</div>
+</form>
+		{/param}
+	{/call}
+{/template}
