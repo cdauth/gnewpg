@@ -28,7 +28,7 @@
 			<tr class="{if $key.expired}expired{/if} {if $key.revokedby}revoked{/if}">
 				<td class="c-select"><input type="checkbox" name="key" value="{$key.id}" /></td>
 				<td class="c-key"><a href="key/{$key.id}">{formatKeyId($key.id)}</a></td>
-				<td class="c-userid">{if $key.primary_identity}{$key.primary_identity}{/if}</td>
+				<td class="c-userid">{if $ij.req.session.user.id == $key.user}<strong>{/if}{if $key.primary_identity}{$key.primary_identity}{/if}{if $ij.req.session.user.id == $key.user}</strong>{/if}</td>
 			</tr>
 				{/foreach}
 		</tbody>

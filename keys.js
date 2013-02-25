@@ -145,7 +145,14 @@ function resolveKeyList(keyring, list) {
 			keyring.getPrimaryIdentity(keyId, function(err, identityInfo) {
 				keyInfo.primary_identity = identityInfo.id;
 
-				cb(null, keyInfo);
+				getKeySettings(keyring._con, keyId, function(err, keySettings) {
+					if(err)
+						return cb(err);
+
+					keyInfo.user = keySettings.user;
+
+					cb(null, keyInfo);
+				});
 			}, [ "id" ]);
 		}, [ "id", "revoked", "expires" ]);
 	});
