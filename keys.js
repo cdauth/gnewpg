@@ -135,7 +135,7 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 }
 
 function resolveKeyList(keyring, list) {
-	return pgp.Fifo.map(list, function(keyId, cb) {
+	return list.map(function(keyId, cb) {
 		keyring.getKey(keyId, function(err, keyInfo) {
 			if(err)
 				return cb(err);

@@ -68,7 +68,7 @@ pgp.utils.extend(FilteredKeyring.prototype, {
 		var ret = FilteredKeyring.super_.prototype.searchIdentities.apply(this, arguments);
 		searchString = searchString.toLowerCase();
 
-		return pgp.Fifo.grep(ret, p(this, function(keyRecord, next) {
+		return ret.grep(p(this, function(keyRecord, next) {
 			this._maySeeKey(keyRecord.id, p(this, function(err, may) {
 				if(err || !may)
 					return next(err, false);
@@ -90,21 +90,21 @@ pgp.utils.extend(FilteredKeyring.prototype, {
 
 	searchByShortKeyId : function(keyId) {
 		var ret = FilteredKeyring.super_.prototype.searchByShortKeyId.apply(this, arguments);
-		return pgp.Fifo.grep(ret, p(this, function(keyInfo, cb) {
+		return ret.grep(p(this, function(keyInfo, cb) {
 			this._maySeeKey(keyInfo.id, cb);
 		}));
 	},
 
 	searchByLongKeyId : function(keyId) {
 		var ret = FilteredKeyring.super_.prototype.searchByLongKeyId.apply(this, arguments);
-		return pgp.Fifo.grep(ret, p(this, function(keyInfo, cb) {
+		return ret.grep(p(this, function(keyInfo, cb) {
 			this._maySeeKey(keyInfo.id, cb);
 		}));
 	},
 
 	searchByFingerprint : function(keyId) {
 		var ret = FilteredKeyring.super_.prototype.searchByFingerprint.apply(this, arguments);
-		return pgp.Fifo.grep(ret, p(this, function(keyInfo, cb) {
+		return ret.grep(p(this, function(keyInfo, cb) {
 			this._maySeeKey(keyInfo.id, cb);
 		}));
 	}
@@ -115,7 +115,7 @@ function __filterList(listFuncName, mayFuncName, argNo) {
 		var t = this;
 		var args = pgp.utils.toProperArray(arguments);
 
-		return pgp.Fifo.grep(FilteredKeyring.super_.prototype[listFuncName].apply(t, args), function(it, cb) {
+		return FilteredKeyring.super_.prototype[listFuncName].apply(t, args).grep(function(it, cb) {
 			t[mayFuncName].apply(t, args.slice(0, argNo).concat([ it, cb ]));
 		});
 	};
@@ -130,7 +130,7 @@ function __filterGetMultiple(getFuncName, mayFuncName, argNo) {
 		if(args[argNo+1] && args[argNo+1].indexOf("id") == -1)
 			args[argNo+1].push("id");
 
-		return pgp.Fifo.grep(FilteredKeyring.super_.prototype[getFuncName].apply(t, args), function(it, cb) {
+		return FilteredKeyring.super_.prototype[getFuncName].apply(t, args).grep(function(it, cb) {
 			t[mayFuncName].apply(t, args.slice(0, argNo).concat([ it.id, cb ]));
 		});
 	};
@@ -370,7 +370,7 @@ pgp.utils.extend(UserKeyring.prototype, {
 	},
 
 	listKeyring : function() {
-		return pgp.Fifo.map(db.getEntries(this._con, "users_keyrings_keys", [ "key" ], { user: this._user }), function(it, cb) {
+		return db.getEntries(this._con, "users_keyrings_keys", [ "key" ], { user: this._user }).map(function(it, cb) {
 			cb(null, it.key);
 		});
 	}
