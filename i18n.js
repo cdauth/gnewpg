@@ -56,7 +56,10 @@ function __getLanguageForLocaleList(list) {
 
 function middleware(req, res, next) {
 	i18n_middleware(req, res, function() {
-		req.locale = req.user ? req.user.locale : __getLanguageForLocaleList(req.locales);
+		var localelist = req.locales;
+		if(req.session.user)
+			localelist.unshift(req.session.user.locale);
+		req.locale = __getLanguageForLocaleList(localelist);
 		
 		req.gettext = function(msg) {
 			return gettext.apply(null, [ msg, req.locale ].concat(pgp.utils.toProperArray(arguments).slice(1)));

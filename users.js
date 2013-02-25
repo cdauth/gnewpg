@@ -17,6 +17,11 @@ function userExists(con, id, callback) {
 	db.entryExists(con, "users", { id: id }, callback);
 }
 
+function updateUser(con, id, fields, callback) {
+	db.update(con, "users", fields, { id: id }, callback);
+}
+
 exports.createUser = createUser;
 exports.getUser = getUser;
 exports.userExists = userExists;
+exports.updateUser = updateUser;
