@@ -2,10 +2,11 @@ var sessions = require("../sessions");
 var utils = require("../utils");
 var db = require("../database");
 var users = require("../users");
+var config = require("../config");
 
 module.exports.get = function(req, res, next) {
 	if(req.session.user)
-		res.redirect(303, req.query.referer || "/");
+		res.redirect(303, config.baseurl + (req.query.referer || "/"));
 	else
 		next();
 };
@@ -23,7 +24,7 @@ module.exports.post = function(req, res, next) {
 					next(err);
 				else
 				{
-					res.redirect(303, req.query.referer || "/");
+					res.redirect(303, config.baseurl + (req.query.referer || "/"));
 					next();
 				}
 			});

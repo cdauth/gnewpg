@@ -1,11 +1,12 @@
 var utils = require("../utils");
 var keys = require("../keys");
 var pgp = require("node-pgp");
+var config = require("../config");
 
 exports.get = function(req, res, next) {
 	var keys = req.params.keyId || req.query.key;
 	if(!keys)
-		return res.redirect(303, "/keyring");
+		return res.redirect(303, config.baseurl+"/keyring");
 
 	if(!Array.isArray(keys))
 		keys = [ keys ];

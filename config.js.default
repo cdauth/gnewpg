@@ -52,7 +52,13 @@ module.exports = {
 	 * The maximum upload size in bytes. Be aware that people might want to upload their whole
 	 * keyrings at once.
 	*/
-	"maxUploadSize" : 20000000
+	"maxUploadSize" : 20000000,
+
+	/**
+	 * The base URL of the application without a trailing slash. This is useful if gnewpg
+	 * runs behind a proxy. Leave empty if not run behind a proxy.
+	*/
+	"baseurl" : ""
 };
 
 require("node-pgp").config.tmpDir = module.exports.tmpDir;
