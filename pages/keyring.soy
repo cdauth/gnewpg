@@ -1,17 +1,14 @@
 {namespace gnewpg.pages}
 
 /**
- * @param? error
- * @param? keys
+ * @param keys
 */
 {template .keyring}
 	{call gnewpg.ui.html}
 		{param searchengines: false /}
 		{param title:_('Your keyring') /}
 		{param content}
-			{if $error}
-				{call gnewpg.ui.error}{param message:_($error)/}{/call}
-			{elseif $keys.length == 0}
+			{if $keys.length == 0}
 <p class="nothingtodo"><em>{_('Your keyring is empty.')}</em></p>
 			{else}
 <form class="keyring" method="get" action="keyring/export">

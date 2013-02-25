@@ -10,10 +10,9 @@ exports.get = function(req, res, next) {
 
 	keys.resolveKeyList(req.keyring, req.keyring.listKeyring()).toArraySingle(function(err, keyList) {
 		if(err)
-			req.params.error = err;
-		else
-			req.params.keys = keyList;
+			return next(err);
 
+		req.params.keys = keyList;
 		next();
 	});
 };
