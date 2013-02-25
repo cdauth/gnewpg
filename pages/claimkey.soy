@@ -10,6 +10,7 @@
 		{param searchengines: false /}
 		{param title:_('Claim key %s', formatKeyId($keyId)) /}
 		{param content}
+			<p><a href="{$ij.config.baseurl}/key/{$keyId}"><i class="icon-backward"></i> {_('Back to key %s', formatKeyId($keyId))}</a></p>
 			{if $sent}
 			<p>{call gnewpg.ui.success}{param message:_('An encrypted e-mail has been sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to add yourself as the owner of the key.')/}{/call}
 			{elseif $verified != null}

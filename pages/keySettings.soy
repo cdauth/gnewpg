@@ -9,8 +9,9 @@
 {template .keySettings}
 	{call gnewpg.ui.html}
 		{param searchengines: false /}
-		{param title:_('Privacy settings for key %s', $keyId) /}
+		{param title:_('Privacy settings for key %s', formatKeyId($keyId)) /}
 		{param content}
+<p><a href="{$ij.config.baseurl}/key/{$keyId}"><i class="icon-backward"></i> {_('Back to key %s', formatKeyId($keyId))}</a></p>
 <form action="" method="post">
 	<p>{_('By default, only those may access the key who have uploaded it once before and have thus proven that they already posess it. People who have access to the key will be provided with all updates concerning the key itself, such as revocation signatures.')}</p>
 	<p>{_('The permissions for the identities and attributes are handled independently. By default, people who have permission to a key will only see those identities and attributes that they have uploaded before, so those who they already posess. Users who have access to an identity or attribute can see all their certification signatures, which might reveal information about social connections to some extent.')}</p>
