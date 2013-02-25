@@ -48,7 +48,11 @@
 	</div>
 			{/foreach}
 			{foreach $attribute in $attributes}
-    <h5>{_('Attribute')}</h5>
+	<h5>{_('Attribute')}
+				{foreach $img in $attribute.images}
+		&nbsp;<img src="{$img}" alt="" />
+				{/foreach}
+	</h5>
     <div class="control-group">
         <div class="controls">
             <label class="checkbox">

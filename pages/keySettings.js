@@ -2,6 +2,7 @@ var config = require("../config");
 var keys = require("../keys");
 var pgp = require("node-pgp");
 var async = require("async");
+var imagemagick = require("imagemagick");
 
 exports.get = exports.post = function(req, res, next) {
 
@@ -68,21 +69,38 @@ exports.get = exports.post = function(req, res, next) {
 					if(err)
 						return next(err);
 
-					req.keyring.getAttributeList(req.params.keyId).forEachSeries(function(attributeId, next) {
+					req.keyring.getAttributes(req.params.keyId, null, [ "id", "subPackets" ]).forEachSeries(function(attributeInfo, next) {
 						async.series([
 							function(next) {
 								if(req.method == "POST")
-									keys.updateAttributeSettings(req.dbCon, req.params.keyId, attributeId, { perm_public: req.body["perm_public-"+attributeId] != null }, next);
+									keys.updateAttributeSettings(req.dbCon, req.params.keyId, attributeInfo.id, { perm_public: req.body["perm_public-"+attributeInfo.id] != null }, next);
 								else
 									next();
 							},
 							function(next) {
-								keys.getAttributeSettings(req.dbCon, req.params.keyId, attributeId, function(err, attributeSettings) {
+								keys.getAttributeSettings(req.dbCon, req.params.keyId, attributeInfo.id, function(err, attributeSettings) {
 									if(err)
 										return next(err);
 
-									req.params.attributes.push(attributeSettings);
-									next();
+									attributeSettings.images = [ ];
+									async.forEachSeries(attributeInfo.subPackets, function(it, next) {
+										if(!it.image)
+											return next();
+
+										imagemagick.resize({ srcData: it.image, height: 25 }, function(err, resized) {
+											if(err)
+												console.log("Error resizing image: ", err);
+											else
+												attributeSettings.images.push("data:image/jpeg;base64,"+(new Buffer(resized, "binary")).toString("base64"));
+											next();
+										});
+									}, function(err) {
+										if(err)
+											return next(err);
+
+										req.params.attributes.push(attributeSettings);
+										next();
+									});
 								});
 							}
 						], next);
