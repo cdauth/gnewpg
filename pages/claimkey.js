@@ -2,7 +2,7 @@ var mails = require("../mails");
 var config = require("../config");
 var keys = require("../keys");
 
-exports.post = exports.get = function(req, res, next, isPost) {
+exports.post = exports.get = function(req, res, next) {
 
 	// Not logged in: can’t claim key, redirect to login page
 	if(!req.session.user)
