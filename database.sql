@@ -3,7 +3,8 @@ CREATE TABLE "users" (
 	"password" CHAR(43) NOT NULL,
 	"email" TEXT,
 	"openid" TEXT UNIQUE,
-	"secret" CHAR(43) NOT NULL UNIQUE -- A secret string for the personal keyserver URL
+	"secret" CHAR(43) NOT NULL UNIQUE, -- A secret string for the personal keyserver URL
+	"locale" TEXT NOT NULL
 );
 
 CREATE INDEX "users_lower_idx" ON "users" (LOWER("id"));

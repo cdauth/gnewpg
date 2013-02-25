@@ -42,7 +42,7 @@ function mdgettext(msg, locale) {
 	return markdown(msg);
 }
 
-function getLanguageForLocaleList(list) {
+function __getLanguageForLocaleList(list) {
 	for(var i=0; i<list.length; i++)
 	{
 		for(var j in gettextModule.data)
@@ -56,7 +56,7 @@ function getLanguageForLocaleList(list) {
 
 function middleware(req, res, next) {
 	i18n_middleware(req, res, function() {
-		req.locale = getLanguageForLocaleList(req.locales);
+		req.locale = req.user ? req.user.locale : __getLanguageForLocaleList(req.locales);
 		
 		req.gettext = function(msg) {
 			return gettext.apply(null, [ msg, req.locale ].concat(pgp.utils.toProperArray(arguments).slice(1)));

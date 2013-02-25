@@ -30,7 +30,7 @@ module.exports.post = function(req, res, next) {
 		
 			if(errors.length == 0)
 			{
-				users.createUser(req.dbCon, req.body.username, req.body.password, req.body.email, null, function(err) {
+				users.createUser(req.dbCon, req.body.username, req.body.password, req.body.email, null, req.locale, function(err) {
 					if(err)
 						next(err);
 					else
