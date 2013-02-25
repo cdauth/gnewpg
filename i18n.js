@@ -6,7 +6,7 @@ var utils = require("./utils");
 var markdown = require("node-markdown").Markdown;
 var sprintf = require("sprintf").sprintf;
 var pgp = require("node-pgp");
-var config = require("./config.json");
+var config = require("./config");
 
 gettextModule.loadLocaleDirectory(__dirname+"/locale");
 

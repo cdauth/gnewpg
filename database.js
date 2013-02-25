@@ -1,5 +1,5 @@
 var utils = require("./utils");
-var config = require("./config.json");
+var config = require("./config");
 var pgp = require("node-pgp");
 var pgKeyring = require("node-pgp-postgres");
 var pgKeyringDatabase = require("node-pgp-postgres/lib/database");

@@ -1,0 +1,58 @@
+module.exports = {
+	/**
+	 * Postgres connection settings. Either a string or an object, see the documentation of the
+	 * constructor on https://github.com/brianc/node-postgres/wiki/Client.
+	*/
+	"db" : "postgres://gnewpg@localhost/gnewpg",
+
+	/**
+	 * Lifetime for normal login sessions in seconds.
+	*/
+	"sessionTimeout" : 3600,
+
+	/**
+	 * Lifetime for sessions with “stay logged in” in seconds.
+	*/
+	"persistentSessionTimeout" : 31536000,
+
+	/**
+	 * Min and max length for user names.
+	*/
+	"usernameMinLength" : 4,
+	"usernameMaxLength" : 20,
+
+	/**
+	 * Min length for passwords.
+	*/
+	"passwordMinLength" : 8,
+
+	/**
+	 * Private key to sign e-mails with.
+	*/
+	"notificationPrivateKey" : "./privateNotificationKey.asc",
+
+	/**
+	 * Sender address for e-mails.
+	*/
+	"notificationFrom" : "notifications@gnewpg.org",
+
+	/**
+	 * Directory for temporary files.
+	*/
+	"tmpDir" : require("os").tmpDir() + "/gnewpg",
+
+	/**
+	 * Mail transport configuration. See https://github.com/andris9/Nodemailer#setting-up-a-transport-method
+	 * for options.
+	*/
+	"mailTransport" : "SENDMAIL",
+	"mailTransportOptions" : { },
+
+	/**
+	 * The maximum upload size in bytes. Be aware that people might want to upload their whole
+	 * keyrings at once.
+	*/
+	"maxUploadSize" : 20000000
+};
+
+require("node-pgp").config.tmpDir = module.exports.tmpDir;

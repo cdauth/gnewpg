@@ -1,4 +1,4 @@
-var config = require("./config.json");
+var config = require("./config");
 var fs = require("fs");
 var pgp = require("node-pgp");
 
