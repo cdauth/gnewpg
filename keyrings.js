@@ -331,15 +331,30 @@ util.inherits(UserKeyring, AnonymousKeyring);
 
 pgp.utils.extend(UserKeyring.prototype, {
 	_containsKey : function(keyId, callback) {
-		db.entryExists(this._con, "users_keyrings_with_groups_keys", { user: this._user, key: keyId }, callback);
+		db.entryExists(this._con, "keys_settings", { user: this._user, key: keyId }, function(err, exists) {
+			if(err || exists)
+				callback(err, exists);
+			else
+				db.entryExists(this._con, "users_keyrings_with_groups_keys", { user: this._user, key: keyId }, callback);
+		}.bind(this));
 	},
 
 	_containsIdentity : function(keyId, identityId, callback) {
-		db.entryExists(this._con, "users_keyrings_with_groups_identities", { user: this._user, identity: identityId, identityKey: keyId }, callback);
+		db.entryExists(this._con, "keys_settings", { user: this._user, key: keyId }, function(err, exists) {
+			if(err || exists)
+				callback(err, exists);
+			else
+				db.entryExists(this._con, "users_keyrings_with_groups_identities", { user: this._user, identity: identityId, identityKey: keyId }, callback);
+		}.bind(this));
 	},
 
 	_containsAttribute : function(keyId, attributeId, callback) {
-		db.entryExists(this._con, "users_keyrings_with_groups_attributes", { user: this._user, attribute: attributeId, attributeKey: keyId }, callback);
+		db.entryExists(this._con, "keys_settings", { user: this._user, key: keyId }, function(err, exists) {
+			if(err || exists)
+				callback(err, exists);
+			else
+				db.entryExists(this._con, "users_keyrings_with_groups_attributes", { user: this._user, attribute: attributeId, attributeKey: keyId }, callback);
+		}.bind(this));
 	},
 
 	_onAddKey : function(keyInfo, callback) {
