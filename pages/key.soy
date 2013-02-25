@@ -2,8 +2,8 @@
 
 /**
  * @param keyId
- * @param error
  * @param keyDetails
+ * @param keySettings
  * @param details
  * @param searchengines
  * @param pictures
@@ -13,68 +13,69 @@
 		{param searchengines: $searchengines /}
 		{param title:$keyDetails ? _('Key %s (%s)', formatKeyId($keyId), $keyDetails.primary_identity) : _('Key %s', $keyId) /}
 		{param content}
-			{if $error}
-{call gnewpg.ui.error}{param message:_($error)/}{/call}
+			{if $keyDetails == null}
+{call gnewpg.ui.error}{param message:_('Key %s not found.', $keyId)/}{/call}
 			{else}
+<form action="{$keyId}/export" method="get">
+    <div>
+        <input type="submit" value="{_('Export this key')}" class="btn btn-info" /> {call gnewpg.ui.exportFormats /}
+    </div>
+                {if $ij.req.session.user}
+                    {if not $keySettings.user}
+	<div><a href="../claimkey/{$keyId}" class="btn btn-success">{_('This key belongs to me!')}</a></div>
+                    {elseif $keySettings.user == $ij.req.session.user.id}
+	<p><strong>{_('You are the verified owner of this key.')}</strong></p>
+                    {/if}
+                {/if}
+
+    <div class="btn-group">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">{_('Details')}: {switch $details}{case '2'}{_('expert')}{case '1'}{_('on')}{default}{_('off')}{/switch} <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+            <li{if $details != 1 and $details != 2} class="active"{/if}><a href="{$keyId}">{_('off')}</a></li>
+            <li{if $details == 1} class="active"{/if}><a href="{$keyId}?details=1">{_('on')}</a></li>
+            <li{if $details == 2} class="active"{/if}><a href="{$keyId}?details=2">{_('expert')}</a></li>
+        </ul>
+    </div>
+
 				{if $pictures.length > 0}
-<ul class="keyPictures pull-right thumbnails">
+	<ul class="keyPictures pull-right thumbnails">
 					{foreach $picture in $pictures}
-	<li>
-		<div class="thumbnail">
-			<img src="{$picture.src|noAutoescape}" alt="" />
-			<p class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}">{_('Picture #%d', $picture.idx)}</p>
-		</div>
-	</li>
+		<li>
+			<div class="thumbnail">
+				<img src="{$picture.src|noAutoescape}" alt="" />
+				<p class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}">{_('Picture #%d', $picture.idx)}</p>
+			</div>
+		</li>
 					{/foreach}
-</ul>
+	</ul>
 				{/if}
-<dl class="dl-horizontal">
-	<dt>{_('Fingerprint')}</dt>
-	<dd>{formatFingerprint($keyDetails.fingerprint)}</dd>
-	
-	<dt>{_('Security')}</dt>
-	<dd>{call gnewpg.ui.security}{param security:$keyDetails.security/}{/call}</dd>
-	
-	<dt>{_('Creation date')}</dt>
-	<dd>{_($keyDetails.date)}</dd>
-	
-	<dt>{_('Expiration date')}</dt>
-	<dd>{if $keyDetails.expires}{_($keyDetails.expires)}{else}<em>{_('never')}</em>{/if}</dd>
-	
-	<dt>{_('Revoked')}</dt>
-	<dd>{if $keyDetails.revokedby}{call .revokedby}{param sig:$keyDetails.revokedby/}{/call}{else}<em>{_('no')}</em>{/if}</dd>
+	<dl class="dl-horizontal">
+		<dt>{_('Fingerprint')}</dt>
+		<dd>{formatFingerprint($keyDetails.fingerprint)}</dd>
+
+		<dt>{_('Security')}</dt>
+		<dd>{call gnewpg.ui.security}{param security:$keyDetails.security/}{/call}</dd>
+
+		<dt>{_('Creation date')}</dt>
+		<dd>{_($keyDetails.date)}</dd>
+
+		<dt>{_('Expiration date')}</dt>
+		<dd>{if $keyDetails.expires}{_($keyDetails.expires)}{else}<em>{_('never')}</em>{/if}</dd>
+
+		<dt>{_('Revoked')}</dt>
+		<dd>{if $keyDetails.revokedby}{call .revokedby}{param sig:$keyDetails.revokedby/}{/call}{else}<em>{_('no')}</em>{/if}</dd>
 				{if $details == 2}
 
-	<dt>{_('Key version')}</dt>
-	<dd>{call gnewpg.ui.security}{param security:$keyDetails.versionSecurity/}{param content}{$keyDetails.version}{/param}{/call}</dd>
+		<dt>{_('Key version')}</dt>
+		<dd>{call gnewpg.ui.security}{param security:$keyDetails.versionSecurity/}{param content}{$keyDetails.version}{/param}{/call}</dd>
 
-	<dt>{_('Public key algorithm')}</dt>
-	<dd>{_(''+'[PKALGO_'+$keyDetails.pkalgo+']')}</dd>
+		<dt>{_('Public key algorithm')}</dt>
+		<dd>{_(''+'[PKALGO_'+$keyDetails.pkalgo+']')}</dd>
 
-	<dt>{_('Key size')}</dt>
-	<dd>{call gnewpg.ui.security}{param security:$keyDetails.sizeSecurity/}{param content}{_('%d bits', $keyDetails.size)}{/param}{/call}</dd>
+		<dt>{_('Key size')}</dt>
+		<dd>{call gnewpg.ui.security}{param security:$keyDetails.sizeSecurity/}{param content}{_('%d bits', $keyDetails.size)}{/param}{/call}</dd>
 				{/if}
-</dl>
-				{if $ij.req.session.user}
-<form action="../claimkey" method="get">
-	<input type="hidden" name="id" value="{$keyId}" />
-	<input type="submit" value="{_('This key belongs to me!')}" class="btn btn-success" />
-</form>
-				{/if}
-
-<form action="{$keyId}/export" method="get">
-	<div>
-		<input type="submit" value="{_('Export this key')}" class="btn btn-info" /> {call gnewpg.ui.exportFormats /}
-	</div>
-
-	<div class="btn-group">
-		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">{_('Details')}: {switch $details}{case '2'}{_('expert')}{case '1'}{_('on')}{default}{_('off')}{/switch} <span class="caret"></span></a>
-		<ul class="dropdown-menu">
-			<li{if $details != 1 and $details != 2} class="active"{/if}><a href="{$keyId}">{_('off')}</a></li>
-			<li{if $details == 1} class="active"{/if}><a href="{$keyId}?details=1">{_('on')}</a></li>
-			<li{if $details == 2} class="active"{/if}><a href="{$keyId}?details=2">{_('expert')}</a></li>
-		</ul>
-	</div>
+	</dl>
 
 	<div class="clearfix"></div> <!-- Cannot apply to table due to Chromium bug -->
 <table class="table key-details">

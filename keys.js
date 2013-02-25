@@ -1,8 +1,8 @@
 var pgp = require("node-pgp");
 var db = require("./database");
-var keyrings = require("./keyrings");
 var async = require("async");
 var i18n = require("./i18n");
+var utils = require("./utils");
 
 function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 	var keyFields = [ "id", "fingerprint", "security", "date", "expires", "revoked" ].concat(detailed ? [ "versionSecurity", "version", "pkalgo", "sizeSecurity", "size" ] : [ ]);
@@ -15,7 +15,7 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 		if(err)
 			return callback(err);
 		if(keyInfo == null)
-			return callback(new i18n.Error_("Key %s not found.", keyId));
+			return callback(null, null);
 
 		keyInfo.signatures = [ ];
 		keyInfo.subkeys = [ ];
@@ -151,5 +151,28 @@ function resolveKeyList(keyring, list) {
 	});
 }
 
+function getKeySettings(con, keyId, callback) {
+	db.getEntry(con, "keys_settings", "*", { key: keyId }, function(err, settings) {
+		if(err)
+			return callback(err);
+
+		callback(null, settings || { });
+	});
+}
+
+function updateKeySettings(con, keyId, fields, callback) {
+	db.entryExists(con, "keys_settings", { key: keyId }, function(err, exists) {
+		if(err)
+			return callback(err);
+
+		if(exists)
+			db.update(con, "keys_settings", fields, { key: keyId }, callback);
+		else
+			db.insert(con, "keys_settings", utils.extend({ key: keyId }, fields), callback);
+	});
+}
+
 exports.getKeyWithSubobjects = getKeyWithSubobjects;
 exports.resolveKeyList = resolveKeyList;
+exports.getKeySettings = getKeySettings;
+exports.updateKeySettings = updateKeySettings;

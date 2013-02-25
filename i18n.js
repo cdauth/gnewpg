@@ -108,6 +108,9 @@ function I18nError(msgId) {
 	};
 }
 
+exports.gettext = gettext;
+exports.ngettext = ngettext;
+exports.mdgettext = mdgettext;
 exports.middleware = middleware;
 exports.injectMethods = injectMethods;
 exports.Error_ = I18nError;

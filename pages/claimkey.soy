@@ -2,16 +2,28 @@
 
 /**
  * @param keyId
+ * @param? sent
+ * @param? verified
 */
 {template .claimkey}
 	{call gnewpg.ui.html}
 		{param searchengines: false /}
-		{param title:_('Claim key %s', $keyId) /}
+		{param title:_('Claim key %s', formatKeyId($keyId)) /}
 		{param content}
-			<p>{_('You are about to verify yourself as the owner of the key %s. An encrypted e-mail will be sent to the primary e-mail address of the key. Click the confirmation key in that e-mail to verify that the key belongs to you.', formatKeyId(keyId))}</p>
+			{if $sent}
+			<p>{call gnewpg.ui.success}{param message:_('An encrypted e-mail has been sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to add yourself as the owner of the key.')/}{/call}
+			{elseif $verified != null}
+				{if $verified}
+			<p>{call gnewpg.ui.success}{param message:_('You are now the owner of this key.')/}{/call}</p>
+				{else}
+			<p>{call gnewpg.ui.error}{param message:_('Unknown token.')/}{/call}
+				{/if}
+			{else}
+			<p>{_('You are about to verify yourself as the owner of the key %s. An encrypted e-mail will be sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to verify that the key belongs to you.', formatKeyId($keyId))}</p>
 			<form action="" method="post">
-				<input type="submit" value="{_('Send verification e-mail')}" />
+				<input type="submit" value="{_('Send verification e-mail')}" class="btn" />
 			</form>
+			{/if}
 		{/param}
 	{/call}
 {/template}

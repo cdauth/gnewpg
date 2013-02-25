@@ -45,6 +45,13 @@ CREATE TABLE "users_email_verification" (
 	FOREIGN KEY ( "identity", "identityKey" ) REFERENCES "keys_identities" ( "id", "key" )
 );
 
+CREATE TABLE "users_ownership_verification" (
+	"token" CHAR(43) NOT NULL,
+	"user" TEXT NOT NULL REFERENCES "users"("id"),
+	"key" TEXT NOT NULL REFERENCES "keys" ( "id" ),
+	"date" TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
 
 -----------------------------------------------------
 -----------------------------------------------------

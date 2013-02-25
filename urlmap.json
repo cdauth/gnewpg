@@ -10,13 +10,13 @@
 		"/key/:keyId/export" : "exportKey",
 		"/keyring" : "keyring",
 		"/keyring/export" : "exportKey",
-		"/claimkey" : "claimkey"
+		"/claimkey/:keyId" : "claimkey"
 	},
 	"post" : {
 		"/login": "login",
 		"/register": "register",
 		"/logout": "logout",
 		"/upload": "upload",
-		"/claimkey" : "claimkey"
+		"/claimkey/:keyId" : "claimkey"
 	}
 }
