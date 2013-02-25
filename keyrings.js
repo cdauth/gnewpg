@@ -213,7 +213,7 @@ pgp.utils.extend(AnonymousKeyring.prototype, {
 			if(err || contains)
 				return callback(err, contains);
 
-			db.getEntry(this._con, "keys_settings", [ "perm_idsearch" ], { id: keyId }, function(err, res) {
+			db.getEntry(this._con, "keys_settings", [ "perm_idsearch" ], { key: keyId }, function(err, res) {
 				if(err)
 					return callback(err);
 
@@ -263,7 +263,7 @@ util.inherits(SearchEngineKeyring, AnonymousKeyring);
 
 pgp.utils.extend(SearchEngineKeyring.prototype, {
 	_maySeeKey : function(keyId, callback) {
-		db.getEntry(this._con, "keys_settings", [ "perm_idsearch", "perm_searchengines" ], { id: keyId }, function(err, res) {
+		db.getEntry(this._con, "keys_settings", [ "perm_idsearch", "perm_searchengines" ], { key: keyId }, function(err, res) {
 			if(err)
 				return callback(err);
 

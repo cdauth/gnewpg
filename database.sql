@@ -127,7 +127,7 @@ CREATE INDEX "sessions_time_idx" ON "sessions"("persistent", "last_access");
 
 
 CREATE TABLE "keys_settings" (
-	"id" CHAR(16) REFERENCES "keys"("id") PRIMARY KEY,
+	"key" CHAR(16) REFERENCES "keys"("id") PRIMARY KEY,
 
 	"user" TEXT REFERENCES "users"("id") ON UPDATE CASCADE ON DELETE CASCADE,
 	"perm_idsearch" BOOLEAN NOT NULL DEFAULT false, -- Key should be findable by searching for its ID
