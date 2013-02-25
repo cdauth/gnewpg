@@ -70,18 +70,9 @@ function middleware(req, res, next) {
 			return mdgettext.apply(null, [ msg, req.locale ].concat(pgp.utils.toProperArray(arguments).slice(1)));
 		};
 		
-		req.formatFingerprint = function(str) {
-			var ret = [ ];
-			for(var i = 0; i<str.length; i+=4)
-				ret.push(str.substr(i, 4));
-			return { contentKind : 0, content : "<span class=\"fingerprint\">"+ret.join("&nbsp;")+"</span>", toString: function() { return ret.join("\u00a0"); } };
-		};
-		
-		req.formatKeyId = function(keyId) {
-			var p1 = keyId.substr(0, 8);
-			var p2 = keyId.substr(8, 16);
-			return { contentKind : 0, content : "<span class=\"keyid\">"+p1+"&nbsp;<strong>"+p2+"</strong></span>", toString: function(){ return p1+"\u2009"+p2; } };
-		};
+		req.formatFingerprint = utils.formatFingerprint;
+
+		req.formatKeyId = utils.formatKeyId;
 
 		next();
 	});

@@ -37,7 +37,22 @@ function getInfoForFormat(format) {
 	}
 }
 
+function formatFingerprint(str) {
+	var ret = [ ];
+	for(var i = 0; i<str.length; i+=4)
+		ret.push(str.substr(i, 4));
+	return { contentKind : 0, content : "<span class=\"fingerprint\">"+ret.join("&nbsp;")+"</span>", toString: function() { return ret.join("\u00a0"); } };
+}
+
+function formatKeyId(keyId) {
+	var p1 = keyId.substr(0, 8);
+	var p2 = keyId.substr(8, 16);
+	return { contentKind : 0, content : "<span class=\"keyid\">"+p1+"&nbsp;<strong>"+p2+"</strong></span>", toString: function(){ return p1+"\u2009"+p2; } };
+}
+
 exports.extend = pgp.utils.extend;
 exports.encodePassword = encodePassword;
 exports.encodeToFormat = encodeToFormat;
 exports.getInfoForFormat = getInfoForFormat;
+exports.formatFingerprint = formatFingerprint;
+exports.formatKeyId = formatKeyId;
