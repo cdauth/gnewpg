@@ -1,0 +1,71 @@
+{namespace gnewpg.pages}
+
+/**
+ @param settings
+ @param errors
+ @param? updated
+*/
+{template .settings}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title:'Account settings' /}
+		{param content}
+<form action="settings" method="post" class="form-horizontal">
+			{if $errors.length > 0}
+	{call gnewpg.ui.errors}{param errors:$errors/}{/call}
+			{elseif $updated}
+	{call gnewpg.ui.success}{param message:_('Settings successfully saved.')/}{/call}
+			{/if}
+	<div class="control-group">
+		<label class="control-label" for="i-username">{_('Username')}</label>
+		<div class="controls">
+			<input id="i-username" name="username" type="text" value="{$settings.id}" disabled="disabled" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label" for="i-password">{_('Password')}</label>
+		<div class="controls">
+			<input id="i-password" name="password" type="password" autocomplete="off" pattern=".{lb}{$ij.config.passwordMinLength},{rb}" title="{_('Minimum %s characters', $ij.config.passwordMinLength)}" onchange="$('#i-password-2').prop('pattern', quoteRegexp(this.value))" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label" for="i-password-2">{_('Repeat password')}</label>
+		<div class="controls">
+			<input id="i-password-2" name="password2" type="password" autocomplete="off" title="{_('Both passwords need to match')}" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label" for="i-openid">{_('OpenID')}</label>
+		<div class="controls">
+			<input id="openid" type="url" name="openid" class="openid" value="{if $settings.openid}{$settings.openid}{/if}" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label" for="i-email">{_('E-mail address')}</label>
+		<div class="controls">
+			<input id="i-email" name="email" type="email" value="{if $settings.email}{$settings.email}{/if}" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label" for="i-locale">{_('Language')}</label>
+		<div class="controls">
+			<select id="i-locale" name="locale">
+				<option value="en"{if $settings.locale == 'en'} selected="selected"{/if}>English</option>
+				<option value="de"{if $settings.locale == 'de'} selected="selected"{/if}>Deutsch</option>
+			</select>
+		</div>
+	</div>
+
+	<div class="control-group">
+		<div class="controls">
+			<input type="submit" value="{_('Save')}" class="btn" />
+		</div>
+	</div>
+		{/param}
+	{/call}
+{/template}

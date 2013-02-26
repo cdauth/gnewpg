@@ -26,6 +26,7 @@
     "node-markdown": "x.x.x",
     "sprintf": "x.x.x",
     "async": "x.x.x",
-    "imagemagick": "x.x.x"
+    "imagemagick": "x.x.x",
+    "openid": "x.x.x"
   }
 }
