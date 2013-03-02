@@ -32,3 +32,16 @@ exports.get = function(req, res, next) {
 		});
 	});
 };
+
+exports.post = function(req, res, next) {
+	var keys = req.body.key;
+	if(!Array.isArray(keys))
+		keys = [ keys ];
+
+	req.keyring.removeFromKeyring(keys, function(err) {
+		if(err)
+			return next(err);
+
+		exports.get(req, res, next);
+	});
+};

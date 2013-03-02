@@ -8,6 +8,17 @@ exports.get = function(req, res, next) {
 	if(!keys)
 		return res.redirect(303, config.baseurl+"/keyring");
 
+	// TODO: Check referer or something!
+	if(req.query.remove) {
+		req.body.key = req.query.key;
+		return require("./keyring").post(req, res, function(err) {
+			if(err)
+				return next(err);
+
+			res.redirect(303, config.baseurl+"/keyring");
+		});
+	}
+
 	if(!Array.isArray(keys))
 		keys = [ keys ];
 

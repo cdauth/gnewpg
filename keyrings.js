@@ -388,6 +388,10 @@ pgp.utils.extend(UserKeyring.prototype, {
 		return db.getEntries(this._con, "users_keyrings_keys", [ "key" ], { user: this._user }).map(function(it, cb) {
 			cb(null, it.key);
 		});
+	},
+
+	removeFromKeyring : function(ids, callback) {
+		return db.remove(this._con, "users_keyrings_keys", { user: this._user, key: ids }, callback);
 	}
 });
 
