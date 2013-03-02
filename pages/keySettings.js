@@ -3,6 +3,7 @@ var keys = require("../keys");
 var pgp = require("node-pgp");
 var async = require("async");
 var imagemagick = require("imagemagick");
+var users = require("../users");
 
 exports.get = exports.post = function(req, res, next) {
 
@@ -24,7 +25,17 @@ exports.get = exports.post = function(req, res, next) {
 				if(err)
 					return next(err);
 
-				res.redirect(303, config.baseurl + "/key/" + encodeURIComponent(req.params.keyId));
+				async.series([
+					function(next) {
+						if(req.session.user.mainkey == req.params.keyId)
+							users.updateUser(req.dbCon, req.session.user.id, { mainkey: null }, next);
+						else
+							next();
+					},
+					function(next) {
+						res.redirect(303, config.baseurl + "/key/" + encodeURIComponent(req.params.keyId));
+					}
+				], next);
 			});
 			return;
 		}

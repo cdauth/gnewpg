@@ -4,6 +4,7 @@
  @param settings
  @param errors
  @param? updated
+ @param ownKeys
 */
 {template .settings}
 	{call gnewpg.ui.html}
@@ -48,6 +49,18 @@
 		<label class="control-label" for="i-email">{_('E-mail address')}</label>
 		<div class="controls">
 			<input id="i-email" name="email" type="email" value="{if $settings.email}{$settings.email}{/if}" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label" for="i-mainkey">{_('Encryption key for e-mail notifications')}</label>
+		<div class="controls">
+			<select id="i-mainkey" name="mainkey">
+				<option value=""{if not $settings.mainkey} selected="selected"{/if}>{_('None')}</option>
+			{foreach $key in $ownKeys}
+				<option value="{$key.id}"{if $key.id == $settings.mainkey} selected="selected"{/if}>{formatKeyId($key.id)}{if $key.primary_identity} ({$key.primary_identity}){/if}</option>
+			{/foreach}
+			</select>
 		</div>
 	</div>
 

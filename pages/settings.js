@@ -4,6 +4,7 @@ var utils = require("../utils");
 var async = require("async");
 var i18n = require("../i18n");
 var openid = require("openid");
+var keys = require("../keys");
 
 var relyingParty = new openid.RelyingParty(config.baseurl+"/settings?openid_verify=1");
 
@@ -15,6 +16,15 @@ exports.get = exports.post = function(req, res, next) {
 	var errors = req.params.errors = [ ];
 	var update = { };
 	async.series([
+		function(next) {
+			keys.resolveKeyList(req.keyring, keys.getKeysOfUser(req.dbCon, req.session.user.id)).toArraySingle(function(err, ownKeys) {
+				if(err)
+					return next(err);
+
+				req.params.ownKeys = ownKeys;
+				next();
+			});
+		},
 		function(next) {
 			if(req.method == "POST")
 			{
@@ -36,6 +46,9 @@ exports.get = exports.post = function(req, res, next) {
 
 				if(req.body.openid != null && req.body.openid.trim() == "")
 					update.openid = null;
+
+				if(req.body.mainkey != null)
+					update.mainkey = (req.body.mainkey == "" ? null : req.body.mainkey);
 			}
 
 			if(req.query.openid_verify)

@@ -158,6 +158,12 @@ function resolveKeyList(keyring, list) {
 	});
 }
 
+function getKeysOfUser(con, userId) {
+	return db.getEntries(con, "keys_settings", [ "key" ], { user: userId }).map(function(it, next) {
+		next(null, it.key);
+	});
+}
+
 function getKeySettings(con, keyId, callback, fields) {
 	db.getEntry(con, "keys_settings", fields || "*", { key: keyId }, function(err, settings) {
 		if(err)
@@ -223,6 +229,7 @@ function updateAttributeSettings(con, keyId, attributeId, fields, callback) {
 
 exports.getKeyWithSubobjects = getKeyWithSubobjects;
 exports.resolveKeyList = resolveKeyList;
+exports.getKeysOfUser = getKeysOfUser;
 exports.getKeySettings = getKeySettings;
 exports.updateKeySettings = updateKeySettings;
 exports.getIdentitySettings = getIdentitySettings;

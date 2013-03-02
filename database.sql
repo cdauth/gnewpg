@@ -2,6 +2,7 @@ CREATE TABLE "users" (
 	"id" TEXT PRIMARY KEY,
 	"password" CHAR(43) NOT NULL,
 	"email" TEXT,
+	"mainkey" CHAR(16),
 	"openid" TEXT UNIQUE,
 	"secret" CHAR(43) NOT NULL UNIQUE, -- A secret string for the personal keyserver URL
 	"locale" TEXT NOT NULL
