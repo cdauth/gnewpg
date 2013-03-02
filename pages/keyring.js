@@ -1,5 +1,6 @@
 var keys = require("../keys");
 var config = require("../config");
+var pgp = require("node-pgp");
 
 exports.get = function(req, res, next) {
 	if(!req.session.user)
@@ -8,11 +9,26 @@ exports.get = function(req, res, next) {
 		return;
 	}
 
-	keys.resolveKeyList(req.keyring, req.keyring.listKeyring()).toArraySingle(function(err, keyList) {
+	keys.getKeysOfUser(req.dbCon, req.session.user.id).toArraySingle(function(err, ownKeyIds) {
 		if(err)
 			return next(err);
 
-		req.params.keys = keyList;
-		next();
+		var ownKeys = keys.resolveKeyList(req.keyring, pgp.Fifo.fromArraySingle(ownKeyIds)).map(function(it, next) {
+			it.own = true;
+			next(null, it);
+		});
+
+		var otherKeyIds = req.keyring.listKeyring().grep(function(it, next) {
+			next(null, ownKeyIds.indexOf(it) == -1);
+		});
+		var otherKeys = keys.resolveKeyList(req.keyring, otherKeyIds);
+
+		ownKeys.concat(otherKeys).toArraySingle(function(err, keyList) {
+			if(err)
+				return next(err);
+
+			req.params.keys = keyList;
+			next();
+		});
 	});
 };
