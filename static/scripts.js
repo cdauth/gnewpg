@@ -18,7 +18,7 @@ $(document).ready(function() {
 			var val = $(this).val().trim().toLowerCase();
 			var rows = $("> tbody > tr,> tr", t);
 			if(val == "")
-				rows.css("display", "");
+				rows.css("display", "").find("input").prop("disabled", false);
 			else
 			{
 				rows.each(function() {
