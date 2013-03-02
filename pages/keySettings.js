@@ -2,8 +2,8 @@ var config = require("../config");
 var keys = require("../keys");
 var pgp = require("node-pgp");
 var async = require("async");
-var imagemagick = require("imagemagick");
 var users = require("../users");
+var utils = require("../utils");
 
 exports.get = exports.post = function(req, res, next) {
 
@@ -98,7 +98,7 @@ exports.get = exports.post = function(req, res, next) {
 										if(!it.image)
 											return next();
 
-										imagemagick.resize({ srcData: it.image, height: 25 }, function(err, resized) {
+										utils.scaleImage(it.image, null, 25, function(err, resized) {
 											if(err)
 												console.log("Error resizing image: ", err);
 											else

@@ -19,7 +19,7 @@ exports.get = function(req, res, next) {
 	res.type(formatInfo.mimetype);
 
 	var selection = null;
-	
+
 	if(req.query.selection)
 	{
 		selection = {

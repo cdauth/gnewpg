@@ -1,6 +1,7 @@
 var config = require("./config");
 var fs = require("fs");
 var pgp = require("node-pgp");
+var imagemagick = require("imagemagick");
 
 function encodePassword(password) {
 	return pgp.utils.hash(password, "sha256", "base64").substring(0, 43);
@@ -50,9 +51,37 @@ function formatKeyId(keyId) {
 	return { contentKind : 0, content : "<span class=\"keyid\">"+p1+"&nbsp;<strong>"+p2+"</strong></span>", toString: function(){ return p1+"\u2009"+p2; } };
 }
 
+function scaleImage(imgData, maxWidth, maxHeight, callback) {
+	imagemagick.identify({ data: imgData }, function(err, imgInfo) {
+		if(err)
+			return callback(err);
+
+		var newHeight = imgInfo.height;
+		var newWidth = imgInfo.width;
+
+		if(maxWidth != null && imgInfo.width > maxWidth) {
+			newWidth = maxWidth;
+			newHeight = Math.round(imgInfo.height * (newWidth / imgInfo.width));
+		}
+		if(maxHeight != null && imgInfo.height > maxHeight) {
+			newHeight = maxHeight;
+			newWidth = Math.round(imgInfo.width * (newHeight / imgInfo.height));
+		}
+
+		if(newWidth == imgInfo.width && newHeight == imgInfo.height)
+			return callback(null, imgData, newWidth, newHeight);
+
+		imagemagick.resize({ srcData: imgData, width: newWidth, height: newHeight }, function(err, resized) {
+			callback(err, resized, newWidth, newHeight);
+		});
+	});
+
+}
+
 exports.extend = pgp.utils.extend;
 exports.encodePassword = encodePassword;
 exports.encodeToFormat = encodeToFormat;
 exports.getInfoForFormat = getInfoForFormat;
 exports.formatFingerprint = formatFingerprint;
 exports.formatKeyId = formatKeyId;
+exports.scaleImage = scaleImage;

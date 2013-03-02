@@ -1,8 +1,11 @@
 var keys = require("../keys");
 var pgp = require("node-pgp");
-var pgpPg = require("node-pgp-postgres");
 var async = require("async");
 var keyrings = require("../keyrings");
+var utils = require("../utils");
+
+var ATTR_MAX_WIDTH = 350;
+var ATTR_MAX_HEIGHT = 250;
 
 exports.get = function(req, res, next) {
 	var keyId = req.params.keyId;
@@ -21,27 +24,38 @@ exports.get = function(req, res, next) {
 			req.params.keySettings = keySettings;
 			req.params.keyDetails = keyDetails;
 
-			if(keyDetails != null)
-			{
-				var pictureIdx = 1;
-				keyDetails.attributes.forEach(function(attributeInfo) {
-					var thisPictures = [ ];
-					attributeInfo.subPackets.forEach(function(subPacket) {
-						if(subPacket.type == pgp.consts.ATTRSUBPKT.IMAGE && subPacket.imageType == pgp.consts.IMAGETYPE.JPEG)
-						{
-							subPacket.pictureIdx = pictureIdx;
-							thisPictures.push(pictureIdx);
-							pictures.push({ idx: pictureIdx, src: "data:image/jpeg;base64,"+subPacket.image.toString("base64"), attr: attributeInfo });
-							pictureIdx++;
-						}
-					});
-
-					if(thisPictures.length > 0)
-						attributeInfo.pictures = "#"+thisPictures.join(", #");
-				});
-			}
-
 			async.waterfall([
+				function(next) {
+					if(keyDetails == null)
+						return next();
+
+					var pictureIdx = 1;
+					async.forEachSeries(keyDetails.attributes, function(attributeInfo, next) {
+						var thisPictures = [ ];
+						async.forEachSeries(attributeInfo.subPackets, function(subPacket, next) {
+							if(subPacket.type != pgp.consts.ATTRSUBPKT.IMAGE || subPacket.imageType != pgp.consts.IMAGETYPE.JPEG)
+								return next();
+
+							utils.scaleImage(subPacket.image, ATTR_MAX_WIDTH, ATTR_MAX_HEIGHT, function(err, scaleImg, width, height) {
+								if(err)
+									return next(err);
+
+								thisPictures.push(pictureIdx);
+								pictures.push({ idx: pictureIdx, src: "data:image/jpeg;base64,"+scaleImg.toString("base64"), width: width, height: height, attr: attributeInfo });
+								pictureIdx++;
+								next();
+							})
+						}, function(err) {
+							if(err)
+								return next(err);
+
+							if(thisPictures.length > 0)
+								attributeInfo.pictures = "#"+thisPictures.join(", #");
+
+							next();
+						});
+					}, next);
+				},
 				function(next) {
 					if(err || details)
 						next(false);

@@ -114,7 +114,8 @@
 /**
  * @param security
  * @param? content
+ * @param? title
 */
 {template .security}
-<span class="security security-{$security}"{if $content} title="{_(''+'[SECURITY_'+$security+']')}"{/if}>{if $content}{$content|noAutoescape}{else}{_(''+'[SECURITY_'+$security+']')}{/if}</span>
+<span class="security security-{$security}"{if $content or $title != null} title="{if $title != null}{$title}{else}{_(''+'[SECURITY_'+$security+']')}{/if}"{/if}>{if $content}{$content|noAutoescape}{else}{_(''+'[SECURITY_'+$security+']')}{/if}</span>
 {/template}

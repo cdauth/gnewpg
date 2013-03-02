@@ -17,44 +17,53 @@
 {call gnewpg.ui.error}{param message:_('Key %s not found.', $keyId)/}{/call}
 			{else}
 <form action="{$keyId}/export" method="get">
-    <div>
-        <input type="submit" value="{_('Export this key')}" class="btn btn-info" /> {call gnewpg.ui.exportFormats /}
-    </div>
-                {if $ij.req.session.user}
-                    {if not $keySettings.user}
-	<div><a href="../claimkey/{$keyId}" class="btn btn-success">{_('This key belongs to me!')}</a></div>
-                    {elseif $keySettings.user == $ij.req.session.user.id}
-	<p><strong>{_('You are the verified owner of this key.')}</strong> <a href="{$keyId}/settings" class="btn btn-success">{_('Edit privacy settings')}</a></p>
-                    {/if}
-                {/if}
-
-    <div class="btn-group">
-        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">{_('Details')}: {switch $details}{case '2'}{_('expert')}{case '1'}{_('on')}{default}{_('off')}{/switch} <span class="caret"></span></a>
-        <ul class="dropdown-menu">
-            <li{if $details != 1 and $details != 2} class="active"{/if}><a href="{$keyId}">{_('off')}</a></li>
-            <li{if $details == 1} class="active"{/if}><a href="{$keyId}?details=1">{_('on')}</a></li>
-            <li{if $details == 2} class="active"{/if}><a href="{$keyId}?details=2">{_('expert')}</a></li>
-        </ul>
-    </div>
+				{if $details == 2}
+	<input type="hidden" name="selection" value="1" />
+				{/if}
 
 				{if $pictures.length > 0}
-	<ul class="keyPictures pull-right thumbnails">
-					{foreach $picture in $pictures}
-		<li>
-			<div class="thumbnail">
-				<img src="{$picture.src|noAutoescape}" alt="" />
-				<p class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}">{_('Picture #%d', $picture.idx)}</p>
-			</div>
-		</li>
-					{/foreach}
-	</ul>
+					<ul class="keyPictures pull-right thumbnails">
+									{foreach $picture in $pictures}
+						<li>
+							<div class="thumbnail">
+								<img src="{$picture.src|noAutoescape}" alt="" style="width:{$picture.width}px; height:{$picture.height}px;" />
+								<p class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}">{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether this key really belongs to the person shown on this picture.', 'unknown')/}{param content}{_('Picture #%d', $picture.idx)}{/param}{/call}</p>
+							</div>
+						</li>
+									{/foreach}
+					</ul>
 				{/if}
+
+	<div>
+		<input type="submit" value="{_('Export this key')}" class="btn btn-info" /> {call gnewpg.ui.exportFormats /}
+	</div>
+				{if $ij.req.session.user}
+					{if not $keySettings.user}
+	<div><a href="../claimkey/{$keyId}" class="btn btn-success">{_('This key belongs to me!')}</a></div>
+					{elseif $keySettings.user == $ij.req.session.user.id}
+	<p><strong>{_('You are the verified owner of this key.')}</strong> <a href="{$keyId}/settings" class="btn btn-success">{_('Edit privacy settings')}</a></p>
+					{/if}
+				{/if}
+
+	<div class="btn-group">
+		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">{_('Details')}: {switch $details}{case '2'}{_('expert')}{case '1'}{_('on')}{default}{_('off')}{/switch} <span class="caret"></span></a>
+		<ul class="dropdown-menu">
+			<li{if $details != 1 and $details != 2} class="active"{/if}><a href="{$keyId}">{_('off')}</a></li>
+			<li{if $details == 1} class="active"{/if}><a href="{$keyId}?details=1">{_('on')}</a></li>
+			<li{if $details == 2} class="active"{/if}><a href="{$keyId}?details=2">{_('expert')}</a></li>
+		</ul>
+	</div>
+
+	<p>{call gnewpg.ui.security}{param security:1/}{param title:''/}{param content}<strong>{_('Do not trust anything marked as red!')}</strong>{/param}{/call}</p>
+
 	<dl class="dl-horizontal">
 		<dt>{_('Fingerprint')}</dt>
 		<dd>{formatFingerprint($keyDetails.fingerprint)}</dd>
 
+					{if $details}
 		<dt>{_('Security')}</dt>
 		<dd>{call gnewpg.ui.security}{param security:$keyDetails.security/}{/call}</dd>
+					{/if}
 
 		<dt>{_('Creation date')}</dt>
 		<dd>{_($keyDetails.date)}</dd>
@@ -76,7 +85,24 @@
 		<dd>{call gnewpg.ui.security}{param security:$keyDetails.sizeSecurity/}{param content}{_('%d bits', $keyDetails.size)}{/param}{/call}</dd>
 				{/if}
 	</dl>
-
+				{if not $details}
+	<h3>{_('Identities')}</h3>
+	<ul class="unstyled identityList">
+					{foreach $identity in $keyDetails.identities}
+		<li>
+			{if $identity.id == $keyDetails.primary_identity}<strong>{/if}
+			{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether this key really belongs to a person called %s.', _('unknown'), $identity.name)/}{param content}{$identity.name}{/param}{/call}
+			{if $identity.email}
+				{sp}&lt;{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether the owner of this key really owns the e-mail address %s.', _('unknown'), $identity.email)/}{param content}{$identity.email}{/param}{/call}&gt;
+			{/if}
+			{if $identity.comment}
+				{sp}({$identity.comment})
+			{/if}
+			{if $identity.id == $keyDetails.primary_identity}</strong>{/if}
+		</li>
+					{/foreach}
+	</ul>
+				{else}
 	<div class="clearfix"></div> <!-- Cannot apply to table due to Chromium bug -->
 <table class="table key-details">
 	<thead>
@@ -126,7 +152,7 @@
 					{if $details == 2}
 			<td class="c-checkbox"><input type="checkbox" name="subkeys" value="{$subkey.id}" checked="checked" /></td>
 					{/if}
-			<td colspan="4" class="c-object{if $subkey.revokedby} revoked{/if}{if $subkey.expired} expired{/if}"><h4>{call gnewpg.ui.security}{param security:$subkey.security/}{param content}{_('Subkey')} {formatKeyId($subkey.id)}{/param}{/call}</h4></td>
+			<td colspan="4" class="c-object{if $subkey.revokedby} revoked{/if}{if $subkey.expired} expired{/if}"><h4>{_('Subkey')} {formatKeyId($subkey.id)}</h4></td>
 			<td class="c-expires">{if $subkey.revokedby}{call .revokedby}{param sig:$subkey.revokedby/}{/call}{else}{if $subkey.expires}{_($subkey.expires)}{else}<em>{_('never')}</em>{/if}{/if}
 					{if $details == 2}
 			<td class="c-details">
@@ -154,7 +180,16 @@
 					{if $details == 2}
 			<td class="c-checkbox"><input type="checkbox" name="identities" value="{$identity.id}" checked="checked" /></td>
 					{/if}
-			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $identity.revokedby} revoked{/if}{if $identity.expired} expired{/if}"><h4>{call gnewpg.ui.security}{param security:$identity.security/}{param content}{$identity.id}{if $identity.id == $keyDetails.primary_identity} <small>({_('primary')})</small>{/if}{/param}{/call}</h4></td>
+			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $identity.revokedby} revoked{/if}{if $identity.expired} expired{/if}"><h4>
+				{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether this key really belongs to a person called %s.', _('unknown'), $identity.name)/}{param content}{$identity.name}{/param}{/call}
+				{if $identity.email}
+					{sp}&lt;{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether the owner of this key really owns the e-mail address %s.', _('unknown'), $identity.email)/}{param content}{$identity.email}{/param}{/call}&gt;
+				{/if}
+				{if $identity.comment}
+					{sp}({$identity.comment})
+				{/if}
+				{if $identity.id == $keyDetails.primary_identity} <small>({_('primary')})</small>{/if}
+			</h4></td>
 		</tr>
 		{call .signatures}{param sigs:$identity.signatures/}{param details:$details/}{/call}
 				{/foreach}
@@ -174,12 +209,13 @@
 					{if $details == 2}
 			<td class="c-checkbox"><input type="checkbox" name="attributes" value="{$attribute.id}" checked="checked" /></td>
 					{/if}
-			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $attribute.revokedby} revoked{/if}{if $attribute.expired} expired{/if}"><h4>{call gnewpg.ui.security}{param security:$attribute.security/}{param content}{_('Attribute')}{if $attribute.pictures} <small>({_('picture')} {$attribute.pictures})</small>{/if}{/param}{/call}</h4></td>
+			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $attribute.revokedby} revoked{/if}{if $attribute.expired} expired{/if}"><h4>{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether this key really belongs to the person shown on this picture.', 'unknown')/}{param content}{_('Attribute')}{/param}{/call}{if $attribute.pictures} <small>({_('picture')} {$attribute.pictures})</small>{/if}</h4></td>
 		</tr>
 		{call .signatures}{param sigs:$attribute.signatures/}{param details:$details/}{/call}
 				{/foreach}
 	</tbody>
 </table>
+				{/if}
 </form>
 			{/if}
 		{/param}

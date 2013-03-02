@@ -8,7 +8,7 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 	var keyFields = [ "id", "fingerprint", "security", "date", "expires", "revoked" ].concat(detailed ? [ "versionSecurity", "version", "pkalgo", "sizeSecurity", "size" ] : [ ]);
 	var signatureFields = [ "id", "expires", "revoked", "security", "sigtype", "verified", "issuer", "date" ].concat(detailed ? [ "version", "hashalgoSecurity", "hashalgo", "hashedSubPackets" ] : [ ]);
 	var subkeyFields = [ "id", "revoked", "expires", "security" ].concat(detailed ? [ "versionSecurity", "version", "sizeSecurity", "size", "pkalgo" ] : [ ]);
-	var identityFields = [ "id", "revoked", "expires", "security" ];
+	var identityFields = [ "id", "name", "email", "comment", "revoked", "expires", "security" ];
 	var attributeFields = [ "id", "revoked", "expires", "security", "subPackets" ];
 
 	keyring.getKey(keyId, function(err, keyInfo) {

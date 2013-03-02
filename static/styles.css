@@ -9,3 +9,5 @@
 .security-1,.security--1 { background-color:#fca; box-shadow:0 0 3px #da8; }
 .security-2 { background-color:#ffb; box-shadow:0 0 3px #dd9; }
 .security-3 { background-color:#e8ffe8; box-shadow:0 0 3px #d0e8d0; }
+
+.identityList li { font-size:1.3em; line-height:2em; }
