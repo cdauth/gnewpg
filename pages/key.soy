@@ -279,7 +279,7 @@
 			{/if}
 			, {ngettext('%d level', '%d levels', $sig.hashedSubPackets[$ij.consts.SIGSUBPKT.TRUST][0].value.level, $sig.hashedSubPackets[$ij.consts.SIGSUBPKT.TRUST][0].value.level)}
 			{if $sig.hashedSubPackets[$ij.consts.SIGSUBPKT.REGEXP]}
-				, {_('regexp')}: <code>$sig.hashedSubPackets[$ij.consts.SIGSUBPKT.REGEXP][0].value</code>
+				, {_('regexp')}: <code>{$sig.hashedSubPackets[$ij.consts.SIGSUBPKT.REGEXP][0].value}</code>
 			{/if}
 		{/if}
 		{if $sig.hashedSubPackets[$ij.consts.SIGSUBPKT.REVOCABLE] and not $sig.hashedSubPackets[$ij.consts.SIGSUBPKT.REVOCABLE][0].value}
