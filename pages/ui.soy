@@ -103,15 +103,21 @@
 {/template}
 
 /**
+*/
+{template .exportFormats}
+<select name="exportFormat" id="i-export-format">
+	<option value="ascii">{_('PGP ASCII-armored format (.asc)')}</option>
+	<option value="binary">{_('PGP binary format (.bexpk)')}</option>
+</select>
+{/template}
+
+/**
  * @param label
 */
 {template .exportButton}
 <div class="export-key">
 	<input type="submit" value="{$label}" class="btn btn-info" />
-	<select name="exportFormat" id="i-export-format">
-		<option value="ascii">{_('PGP ASCII-armored format (.asc)')}</option>
-		<option value="binary">{_('PGP binary format (.bexpk)')}</option>
-	</select>
+	{call .exportFormats/}
 </div>
 {/template}
 
