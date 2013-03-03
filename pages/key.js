@@ -14,7 +14,7 @@ exports.get = function(req, res, next) {
 	var pictures = req.params.pictures = [ ];
 
 	keys.getKeyWithSubobjects(req.keyring, req.params.keyId, req.params.details, function(err, keyDetails) {
-		if(err)
+		if(err || keyDetails == null)
 			return next(err);
 
 		keys.getKeySettings(req.dbCon, req.params.keyId, function(err, keySettings) {
