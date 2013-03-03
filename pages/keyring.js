@@ -38,10 +38,20 @@ exports.post = function(req, res, next) {
 	if(!Array.isArray(keys))
 		keys = [ keys ];
 
-	req.keyring.removeFromKeyring(keys, function(err) {
-		if(err)
-			return next(err);
+	if(req.body.addKey) {
+		req.keyring.addToKeyring(keys, function(err) {
+			if(err)
+				return next(err);
 
+			exports.get(req, res, next);
+		});
+	} else if(req.body.remove) {
+		req.keyring.removeFromKeyring(keys, function(err) {
+			if(err)
+				return next(err);
+
+			exports.get(req, res, next);
+		});
+	} else
 		exports.get(req, res, next);
-	});
 };

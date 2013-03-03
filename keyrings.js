@@ -2,6 +2,7 @@ var db = require("./database");
 var util = require("util");
 var keyringPg = require("node-pgp-postgres");
 var pgp = require("node-pgp");
+var async = require("async");
 
 var p = pgp.utils.proxy;
 
@@ -388,6 +389,17 @@ pgp.utils.extend(UserKeyring.prototype, {
 		return db.getEntries(this._con, "users_keyrings_keys", [ "key" ], { user: this._user }).map(function(it, cb) {
 			cb(null, it.key);
 		});
+	},
+
+	addToKeyring : function(ids, callback) {
+		ids = [ ].concat(ids);
+		db.getEntries(this._con, "users_keyrings_keys", [ "key" ], { user: this._user, key: ids }).map(function(it, cb) { cb(it.key); }).toArraySingle(function(err, existingIds) {
+			async.forEachSeries(ids, function(id, next) {
+				if(existingIds.indexOf(id) != -1)
+					return next();
+				db.insert(this._con, "users_keyrings_keys", { user: this._user, key: id }, next);
+			}.bind(this), callback);
+		}.bind(this));
 	},
 
 	removeFromKeyring : function(ids, callback) {

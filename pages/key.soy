@@ -34,25 +34,35 @@
 					</ul>
 				{/if}
 
-	<div>
+				{if $ij.req.session.user and $ij.req.session.user.id == $keySettings.user}
+	<p><strong>{_('You are the verified owner of this key.')}</strong></p>
+				{/if}
+	<p class="form-inline">
 		{call gnewpg.ui.exportButton}{param label:_('Export this key')/}{/call}
-	</div>
 				{if $ij.req.session.user}
-					{if not $keySettings.user}
-	<div><a href="../claimkey/{$keyId}" class="btn btn-success">{_('This key belongs to me!')}</a></div>
-					{elseif $keySettings.user == $ij.req.session.user.id}
-	<p><strong>{_('You are the verified owner of this key.')}</strong> <a href="{$keyId}/settings" class="btn btn-success">{_('Edit privacy settings')}</a></p>
+					{if $keySettings.user == $ij.req.session.user.id}
+		<div class="btn-group"><a href="{$keyId}/settings" class="btn btn-success">{_('Edit privacy settings')}</a></div>
+					{else}
+						{if not $keySettings.user}
+		<div class="btn-group"><a href="../claimkey/{$keyId}" class="btn btn-success">{_('This key belongs to me!')}</a></div>
+						{/if}
+						{if $keyDetails.inKeyring}
+		<div class="btn-group"><input type="submit" name="remove" class="btn btn-danger" value="{_('Remove from keyring')}" onclick="return confirm('{_('Are you sure that you want to remove the selected keys from your keyring? If they are marked as private, you will not be able to access them anymore.')}');" /></div>
+						{else}
+		<div class="btn-group"><input type="submit" name="addKey" class="btn btn-success" value="{_('Add to keyring')}" /></div>
+						{/if}
 					{/if}
 				{/if}
 
-	<div class="btn-group">
-		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">{_('Details')}: {switch $details}{case '2'}{_('expert')}{case '1'}{_('on')}{default}{_('off')}{/switch} <span class="caret"></span></a>
-		<ul class="dropdown-menu">
-			<li{if $details != 1 and $details != 2} class="active"{/if}><a href="{$keyId}">{_('off')}</a></li>
-			<li{if $details == 1} class="active"{/if}><a href="{$keyId}?details=1">{_('on')}</a></li>
-			<li{if $details == 2} class="active"{/if}><a href="{$keyId}?details=2">{_('expert')}</a></li>
-		</ul>
-	</div>
+		<div class="btn-group">
+			<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">{_('Details')}: {switch $details}{case '2'}{_('expert')}{case '1'}{_('on')}{default}{_('off')}{/switch} <span class="caret"></span></a>
+			<ul class="dropdown-menu">
+				<li{if $details != 1 and $details != 2} class="active"{/if}><a href="{$keyId}">{_('off')}</a></li>
+				<li{if $details == 1} class="active"{/if}><a href="{$keyId}?details=1">{_('on')}</a></li>
+				<li{if $details == 2} class="active"{/if}><a href="{$keyId}?details=2">{_('expert')}</a></li>
+			</ul>
+		</div>
+	</p>
 
 	<p>{call gnewpg.ui.security}{param security:1/}{param title:''/}{param content}<strong>{_('Do not trust anything marked as red!')}</strong>{/param}{/call}</p>
 

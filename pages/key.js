@@ -26,6 +26,11 @@ exports.get = function(req, res, next) {
 
 			async.waterfall([
 				function(next) {
+					req.keyring._containsKey(keyId, next);
+				},
+				function(inKeyring, next) {
+					keyDetails.inKeyring = inKeyring;
+
 					if(keyDetails == null)
 						return next();
 

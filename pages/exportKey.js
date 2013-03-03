@@ -9,13 +9,18 @@ exports.get = function(req, res, next) {
 		return res.redirect(303, config.baseurl+"/keyring");
 
 	// TODO: Check referer or something!
-	if(req.query.remove) {
-		req.body.key = req.query.key;
+	if(req.query.addKey || req.query.remove) {
+		req.body.key = keys;
+		req.body.addKey = req.query.addKey;
+		req.body.remove = req.query.remove;
 		return require("./keyring").post(req, res, function(err) {
 			if(err)
 				return next(err);
 
-			res.redirect(303, config.baseurl+"/keyring");
+			if(req.params.keyId)
+				res.redirect(303, config.baseurl+"/key/"+encodeURIComponent(req.params.keyId));
+			else
+				res.redirect(303, config.baseurl+"/keyring");
 		});
 	}
 
