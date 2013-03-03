@@ -35,7 +35,7 @@
 				{/if}
 
 	<div>
-		<input type="submit" value="{_('Export this key')}" class="btn btn-info" /> {call gnewpg.ui.exportFormats /}
+		{call gnewpg.ui.exportButton}{param label:_('Export this key')/}{/call}
 	</div>
 				{if $ij.req.session.user}
 					{if not $keySettings.user}
