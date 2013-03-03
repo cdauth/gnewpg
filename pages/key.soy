@@ -162,7 +162,7 @@
 					{if $details == 2}
 			<td class="c-checkbox"><input type="checkbox" name="subkeys" value="{$subkey.id}" checked="checked" /></td>
 					{/if}
-			<td colspan="4" class="c-object{if $subkey.revokedby} revoked{/if}{if $subkey.expired} expired{/if}"><h4>{_('Subkey')} {formatKeyId($subkey.id)}</h4></td>
+			<td colspan="4" class="c-object{if $subkey.revokedby} revoked{/if}{if $subkey.expired} expired{/if}"><h4>{_('Subkey')} {formatKeyId($subkey.id)} <small>{call gnewpg.ui.security}{param security:$subkey.security/}{/call}</small></h4></td>
 			<td class="c-expires">{if $subkey.revokedby}{call .revokedby}{param sig:$subkey.revokedby/}{/call}{else}{if $subkey.expires}{_($subkey.expires)}{else}<em>{_('never')}</em>{/if}{/if}
 					{if $details == 2}
 			<td class="c-details">

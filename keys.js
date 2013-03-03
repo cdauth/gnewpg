@@ -5,11 +5,11 @@ var i18n = require("./i18n");
 var utils = require("./utils");
 
 function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
-	var keyFields = [ "id", "fingerprint", "security", "date", "expires", "revoked" ].concat(detailed ? [ "versionSecurity", "version", "pkalgo", "sizeSecurity", "size" ] : [ ]);
-	var signatureFields = [ "id", "expires", "revoked", "security", "sigtype", "verified", "issuer", "date" ].concat(detailed ? [ "version", "hashalgoSecurity", "hashalgo", "hashedSubPackets" ] : [ ]);
-	var subkeyFields = [ "id", "revoked", "expires", "security" ].concat(detailed ? [ "versionSecurity", "version", "sizeSecurity", "size", "pkalgo" ] : [ ]);
+	var keyFields = [ "id", "fingerprint", "security", "date", "expires", "revoked" ].concat(detailed == 2 ? [ "versionSecurity", "version", "pkalgo", "sizeSecurity", "size" ] : [ ]);
+	var signatureFields = [ "id", "expires", "revoked", "security", "sigtype", "verified", "issuer", "date" ].concat(detailed == 2 ? [ "version", "hashalgoSecurity", "hashalgo", "hashedSubPackets" ] : [ ]);
+	var subkeyFields = [ "id", "revoked", "expires", "security" ].concat(detailed == 2 ? [ "versionSecurity", "version", "sizeSecurity", "size", "pkalgo" ] : [ ]);
 	var identityFields = [ "id", "name", "email", "comment", "revoked", "expires", "security" ];
-	var attributeFields = [ "id", "revoked", "expires", "security", "subPackets" ];
+	var attributeFields = [ "id", "revoked", "expires", "subPackets" ];
 
 	keyring.getKey(keyId, function(err, keyInfo) {
 		if(err)
@@ -36,7 +36,10 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 				resolveRevokedBy(keyInfo, next);
 			},
 			function(next) {
-				handleSignatures(keyInfo, keyring.getKeySignatures(keyId, null, signatureFields), next);
+				if(detailed >= 1)
+					handleSignatures(keyInfo, keyring.getKeySignatures(keyId, null, signatureFields), next);
+				else
+					next();
 			},
 			function(next) {
 				keyring.getSelfSignedSubkeys(keyId, null, subkeyFields).forEachSeries(function(subkeyInfo, next) {
@@ -46,7 +49,10 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 						if(err)
 							return next(err);
 
-						handleSignatures(subkeyInfo, keyring.getSubkeySignatures(keyId, subkeyInfo.id), next);
+						if(detailed >= 1)
+							handleSignatures(subkeyInfo, keyring.getSubkeySignatures(keyId, subkeyInfo.id), next);
+						else
+							next();
 					});
 				}, next);
 			},
@@ -58,7 +64,10 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 						if(err)
 							return next(err);
 
-						handleSignatures(identityInfo, keyring.getIdentitySignatures(keyId, identityInfo.id), next);
+						if(detailed >= 1)
+							handleSignatures(identityInfo, keyring.getIdentitySignatures(keyId, identityInfo.id), next);
+						else
+							next();
 					});
 				}, next);
 			},
@@ -70,7 +79,10 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 						if(err)
 							return next(err);
 
-						handleSignatures(attributeInfo, keyring.getAttributeSignatures(keyId, attributeInfo.id), next);
+						if(detailed >= 1)
+							handleSignatures(attributeInfo, keyring.getAttributeSignatures(keyId, attributeInfo.id), next);
+						else
+							next();
 					});
 				}, next);
 			}
