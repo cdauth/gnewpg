@@ -22,16 +22,16 @@
 				{/if}
 
 				{if $pictures.length > 0}
-					<ul class="keyPictures pull-right thumbnails">
-									{foreach $picture in $pictures}
-						<li>
-							<div class="thumbnail">
-								<img src="{$picture.src|noAutoescape}" alt="" style="width:{$picture.width}px; height:{$picture.height}px;" />
-								<p class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}">{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether this key really belongs to the person shown on this picture.', 'unknown')/}{param content}{_('Picture #%d', $picture.idx)}{/param}{/call}</p>
-							</div>
-						</li>
-									{/foreach}
-					</ul>
+	<ul class="keyPictures pull-right thumbnails">
+					{foreach $picture in $pictures}
+		<li>
+			<div class="thumbnail">
+				<img src="{$picture.src|noAutoescape}" alt="" style="width:{$picture.width}px; height:{$picture.height}px;" />
+				<p class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}">{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether this key really belongs to the person shown on this picture.', 'unknown')/}{param content}{_('Picture #%d', $picture.idx)}{/param}{/call}</p>
+			</div>
+		</li>
+					{/foreach}
+	</ul>
 				{/if}
 
 				{if $ij.req.session.user and $ij.req.session.user.id == $keySettings.user}
@@ -64,7 +64,7 @@
 		</div>
 	</p>
 
-	<p>{call gnewpg.ui.security}{param security:1/}{param title:''/}{param content}<strong>{_('Do not trust anything marked as red!')}</strong>{/param}{/call}</p>
+	<p>{call gnewpg.ui.security}{param security:1/}{param title:''/}{param content}<strong>{_('Do not trust any information marked as red!')}</strong>{/param}{/call}</p>
 
 	<dl class="dl-horizontal">
 		<dt>{_('Fingerprint')}</dt>

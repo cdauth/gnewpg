@@ -57,17 +57,17 @@
 		&nbsp;<img src="{$img}" alt="" />
 				{/foreach}
 	</h5>
-    <div class="control-group">
-        <div class="controls">
-            <label class="checkbox muted">
-                <input type="checkbox" checked="checked" disabled="disabled" /> {_('Attribute may be seen by people who already have it in their keyring')}
-            </label>
-            <label class="checkbox">
-                <input name="perm_public-{$attribute.id}" type="checkbox"{if $attribute.perm_public} checked="checked"{/if} /> {_('Attribute may be seen by everyone who can access the key.')}
-            </label>
-        </div>
-    </div>
-            {/foreach}
+	<div class="control-group">
+		<div class="controls">
+			<label class="checkbox muted">
+				<input type="checkbox" checked="checked" disabled="disabled" /> {_('Attribute may be seen by people who already have it in their keyring')}
+			</label>
+			<label class="checkbox">
+				<input name="perm_public-{$attribute.id}" type="checkbox"{if $attribute.perm_public} checked="checked"{/if} /> {_('Attribute may be seen by everyone who can access the key.')}
+			</label>
+		</div>
+	</div>
+			{/foreach}
 	<div class="control-group">
 		<div class="controls">
 			<input type="submit" value="{_('Save')}" class="btn btn-info" />
