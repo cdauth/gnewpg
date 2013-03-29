@@ -75,7 +75,20 @@ function scaleImage(imgData, maxWidth, maxHeight, callback) {
 			callback(err, resized, newWidth, newHeight);
 		});
 	});
+}
 
+function quoteRegexp(regexp) {
+	return (regexp+'').replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
+}
+
+function checkReferrer(req, res, next) {
+	var referrer = req.get("Referer") || "";
+	if(config.baseurl && referrer.substr(0, config.baseurl.length+1) == config.baseurl+"/")
+		return next();
+	else if(!config.baseurl && referrer.match(new RegExp("^https?://"+quoteRegexp(req.host)+"[:/]")))
+		return next();
+
+	res.send(403, "Invalid referrer.");
 }
 
 exports.extend = pgp.utils.extend;
@@ -85,3 +98,4 @@ exports.getInfoForFormat = getInfoForFormat;
 exports.formatFingerprint = formatFingerprint;
 exports.formatKeyId = formatKeyId;
 exports.scaleImage = scaleImage;
+exports.checkReferrer = checkReferrer;

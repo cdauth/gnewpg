@@ -27,6 +27,12 @@ async.series([
 		app.use(sessions.sessionMiddleware);
 		app.use("/static", express.static(__dirname+"/static"));
 		app.use(i18n.middleware);
+		app.use(function(req, res, next) {
+			if(req.method == "GET" || req.method == "HEAD")
+				return next();
+
+			utils.checkReferrer(req, res, next);
+		});
 		
 		for(var i in urlmap.get)
 			app.get(i, _request("get", urlmap.get[i]));
