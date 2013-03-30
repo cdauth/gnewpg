@@ -13,6 +13,9 @@ var db = require("../database");
 function startServer(callback) {
 	var app = express();
 
+	if(config.trustProxy)
+		app.enable("trust proxy");
+
 	app.use(express.bodyParser({ uploadDir: config.tmpDir+"/upload", maxFieldsSize: config.maxUploadSize })); // For POST requests
 	app.use(express.cookieParser());
 	app.use(db.middleware);

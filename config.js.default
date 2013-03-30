@@ -71,6 +71,11 @@ module.exports = {
 	"baseurl" : "",
 
 	/**
+	 * Set to true if run behind a reverse proxy so that hostname detection works properly.
+	*/
+	"trustProxy" : false,
+
+	/**
 	 * The hostname that the HKP server will be reachable on. Leave empty to not start a HKP server
 	 * on port 11371.
 	*/
@@ -85,5 +90,8 @@ module.exports = {
 };
 
 require("node-pgp").config.tmpDir = module.exports.tmpDir;
-require("node-pgp-hkp-server/config").maxUploadSize = module.exports.maxUploadSize;
-require("node-pgp-hkp-server/config").address = module.exports.address;
+
+var hkpConfig = require("node-pgp-hkp-server/config");
+hkpConfig.maxUploadSize = module.exports.maxUploadSize;
+hkpConfig.address = module.exports.address;
+hkpConfig.trustProxy = module.exports.trustProxy;
