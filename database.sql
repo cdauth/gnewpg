@@ -137,7 +137,7 @@ CREATE INDEX "sessions_time_idx" ON "sessions"("persistent", "last_access");
 
 
 CREATE TABLE "keys_settings" (
-	"key" CHAR(16) REFERENCES "keys"("id") PRIMARY KEY,
+	"key" CHAR(16) PRIMARY KEY REFERENCES "keys"("id") ON UPDATE CASCADE ON DELETE CASCADE,
 
 	"user" TEXT REFERENCES "users"("id") ON UPDATE CASCADE ON DELETE CASCADE,
 	"perm_idsearch" BOOLEAN NOT NULL DEFAULT false, -- Key should be findable by searching for its ID
@@ -153,7 +153,8 @@ CREATE TABLE "keys_identities_settings" (
 	"perm_emailsearch" BOOLEAN NOT NULL DEFAULT false, -- The key can be found by searching for the e-mail address stated in this identity
 	"email_blacklisted" TIMESTAMP WITH TIME ZONE DEFAULT NULL, -- If a date is set, the recipient of an e-mail verification mail stated that the key does not belong to them
 
-	PRIMARY KEY("key", "id")
+	PRIMARY KEY("key", "id"),
+	FOREIGN KEY("key", "id") REFERENCES "keys_identities"("key", "id") ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE "keys_attributes_settings" (
@@ -162,5 +163,6 @@ CREATE TABLE "keys_attributes_settings" (
 
 	"perm_public" BOOLEAN NOT NULL DEFAULT false, -- Identity is visible to people who do not know about it yet
 
-	PRIMARY KEY("key", "id")
+	PRIMARY KEY("key", "id"),
+	FOREIGN KEY("key", "id") REFERENCES "keys_attributes"("key", "id") ON UPDATE CASCADE ON DELETE CASCADE
 );
