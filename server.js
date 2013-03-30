@@ -54,7 +54,7 @@ async.series([
 	if(err)
 		throw err;
 
-	app.listen(8888);
+	app.listen(config.port);
 	
 	console.log("Server started");
 });
