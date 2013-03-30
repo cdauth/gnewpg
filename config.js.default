@@ -11,6 +11,11 @@ module.exports = {
 	"port" : 8888,
 
 	/**
+	 * The address to listen on. Leave empty to listen on all interfaces.
+	*/
+	"address" : "",
+
+	/**
 	 * Lifetime for normal login sessions in seconds.
 	*/
 	"sessionTimeout" : 3600,
@@ -81,3 +86,4 @@ module.exports = {
 
 require("node-pgp").config.tmpDir = module.exports.tmpDir;
 require("node-pgp-hkp-server/config").maxUploadSize = module.exports.maxUploadSize;
+require("node-pgp-hkp-server/config").address = module.exports.address;

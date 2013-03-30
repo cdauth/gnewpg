@@ -41,7 +41,10 @@ function startServer(callback) {
 		if(err)
 			return callback(err);
 
-		app.listen(config.port);
+		if(config.address)
+			app.listen(config.port, config.address);
+		else
+			app.listen(config.port);
 
 		callback();
 	});
