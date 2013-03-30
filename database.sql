@@ -4,6 +4,7 @@ CREATE TABLE "users" (
 	"email" TEXT,
 	"mainkey" CHAR(16),
 	"openid" TEXT UNIQUE,
+	"newOpenid" TEXT,
 	"secret" CHAR(43) NOT NULL UNIQUE, -- A secret string for the personal keyserver URL
 	"locale" TEXT NOT NULL
 );

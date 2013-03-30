@@ -44,9 +44,6 @@ exports.get = exports.post = function(req, res, next) {
 				if(req.body.locale)
 					update.locale = req.body.locale;
 
-				if(req.body.openid != null && req.body.openid.trim() == "")
-					update.openid = null;
-
 				if(req.body.mainkey != null)
 					update.mainkey = (req.body.mainkey == "" ? null : req.body.mainkey);
 			}
@@ -56,13 +53,40 @@ exports.get = exports.post = function(req, res, next) {
 				relyingParty.verifyAssertion(req, function(err, res) {
 					if(err)
 						errors.push(req.gettext("Error verifying openid: %s", err.message));
-					else if(!res.authenticated)
+					else if(!res.authenticated || res.claimedIdentifier != req.session.user.newOpenid)
 						errors.push(req.gettext("Error verifying openid."));
 					else
 						update.openid = res.claimedIdentifier;
+					// TODO: Maybe check if openid is already used by different account? At the moment
+					// this is enforced by the UNIQUE constraint.
 					next();
 				});
 				return;
+			}
+
+			next();
+		},
+		function(next) {
+			if(req.method == "POST" && req.body.openid != null) {
+				req.body.openid = req.body.openid.trim();
+
+				if(req.body.openid == "") {
+					update.openid = null;
+					update.newOpenid = null;
+				}
+				else if(req.body.openid != req.session.user.openid) {
+					return users.getUserByOpenId(req.dbCon, req.body.openid, function(err, user) {
+						if(err)
+							return next(err);
+
+						if(user != null)
+							errors.push(req.gettext("This OpenID is used by another account already."));
+						else
+							update.newOpenid = req.body.openid;
+
+						next();
+					});
+				}
 			}
 
 			next();
@@ -94,7 +118,7 @@ exports.get = exports.post = function(req, res, next) {
 							next();
 					},
 					function(next) {
-						if(req.method == "POST" && req.body.openid && req.body.openid.trim() != userInfo.openid)
+						if(req.method == "POST" && req.body.openid && req.body.openid != userInfo.openid && errors.length == 0)
 						{
 							relyingParty.authenticate(req.body.openid, false, function(err, url) {
 								if(url)

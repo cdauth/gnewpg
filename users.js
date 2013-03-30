@@ -21,7 +21,12 @@ function updateUser(con, id, fields, callback) {
 	db.update(con, "users", fields, { id: id }, callback);
 }
 
+function getUserByOpenId(con, openid, callback) {
+	db.getEntry(con, "users", "*", { openid: openid }, callback);
+}
+
 exports.createUser = createUser;
 exports.getUser = getUser;
 exports.userExists = userExists;
 exports.updateUser = updateUser;
+exports.getUserByOpenId = getUserByOpenId;
