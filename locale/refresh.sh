@@ -42,6 +42,6 @@ for((i=1; $i<=$FAQNUMBER; i++)); do
 	echo '_("[FAQ_'$i'_TITLE]");' >> fixedStrings.tmp.js
 done
 
-( echo fixedStrings.tmp.js; ls -1 ../*.js; ls -1 ../pages/*.js; ls -1 ../pages/*.soy ) | xgettext -f- -dgnewpg -ognewpg.pot -LPython --from-code=UTF-8 --add-comments="I18N:" -k_ -kError_
+( echo fixedStrings.tmp.js; ls -1 ../*.js; ls -1 ../web/*.js; ls -1 ../web/*.soy ) | xgettext -f- -dgnewpg -ognewpg.pot -LPython --from-code=UTF-8 --add-comments="I18N:" -k_ -kError_
 
 rm -f fixedStrings.tmp.js
