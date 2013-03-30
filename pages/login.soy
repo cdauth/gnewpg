@@ -2,8 +2,10 @@
 
 /**
  * @param? username
+ * @param? openid
  * @param? stayloggedin
  * @param? errors
+ * @param? openidErrors
 */
 {template .login}
 	{call gnewpg.ui.html}
@@ -24,6 +26,25 @@
 		<label class="control-label" for="i-password">{_('Password')}</label>
 		<div class="controls">
 			<input id="i-password" name="password" type="password" required="required" pattern=".{lb}{$ij.config.passwordMinLength},{rb}" title="{_('Minimum %s characters', $ij.config.passwordMinLength)}" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<div class="controls">
+			<label class="checkbox">
+				<input name="stayloggedin" type="checkbox"{if $stayloggedin} checked="checked"{/if} /> {_('Stay logged in')}
+			</label>
+			<input type="submit" value="{_('Login')}" class="btn" />
+		</div>
+	</div>
+</form>
+<h3>{_('Login via OpenID')}</h3>
+<form class="form-horizontal" action="" method="post">
+	{call gnewpg.ui.errors}{param errors:$openidErrors/}{/call}
+	<div class="control-group">
+		<label class="control-label" for="i-openid">{_('OpenID')}</label>
+		<div class="controls">
+			<input id="i-openid" name="openid" type="url"{if $openid} value="{$openid}"{/if} required="required" />
 		</div>
 	</div>
 
