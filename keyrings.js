@@ -244,7 +244,7 @@ pgp.utils.extend(AnonymousKeyring.prototype, {
 			if(err || contains)
 				return callback(err, contains);
 
-			db.getEntry(this._con, "keys_identities_settings", [ "perm_public" ], { key: keyId, id: identityId }, function(err, res) {
+			db.getEntry(this._con, "keys_identities_settings", [ "perm_public" ], { key: keyId, id: attributeId }, function(err, res) {
 				if(err)
 					return callback(err);
 
