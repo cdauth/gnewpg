@@ -22,6 +22,7 @@
     "node-pgp": "git://github.com/cdauth/node-pgp.git",
 	"node-pgp-postgres": "git://github.com/cdauth/node-pgp-postgres.git",
     "node-pgp-mail": "git://github.com/cdauth/node-pgp-mail.git",
+    "node-pgp-hkp-server": "git://github.com/cdauth/node-pgp-hkp-server.git",
     "dateformat": "x.x.x",
     "node-markdown": "x.x.x",
     "sprintf": "x.x.x",

@@ -52,7 +52,7 @@ function middleware(req, res, next) {
 }
 
 function getUniqueRandomString(con, length, table, field, callback) {
-	var randomStr = pgp.utils.generateRandomString(length);
+	var randomStr = pgp.utils.generateRandomString(length).toLowerCase();
 	con.query("SELECT "+field+" FROM "+table+" WHERE "+field+" = $1 LIMIT 1", [ randomStr ], function(err, res) {
 		if(err)
 			callback(err);

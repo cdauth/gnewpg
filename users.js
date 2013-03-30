@@ -25,8 +25,13 @@ function getUserByOpenId(con, openid, callback) {
 	db.getEntry(con, "users", "*", { openid: openid }, callback);
 }
 
+function getUserBySecret(con, secret, callback) {
+	db.getEntry(con, "users", "*", { secret: secret }, callback);
+}
+
 exports.createUser = createUser;
 exports.getUser = getUser;
 exports.userExists = userExists;
 exports.updateUser = updateUser;
 exports.getUserByOpenId = getUserByOpenId;
+exports.getUserBySecret = getUserBySecret;

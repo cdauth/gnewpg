@@ -63,7 +63,21 @@ module.exports = {
 	 * The base URL of the application without a trailing slash. This is useful if gnewpg
 	 * runs behind a proxy. Leave empty if not run behind a proxy.
 	*/
-	"baseurl" : ""
+	"baseurl" : "",
+
+	/**
+	 * The hostname that the HKP server will be reachable on. Leave empty to not start a HKP server
+	 * on port 11371.
+	*/
+	"hkpHostname" : "keyserver.gnewpg.org",
+
+	/**
+	 * The hostname for the personalised HKP servers. %s will be replaced by a secret string that is
+	 * unique for each user account, so each user has a personal HKP server reachable under a secret
+	 * URL.
+	*/
+	"personalHkpHostname" : "%s.keyserver.gnewpg.org"
 };
 
 require("node-pgp").config.tmpDir = module.exports.tmpDir;
+require("node-pgp-hkp-server/config").maxUploadSize = module.exports.maxUploadSize;

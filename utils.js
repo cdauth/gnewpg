@@ -98,4 +98,5 @@ exports.getInfoForFormat = getInfoForFormat;
 exports.formatFingerprint = formatFingerprint;
 exports.formatKeyId = formatKeyId;
 exports.scaleImage = scaleImage;
+exports.quoteRegexp = quoteRegexp;
 exports.checkReferrer = checkReferrer;
