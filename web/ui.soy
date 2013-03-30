@@ -97,9 +97,9 @@
  * @param? showTitle
 */
 {template .faq}
-<{if $showTitle}p{else}span{/if} class="faq">
+<span class="faq">
 <a href="{$ij.config.baseurl}/faq/{$no}" target="_blank">{if $showTitle}{_(''+'[FAQ_'+$no+'_TITLE]')}{else}<abbr title="{_(''+'[FAQ_'+$no+'_TITLE]')}">?</abbr>{/if}</a>
-</{if $showTitle}p{else}span{/if}>
+</span>
 {/template}
 
 /**

@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnewpg\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-09-28 09:43+0200\n"
-"PO-Revision-Date: 2012-09-28 09:44+0100\n"
-"Last-Translator: Candid Dauth <cdauth@cdauth.eu>\n"
+"POT-Creation-Date: 2013-03-31 00:16+0100\n"
+"PO-Revision-Date: 2013-03-31 00:31+0100\n"
+"Last-Translator: Candid Dauth <webmaster@cdauth.de>\n"
 "Language-Team: \n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -205,475 +205,720 @@ msgstr ""
 msgid "[FAQ_3_TITLE]"
 msgstr "What is gnewpg?"
 
-#: ../i18n.js:16
+#: fixedStrings.tmp.js:39
+msgid "[FAQ_4]"
+msgstr "In order to use the gnewpg key server, you have to configure your PGP client to trust the [CAcert root certificate](http://www.cacert.org/certs/root.crt). See [CAcert’s manual](http://wiki.cacert.org/FAQ/ImportRootCert) on how to do this. Alternatively, you might disable encryption by replacing `hkps://` with `hkp://` in the keyserver URL. Note that this is **insecure**, as other people might spoof your keyring, especially if you are on a wireless connection."
+
+#: fixedStrings.tmp.js:40
+msgid "[FAQ_4_TITLE]"
+msgstr "Common problems configuring the keyserver"
+
+#: ../i18n.js:17
 msgid "isoUtcDateTime"
 msgstr "isoUtcDateTime"
 
-#: ../i18n.js:108
+#: ../i18n.js:106
 msgid "Internal error"
 msgstr "Internal error"
 
-#: ../keys.js:136
+#: ../mails.js:54
+msgid "This key does not contain any valid e-mail addresses."
+msgstr "This key does not contain any valid e-mail addresses."
+
+#: ../mails.js:66
 #, python-format
-msgid "Key %s does not exist."
-msgstr "Key %s does not exist."
+msgid "gnewpg ownership verification for key %s"
+msgstr "gnewpg ownership verification for key %s"
 
-#: ../keys.js:150
-#: ../keys.js:154
-#: ../keys.js:269
-#: ../keys.js:273
+#: ../mails.js:66
 #, python-format
-msgid "No permission to view key %s."
-msgstr "No permission to view key %s."
+msgid "[ownership_mail keyId=%s username=%s link=%s]"
+msgstr ""
+"Someone (hopefully you) claims to be the owner of the PGP key %s. If the user account %s is yours, click the following link to verify the ownership:\n"
+"\n"
+"%s"
 
-#: ../keys.js:250
+#: ../web/login.js:29
+#: ../web/login.js:60
+msgid "There is no user account with this OpenID."
+msgstr "There is no user account with this OpenID."
+
+#: ../web/login.js:38
+#: ../web/settings.js:128
 #, python-format
-msgid "Key %s not found."
-msgstr "Key %s not found."
+msgid "OpenID authentication failed: %s"
+msgstr "OpenID authentication failed: %s"
 
-#: ../keysSearch.js:17
-msgid "The search string is too short."
-msgstr "The search string is too short."
+#: ../web/login.js:40
+#: ../web/settings.js:130
+msgid "OpenID authentication failed."
+msgstr "OpenID authentication failed."
 
-#: ../keysUpload.js:92
-#: ../keysUpload.js:108
-msgid "No associated key."
-msgstr "No associated key."
-
-#: ../keysUpload.js:125
-msgid "Signatures without issuer or date information are unacceptable."
-msgstr "Signatures without issuer or date information are unacceptable."
-
-#: ../keysUpload.js:131
-msgid "Signature is not exportable."
-msgstr "Signature is not exportable."
-
-#: ../keysUpload.js:145
+#: ../web/login.js:51
+#: ../web/settings.js:55
 #, python-format
-msgid "Signature type %s is only acceptable on identities and attributes."
-msgstr "Signature type %s is only acceptable on identities and attributes."
+msgid "Error verifying openid: %s"
+msgstr "Error verifying openid: %s"
 
-#: ../keysUpload.js:154
-#, python-format
-msgid "Signature type %s is only acceptable on subkeys."
-msgstr "Signature type %s is only acceptable on subkeys."
+#: ../web/login.js:53
+#: ../web/settings.js:57
+msgid "Error verifying openid."
+msgstr "Error verifying openid."
 
-#: ../keysUpload.js:165
-#, python-format
-msgid "Unsupported signature type %s."
-msgstr "Unsupported signature type %s."
-
-#: ../keysUpload.js:200
-msgid "No associated object for signature."
-msgstr "No associated object for signature."
-
-#: ../keysUpload.js:216
-msgid "Unknown packet type."
-msgstr "Unknown packet type."
-
-#: ../keysUpload.js:255
-msgid "Subkey without signatures."
-msgstr "Subkey without signatures."
-
-#: ../keysUpload.js:271
-msgid "Identity without signatures."
-msgstr "Identity without signatures."
-
-#: ../keysUpload.js:297
-msgid "Attribute without signatures."
-msgstr "Attribute without signatures."
-
-#: ../keysUpload.js:321
-msgid "Key without signatures, subkeys, identities or attributes."
-msgstr "Key without signatures, subkeys, identities or attributes."
-
-#: ../keysUpload.js:420
-#: ../keysUpload.js:451
-#: ../keysUpload.js:482
-msgid "Bad signature."
-msgstr "Bad signature."
-
-#: ../pages/login.js:32
+#: ../web/login.js:79
 msgid "Login failed."
 msgstr "Login failed."
 
-#: ../pages/register.js:15
+#: ../web/register.js:15
 #, python-format
 msgid "The username has to be at least %d character long."
 msgid_plural "The username has to be at least %d characters long."
 msgstr[0] "The username has to be at least %d character long."
 msgstr[1] "The username has to be at least %d characters long."
 
-#: ../pages/register.js:17
+#: ../web/register.js:17
 #, python-format
 msgid "The username may be at most %d character long."
 msgid_plural "The username may be at most %d characters long."
 msgstr[0] "The username may be at most %d character long."
 msgstr[1] "The username may be at most %d characters long."
 
-#: ../pages/register.js:25
+#: ../web/register.js:25
 msgid "This username is already taken."
 msgstr "This username is already taken."
 
-#: ../pages/register.js:27
+#: ../web/register.js:27
+#: ../web/settings.js:34
 #, python-format
 msgid "The password has to be at least %d character long."
 msgid_plural "The password has to be at least %d characters long."
 msgstr[0] "The password has to be at least %d character long."
 msgstr[1] "The password has to be at least %d characters long."
 
-#: ../pages/register.js:29
+#: ../web/register.js:29
+#: ../web/settings.js:36
 msgid "The two passwords do not match."
 msgstr "The two passwords do not match."
 
-#: ../pages/faq.soy:9
-msgid "FAQ"
-msgstr "FAQ"
+#: ../web/search.js:12
+msgid "The search string is too short."
+msgstr "The search string is too short."
 
-#: ../pages/index.soy:13
+#: ../web/settings.js:83
+msgid "This OpenID is used by another account already."
+msgstr "This OpenID is used by another account already."
+
+#: ../web/claimkey.soy:11
+#, python-format
+msgid "Claim key %s"
+msgstr "Claim key %s"
+
+#: ../web/claimkey.soy:13
+#: ../web/keySettings.soy:14
+#, python-format
+msgid "Back to key %s"
+msgstr "Back to key %s"
+
+#: ../web/claimkey.soy:15
+msgid "An encrypted e-mail has been sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to add yourself as the owner of the key."
+msgstr "An encrypted e-mail has been sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to add yourself as the owner of the key."
+
+#: ../web/claimkey.soy:18
+msgid "You are now the owner of this key."
+msgstr "You are now the owner of this key."
+
+#: ../web/claimkey.soy:20
+msgid "Unknown token."
+msgstr "Unknown token."
+
+#: ../web/claimkey.soy:23
+#, python-format
+msgid "You are about to verify yourself as the owner of the key %s. An encrypted e-mail will be sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to verify that the key belongs to you."
+msgstr "You are about to verify yourself as the owner of the key %s. An encrypted e-mail will be sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to verify that the key belongs to you."
+
+#: ../web/index.soy:15
+#, python-format
+msgid "Configure your local PGP application to use gnewpg as a keyserver. Your individual keyserver URL is %s, it is connected to your user account and you should keep it secret."
+msgstr "Configure your local PGP application to use gnewpg as a keyserver. Your individual keyserver URL is %s, it is connected to your user account and you should keep it secret."
+
+#: ../web/index.soy:30
+#, python-format
+msgid "Configure your local PGP application to use gnewpg as a keyserver. The public keyserver URL is %s. Log in to get an individual key server URL that keeps track of your uploaded keys."
+msgstr "Configure your local PGP application to use gnewpg as a keyserver. The public keyserver URL is %s. Log in to get an individual key server URL that keeps track of your uploaded keys."
+
+#: ../web/index.soy:35
 msgid "Search for a key"
 msgstr "Search for a key"
 
-#: ../pages/index.soy:19
-#: ../pages/upload.soy:11
+#: ../web/index.soy:43
+#: ../web/upload.soy:11
 msgid "Upload a key"
 msgstr "Upload a key"
 
-#: ../pages/index.soy:20
+#: ../web/index.soy:44
 msgid "To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it."
 msgstr "To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it."
 
-#: ../pages/index.soy:24
-msgid "Your own keys"
-msgstr "Your own keys"
-
-#: ../pages/index.soy:27
-#: ../pages/keyring.soy:10
+#: ../web/index.soy:51
+#: ../web/keyring.soy:9
 msgid "Your keyring"
 msgstr "Your keyring"
 
-#: ../pages/index.soy:30
-msgid "Your account"
-msgstr "Your account"
+#: ../web/index.soy:56
+msgid "Account settings"
+msgstr "Account settings"
 
-#: ../pages/keyring.soy:15
+#: ../web/keyring.soy:12
 msgid "Your keyring is empty."
 msgstr "Your keyring is empty."
 
-#: ../pages/keyring.soy:22
-#: ../pages/search.soy:21
+#: ../web/keyring.soy:19
+#: ../web/search.soy:21
 msgid "Key"
 msgstr "Key"
 
-#: ../pages/keyring.soy:23
-#: ../pages/upload.soy:82
+#: ../web/keyring.soy:20
+#: ../web/upload.soy:105
 msgid "User ID"
 msgstr "User ID"
 
-#: ../pages/key.soy:14
+#: ../web/keyring.soy:35
+msgid "Export the selected keys"
+msgstr "Export the selected keys"
+
+#: ../web/keySettings.soy:12
+#, python-format
+msgid "Privacy settings for key %s"
+msgstr "Privacy settings for key %s"
+
+#: ../web/keySettings.soy:17
+#: ../web/settings.soy:18
+msgid "Settings successfully saved."
+msgstr "Settings successfully saved."
+
+#: ../web/keySettings.soy:19
+msgid "By default, only those may access the key who have uploaded it once before and have thus proven that they already posess it. People who have access to the key will be provided with all updates concerning the key itself, such as revocation signatures."
+msgstr "By default, only those may access the key who have uploaded it once before and have thus proven that they already posess it. People who have access to the key will be provided with all updates concerning the key itself, such as revocation signatures."
+
+#: ../web/keySettings.soy:20
+msgid "The permissions for the identities and attributes are handled independently. By default, people who have permission to a key will only see those identities and attributes that they have uploaded before, so those who they already posess. Users who have access to an identity or attribute can see all their certification signatures, which might reveal information about social connections to some extent."
+msgstr "The permissions for the identities and attributes are handled independently. By default, people who have permission to a key will only see those identities and attributes that they have uploaded before, so those who they already posess. Users who have access to an identity or attribute can see all their certification signatures, which might reveal information about social connections to some extent."
+
+#: ../web/keySettings.soy:21
+#: ../web/key.soy:14
 #, python-format
 msgid "Key %s"
 msgstr "Key %s"
 
-#: ../pages/key.soy:22
+#: ../web/keySettings.soy:25
+msgid "Key may be seen by people who already have it in their keyring"
+msgstr "Key may be seen by people who already have it in their keyring"
+
+#: ../web/keySettings.soy:28
+msgid "Key can be found by everyone, by searching for its ID or by clicking a link"
+msgstr "Key can be found by everyone, by searching for its ID or by clicking a link"
+
+#: ../web/keySettings.soy:31
+msgid "The page of this key may be indexed by search engines"
+msgstr "The page of this key may be indexed by search engines"
+
+#: ../web/keySettings.soy:36
+#, python-format
+msgid "Identity %s"
+msgstr "Identity %s"
+
+#: ../web/keySettings.soy:40
+msgid "Identity may be seen by people who already have it in their keyring"
+msgstr "Identity may be seen by people who already have it in their keyring"
+
+#: ../web/keySettings.soy:43
+msgid "Identity may be seen by everyone who can access the key."
+msgstr "Identity may be seen by everyone who can access the key."
+
+#: ../web/keySettings.soy:46
+msgid "The key may be found by searching for this identity’s name."
+msgstr "The key may be found by searching for this identity’s name."
+
+#: ../web/keySettings.soy:49
+msgid "The key may be found by searching for this identity’s e-mail address."
+msgstr "The key may be found by searching for this identity’s e-mail address."
+
+#: ../web/keySettings.soy:55
+#: ../web/key.soy:222
+#: ../web/upload.soy:111
+msgid "Attribute"
+msgstr "Attribute"
+
+#: ../web/keySettings.soy:63
+msgid "Attribute may be seen by people who already have it in their keyring"
+msgstr "Attribute may be seen by people who already have it in their keyring"
+
+#: ../web/keySettings.soy:66
+msgid "Attribute may be seen by everyone who can access the key."
+msgstr "Attribute may be seen by everyone who can access the key."
+
+#: ../web/key.soy:14
+#, python-format
+msgid "Key %s (%s)"
+msgstr "Key %s (%s)"
+
+#: ../web/key.soy:17
+#, python-format
+msgid "Key %s not found."
+msgstr "Key %s not found."
+
+#: ../web/key.soy:30
+#: ../web/key.soy:222
+#, python-format
+msgid "It is %s whether this key really belongs to the person shown on this picture."
+msgstr "It is %s whether this key really belongs to the person shown on this picture."
+
+#: ../web/key.soy:30
 #, python-format
 msgid "Picture #%d"
 msgstr "Picture #%d"
 
-#: ../pages/key.soy:27
+#: ../web/key.soy:38
+msgid "You are the verified owner of this key."
+msgstr "You are the verified owner of this key."
+
+#: ../web/key.soy:41
+msgid "Export this key"
+msgstr "Export this key"
+
+#: ../web/key.soy:44
+msgid "Edit privacy settings"
+msgstr "Edit privacy settings"
+
+#: ../web/key.soy:47
+msgid "This key belongs to me!"
+msgstr "This key belongs to me!"
+
+#: ../web/key.soy:58
+#: ../web/key.soy:129
+msgid "Details"
+msgstr "Details"
+
+#: ../web/key.soy:58
+#: ../web/key.soy:62
+msgid "expert"
+msgstr "expert"
+
+#: ../web/key.soy:58
+#: ../web/key.soy:61
+msgid "on"
+msgstr "on"
+
+#: ../web/key.soy:58
+#: ../web/key.soy:60
+msgid "off"
+msgstr "off"
+
+#: ../web/key.soy:67
+msgid "Do not trust any information marked as red!"
+msgstr "Do not trust any information marked as red!"
+
+#: ../web/key.soy:70
 msgid "Fingerprint"
 msgstr "Fingerprint"
 
-#: ../pages/key.soy:30
+#: ../web/key.soy:74
 msgid "Security"
 msgstr "Security"
 
-#: ../pages/key.soy:33
+#: ../web/key.soy:78
 msgid "Creation date"
 msgstr "Creation date"
 
-#: ../pages/key.soy:36
+#: ../web/key.soy:81
 msgid "Expiration date"
 msgstr "Expiration date"
 
-#: ../pages/key.soy:37
-#: ../pages/key.soy:91
-#: ../pages/key.soy:176
+#: ../web/key.soy:82
+#: ../web/key.soy:166
+#: ../web/key.soy:277
 msgid "never"
 msgstr "never"
 
-#: ../pages/key.soy:39
+#: ../web/key.soy:84
 msgid "Revoked"
 msgstr "Revoked"
 
-#: ../pages/key.soy:40
+#: ../web/key.soy:85
 msgid "no"
 msgstr "no"
 
-#: ../pages/key.soy:43
+#: ../web/key.soy:88
 msgid "Key version"
 msgstr "Key version"
 
-#: ../pages/key.soy:46
+#: ../web/key.soy:91
 msgid "Public key algorithm"
 msgstr "Public key algorithm"
 
-#: ../pages/key.soy:49
+#: ../web/key.soy:94
 msgid "Key size"
 msgstr "Key size"
 
-#: ../pages/key.soy:50
+#: ../web/key.soy:95
 #, python-format
 msgid "%d bits"
 msgstr "%d bits"
 
-#: ../pages/key.soy:59
-#: ../pages/key.soy:61
-#: ../pages/key.soy:72
-msgid "Details"
-msgstr "Details"
+#: ../web/key.soy:99
+#: ../web/key.soy:182
+msgid "Identities"
+msgstr "Identities"
 
-#: ../pages/key.soy:59
-msgid "on"
-msgstr "on"
+#: ../web/key.soy:104
+#: ../web/key.soy:106
+#: ../web/key.soy:194
+#: ../web/key.soy:196
+msgid "unknown"
+msgstr "unknown"
 
-#: ../pages/key.soy:61
-msgid "off"
-msgstr "off"
+#: ../web/key.soy:104
+#: ../web/key.soy:194
+#, python-format
+msgid "It is %s whether this key really belongs to a person called %s."
+msgstr "It is %s whether this key really belongs to a person called %s."
 
-#: ../pages/key.soy:67
+#: ../web/key.soy:106
+#: ../web/key.soy:196
+#, python-format
+msgid "It is %s whether the owner of this key really owns the e-mail address %s."
+msgstr "It is %s whether the owner of this key really owns the e-mail address %s."
+
+#: ../web/key.soy:124
+#: ../web/upload.soy:99
 msgid "Signature"
 msgstr "Signature"
 
-#: ../pages/key.soy:68
+#: ../web/key.soy:125
 msgid "Issued by"
 msgstr "Issued by"
 
-#: ../pages/key.soy:69
+#: ../web/key.soy:126
 msgid "Date"
 msgstr "Date"
 
-#: ../pages/key.soy:70
+#: ../web/key.soy:127
 msgid "Expires/revoked"
 msgstr "Expires/revoked"
 
-#: ../pages/key.soy:82
+#: ../web/key.soy:139
+msgid "Key signatures"
+msgstr "Key signatures"
+
+#: ../web/key.soy:141
+msgid "No key signatures."
+msgstr "No key signatures."
+
+#: ../web/key.soy:154
 msgid "Subkeys"
 msgstr "Subkeys"
 
-#: ../pages/key.soy:84
+#: ../web/key.soy:156
 msgid "No subkeys."
 msgstr "No subkeys."
 
-#: ../pages/key.soy:90
+#: ../web/key.soy:165
+#: ../web/upload.soy:34
 msgid "Subkey"
 msgstr "Subkey"
 
-#: ../pages/key.soy:94
-#: ../pages/key.soy:181
+#: ../web/key.soy:169
+#: ../web/key.soy:282
 msgid "version"
 msgstr "version"
 
-#: ../pages/key.soy:95
+#: ../web/key.soy:170
 #, python-format
 msgid "%d bit"
 msgstr "%d bit"
 
-#: ../pages/key.soy:104
-msgid "Identities"
-msgstr "Identities"
-
-#: ../pages/key.soy:106
+#: ../web/key.soy:184
 msgid "No identities."
 msgstr "No identities."
 
-#: ../pages/key.soy:112
+#: ../web/key.soy:201
 msgid "primary"
 msgstr "primary"
 
-#: ../pages/key.soy:118
+#: ../web/key.soy:211
 msgid "Attributes"
 msgstr "Attributes"
 
-#: ../pages/key.soy:120
+#: ../web/key.soy:213
 msgid "No attributes."
 msgstr "No attributes."
 
-#: ../pages/key.soy:126
-#: ../pages/upload.soy:96
-msgid "Attribute"
-msgstr "Attribute"
-
-#: ../pages/key.soy:126
+#: ../web/key.soy:222
 msgid "picture"
 msgstr "picture"
 
-#: ../pages/key.soy:146
+#: ../web/key.soy:244
 msgid "No signatures."
 msgstr "No signatures."
 
-#: ../pages/key.soy:166
-#: ../pages/key.soy:213
+#: ../web/key.soy:267
+#: ../web/key.soy:320
 msgid "unverified"
 msgstr "unverified"
 
-#: ../pages/key.soy:185
+#: ../web/key.soy:286
 msgid "Partial trust"
 msgstr "Partial trust"
 
-#: ../pages/key.soy:187
+#: ../web/key.soy:288
 msgid "Complete trust"
 msgstr "Complete trust"
 
-#: ../pages/key.soy:189
+#: ../web/key.soy:290
 #, python-format
 msgid "%d level"
 msgid_plural "%d levels"
+msgstr[0] "%d level"
+msgstr[1] "%d levels"
 
-#: ../pages/key.soy:191
+#: ../web/key.soy:292
 msgid "regexp"
 msgstr "regexp"
 
-#: ../pages/key.soy:195
+#: ../web/key.soy:296
 msgid "non-revocable"
 msgstr "non-revocable"
 
-#: ../pages/key.soy:211
+#: ../web/key.soy:302
+msgid "Reason for revocation"
+msgstr "Reason for revocation"
+
+#: ../web/key.soy:304
+#, python-format
+msgid "“%s”"
+msgstr "“%s”"
+
+#: ../web/key.soy:316
 msgid "by"
 msgstr "by"
 
-#: ../pages/login.soy:11
+#: ../web/login.soy:13
 msgid "Login"
 msgstr "Login"
 
-#: ../pages/login.soy:17
+#: ../web/login.soy:19
+#: ../web/settings.soy:21
 msgid "Username"
 msgstr "Username"
 
-#: ../pages/login.soy:20
-#: ../pages/register.soy:24
+#: ../web/login.soy:26
+#: ../web/register.soy:28
+#: ../web/settings.soy:28
 msgid "Password"
 msgstr "Password"
 
-#: ../pages/login.soy:23
+#: ../web/login.soy:35
+#: ../web/login.soy:54
 msgid "Stay logged in"
 msgstr "Stay logged in"
 
-#: ../pages/register.soy:12
-#: ../pages/ui.soy:30
+#: ../web/login.soy:41
+msgid "Login via OpenID"
+msgstr "Login via OpenID"
+
+#: ../web/login.soy:45
+#: ../web/settings.soy:42
+msgid "OpenID"
+msgstr "OpenID"
+
+#: ../web/register.soy:12
+#: ../web/ui.soy:49
 msgid "Register"
 msgstr "Register"
 
-#: ../pages/register.soy:16
+#: ../web/register.soy:16
 msgid "You have successfully registered. You can now log in."
 msgstr "You have successfully registered. You can now log in."
 
-#: ../pages/register.soy:21
+#: ../web/register.soy:21
 msgid "Desired username"
 msgstr "Desired username"
 
-#: ../pages/register.soy:27
+#: ../web/register.soy:35
+#: ../web/settings.soy:35
 msgid "Repeat password"
 msgstr "Repeat password"
 
-#: ../pages/register.soy:30
+#: ../web/register.soy:42
+#: ../web/settings.soy:49
 msgid "E-mail address"
 msgstr "E-mail address"
 
-#: ../pages/search.soy:11
+#: ../web/search.soy:11
 #, python-format
 msgid "Search: %s"
 msgstr "Search: %s"
 
-#: ../pages/search.soy:17
+#: ../web/search.soy:17
 msgid "No keys have been found."
 msgstr "No keys have been found."
 
-#: ../pages/search.soy:21
+#: ../web/search.soy:21
 msgid "revoked"
 msgstr "revoked"
 
-#: ../pages/search.soy:21
+#: ../web/search.soy:21
 msgid "expired"
 msgstr "expired"
 
-#: ../pages/search.soy:21
-msgid "identity"
-msgstr "identity"
-
-#: ../pages/search.soy:21
+#: ../web/search.soy:21
 msgid "subkey"
 msgstr "subkey"
 
-#: ../pages/ui.soy:28
+#: ../web/settings.soy:56
+msgid "Encryption key for e-mail notifications"
+msgstr "Encryption key for e-mail notifications"
+
+#: ../web/settings.soy:59
+msgid "None"
+msgstr "None"
+
+#: ../web/settings.soy:68
+msgid "Language"
+msgstr "Language"
+
+#: ../web/ui.soy:47
 #, python-format
 msgid "Logged in as %s"
 msgstr "Logged in as %s"
 
-#: ../pages/ui.soy:30
+#: ../web/ui.soy:49
 msgid "Not logged in."
 msgstr "Not logged in."
 
-#: ../pages/ui.soy:86
+#: ../web/ui.soy:109
 msgid "PGP ASCII-armored format (.asc)"
 msgstr "PGP ASCII-armored format (.asc)"
 
-#: ../pages/ui.soy:87
-msgid "PGP binary format (.pgp)"
-msgstr "PGP binary format (.pgp)"
+#: ../web/ui.soy:110
+msgid "PGP binary format (.bexpk)"
+msgstr "PGP binary format (.bexpk)"
 
-#: ../pages/upload.soy:15
+#: ../web/upload.soy:15
 msgid "Internal errors occurred while uploading the keys."
 msgstr "Internal errors occurred while uploading the keys."
 
-#: ../pages/upload.soy:18
-msgid "The following keys were successfully uploaded:"
-msgstr "The following keys were successfully uploaded:"
-
-#: ../pages/upload.soy:25
-msgid "No keys were successfully uploaded."
-msgstr "No keys were successfully uploaded."
-
-#: ../pages/upload.soy:28
+#: ../web/upload.soy:18
 msgid "The following errors occurred:"
 msgstr "The following errors occurred:"
 
-#: ../pages/upload.soy:38
+#: ../web/upload.soy:26
+msgid "The following keys were successfully uploaded:"
+msgstr "The following keys were successfully uploaded:"
+
+#: ../web/upload.soy:45
+msgid "No keys were successfully uploaded."
+msgstr "No keys were successfully uploaded."
+
+#: ../web/upload.soy:50
 msgid "Upload a file"
 msgstr "Upload a file"
 
-#: ../pages/upload.soy:41
+#: ../web/upload.soy:57
 msgid "or paste a key"
 msgstr "or paste a key"
 
-#: ../pages/upload.soy:45
+#: ../web/upload.soy:67
 msgid "Download keys with updated signatures after uploading as"
 msgstr "Download keys with updated signatures after uploading as"
 
-#: ../pages/upload.soy:46
-msgid "If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so it will only be visible to people who already posess it in order to receive new signatures."
-msgstr "If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so it will only be visible to people who already posess it in order to receive new signatures."
+#: ../web/upload.soy:74
+msgid "If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so only people who prove that they already posess the key can access it. New signatures in the uploaded key will be saved on the server and will be available to everyone who has permission to access the key."
+msgstr "If the key does not exist on the keyserver yet, it will be added to the keyserver with the highest privacy settings, so only people who prove that they already posess the key can access it. New signatures in the uploaded key will be saved on the server and will be available to everyone who has permission to access the key."
 
-#: ../pages/upload.soy:47
-msgid "New signatures in the uploaded key will be saved on the server and will be available to everyone who has access to the key."
-msgstr "New signatures in the uploaded key will be saved on the server and will be available to everyone who has access to the key."
+#: ../web/upload.soy:76
+msgid "Do not save anything on the server, only download updated keys"
+msgstr "Do not save anything on the server, only download updated keys"
 
-#: ../pages/upload.soy:48
-msgid "Do not publish uploaded signatures on the server"
-msgstr "Do not publish uploaded signatures on the server"
-
-#: ../pages/upload.soy:66
+#: ../web/upload.soy:102
 msgid "Public key"
 msgstr "Public key"
 
-#: ../pages/upload.soy:89
+#: ../web/upload.soy:108
 msgid "Public subkey"
 msgstr "Public subkey"
 
-#: ../pages/upload.soy:103
+#: ../web/upload.soy:114
 #, python-format
 msgid "Packet type %d"
 msgstr "Packet type %d"
+
+#~ msgid "Key %s does not exist."
+#~ msgstr "Key %s does not exist."
+
+#~ msgid "No permission to view key %s."
+#~ msgstr "No permission to view key %s."
+
+#~ msgid "No associated key."
+#~ msgstr "No associated key."
+
+#~ msgid "Signatures without issuer or date information are unacceptable."
+#~ msgstr "Signatures without issuer or date information are unacceptable."
+
+#~ msgid "Signature is not exportable."
+#~ msgstr "Signature is not exportable."
+
+#~ msgid "Signature type %s is only acceptable on identities and attributes."
+#~ msgstr "Signature type %s is only acceptable on identities and attributes."
+
+#~ msgid "Signature type %s is only acceptable on subkeys."
+#~ msgstr "Signature type %s is only acceptable on subkeys."
+
+#~ msgid "Unsupported signature type %s."
+#~ msgstr "Unsupported signature type %s."
+
+#~ msgid "No associated object for signature."
+#~ msgstr "No associated object for signature."
+
+#~ msgid "Unknown packet type."
+#~ msgstr "Unknown packet type."
+
+#~ msgid "Subkey without signatures."
+#~ msgstr "Subkey without signatures."
+
+#~ msgid "Identity without signatures."
+#~ msgstr "Identity without signatures."
+
+#~ msgid "Attribute without signatures."
+#~ msgstr "Attribute without signatures."
+
+#~ msgid "Key without signatures, subkeys, identities or attributes."
+#~ msgstr "Key without signatures, subkeys, identities or attributes."
+
+#~ msgid "Bad signature."
+#~ msgstr "Bad signature."
+
+#~ msgid "FAQ"
+#~ msgstr "FAQ"
+
+#~ msgid "Your own keys"
+#~ msgstr "Your own keys"
+
+#~ msgid "Your account"
+#~ msgstr "Your account"
+
+#~ msgid "identity"
+#~ msgstr "identity"
+
+#~ msgid ""
+#~ "New signatures in the uploaded key will be saved on the server and will "
+#~ "be available to everyone who has access to the key."
+#~ msgstr ""
+#~ "New signatures in the uploaded key will be saved on the server and will "
+#~ "be available to everyone who has access to the key."
+
+#~ msgid "Do not publish uploaded signatures on the server"
+#~ msgstr "Do not publish uploaded signatures on the server"
 
 #~ msgid "public key algorithm"
 #~ msgstr "public key algorithm"
@@ -689,9 +934,6 @@ msgstr "Packet type %d"
 
 #~ msgid "Do not show details"
 #~ msgstr "Do not show details"
-
-#~ msgid "Unknown packet"
-#~ msgstr "Unknown packet"
 
 #~ msgid "Upload"
 #~ msgstr "Upload"
