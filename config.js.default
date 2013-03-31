@@ -26,6 +26,11 @@ module.exports = {
 	"persistentSessionTimeout" : 31536000,
 
 	/**
+	 * Lifetime for tokens used in verification e-mails.
+	*/
+	"tokenTimeout" : 86400,
+
+	/**
 	 * Min and max length for user names.
 	*/
 	"usernameMinLength" : 4,
