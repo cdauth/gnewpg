@@ -28,7 +28,7 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 					if(err)
 						return next(err);
 
-					keyInfo.primary_identity = identityInfo.id;
+					keyInfo.primary_identity = identityInfo ? identityInfo.id : null;
 					next();
 				}, [ "id" ]);
 			},
@@ -155,7 +155,7 @@ function resolveKeyList(keyring, list) {
 			keyInfo.expired = (keyInfo.expires && keyInfo.expires.getTime() <= (new Date()).getTime());
 
 			keyring.getPrimaryIdentity(keyId, function(err, identityInfo) {
-				keyInfo.primary_identity = identityInfo.id;
+				keyInfo.primary_identity = identityInfo ? identityInfo.id : null;
 
 				/*getKeySettings(keyring._con, keyId, function(err, keySettings) {
 					if(err)

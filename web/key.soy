@@ -11,7 +11,7 @@
 {template .key}
 	{call gnewpg.ui.html}
 		{param searchengines: $searchengines /}
-		{param title:$keyDetails ? _('Key %s (%s)', formatKeyId($keyId), $keyDetails.primary_identity) : _('Key %s', $keyId) /}
+		{param title:$keyDetails and $keyDetails.primary_identity ? _('Key %s (%s)', formatKeyId($keyId), $keyDetails.primary_identity) : _('Key %s', $keyId) /}
 		{param content}
 			{if $keyDetails == null}
 {call gnewpg.ui.error}{param message:_('Key %s not found.', $keyId)/}{/call}
