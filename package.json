@@ -13,7 +13,7 @@
   "license": "BSD",
   "description": "ERROR: No README.md file found!",
   "dependencies": {
-    "express": "3.x",
+    "express": "git://github.com/cdauth/express.git",
     "soynode": "git://github.com/cdauth/soynode.git",
     "pg": "x.x.x",
     "connect-pg": "x.x.x",
