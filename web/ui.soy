@@ -28,6 +28,7 @@
 			var i18n = {lb}
 				'Filter' : '{_('Filter')}'
 			{rb};
+			var baseurl = '{$ij.config.baseurl}';
 		</script>
 	</head>
 	<body>
@@ -40,7 +41,7 @@
 				<h1><a href="{$ij.config.baseurl}/">gnewpg</a></h1>
 			</div>
 			<div class="span3">
-				{call gnewpg.ui.faq}{param no:3 /}{param showTitle:true /}{/call}
+				{call gnewpg.ui.faq}{param no:3 /}{param showTitle:true /}{param noPopup:true /}{/call}
 			</div>
 			<div id="login-bar" class="span6 text-right">
 {if $ij.req.session.user}
@@ -95,10 +96,11 @@
 /**
  * @param no
  * @param? showTitle
+ * @param? noPopup
 */
 {template .faq}
-<span class="faq">
-<a href="{$ij.config.baseurl}/faq/{$no}" target="_blank">{if $showTitle}{_(''+'[FAQ_'+$no+'_TITLE]')}{else}<abbr title="{_(''+'[FAQ_'+$no+'_TITLE]')}">?</abbr>{/if}</a>
+<span class="faq {if $noPopup}no-popup{/if}" data-faq-no="{$no}">
+<a href="{$ij.config.baseurl}/faq/{$no}">{if $showTitle}{_(''+'[FAQ_'+$no+'_TITLE]')}{else}<abbr title="{_(''+'[FAQ_'+$no+'_TITLE]')}">?</abbr>{/if}</a>
 </span>
 {/template}
 

@@ -55,6 +55,31 @@ $(document).ready(function() {
 		});
 		btnDropdown.dropdown();
 	});
+
+	$(".faq:not(.no-popup)").each(function() {
+		var no = $(this).attr("data-faq-no");
+		$("a", this).click(function() {
+			var a = $(this);
+			$.get(baseurl+"/faq/"+no, function(data) {
+				var doc = $(data);
+				var content = $(
+					'<div class="modal hide fade" role="dialog">' +
+						'<div class="modal-header">' +
+							'<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>' +
+							'<h3>'+$("h2", doc).html()+'</h3>' +
+						'</div>' +
+						'<div class="modal-body">' +
+							$("div.faq", doc).html() +
+						'</div>' +
+					'</div>'
+				).on("hidden", function() {
+					$(this).remove();
+				}).modal();
+			}, "html");
+
+			return false;
+		});
+	});
 });
 
 function quoteRegexp(str) {
