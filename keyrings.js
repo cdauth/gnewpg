@@ -403,7 +403,17 @@ pgp.utils.extend(UserKeyring.prototype, {
 	},
 
 	removeFromKeyring : function(ids, callback) {
-		return db.remove(this._con, "users_keyrings_keys", { user: this._user, key: ids }, callback);
+		async.series([
+			function(next) {
+				db.remove(this._con, "users_keyrings_identities", { user: this._user, identityKey: ids }, next);
+			}.bind(this),
+			function(next) {
+				db.remove(this._con, "users_keyrings_attributes", { user: this._user, attributeKey: ids }, next);
+			}.bind(this),
+			function(next) {
+				db.remove(this._con, "users_keyrings_keys", { user: this._user, key: ids }, next);
+			}.bind(this)
+		], callback);
 	}
 });
 
