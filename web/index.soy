@@ -1,7 +1,7 @@
 {namespace gnewpg.pages}
 
 /**
- * @param keyserver
+ * @param? keyserver
 */
 {template .index}
 	{call gnewpg.ui.html}
@@ -42,26 +42,28 @@
 		</li>
 			{/if}
 	</ul>
-			{let $keyserverEsc}{$keyserver}{/let}
-            {let $keyserverFaq}{call gnewpg.ui.faq}{param no:4 /}{param showTitle:true /}{/call}{/let}
-            {if $ij.req.session.user}
-    <p id="keyserver-note">{_('Configure your local PGP application to use gnewpg as a keyserver. Your individual keyserver URL is %s, it is connected to your user account and you should keep it secret.', '<strong>'+$keyserverEsc+'</strong>')|noAutoescape} {$keyserverFaq|noAutoescape}</p>
-    <script type="text/javascript">
-        $("#keyserver-note").html('{_('Configure your local PGP application to use gnewpg as a keyserver. %sClick here%s to show your indivitual keyserver URL, it is connected to your user account and you should keep it secret.', '<a href="#" id="keyserver-note-popup">', '</a>')|escapeJsString} {$keyserverFaq|escapeJsString}');
-        $("#keyserver-note-popup").popover({lb}
-            placement: 'bottom',
-            title: '{_('Your personal keyserver URL')}',
-            content: '<strong>{$keyserverEsc}</strong>',
-            html: true
-        {rb});
-        $(document).click(function(e) {lb}
-            if($(e.target).closest(".popover,#keyserver-note-popup").size() == 0)
-                $("#keyserver-note a").popover("hide");
-        {rb});
-    </script>
-            {else}
-    <p id="keyserver-note">{_('Configure your local PGP application to use gnewpg as a keyserver. The public keyserver URL is %s. Log in to get an individual key server URL that keeps track of your uploaded keys.', '<strong>'+$keyserverEsc+'</strong>')|noAutoescape} {$keyserverFaq|noAutoescape}</p>
-            {/if}
+			{if $keyserver}
+				{let $keyserverEsc}{$keyserver}{/let}
+				{let $keyserverFaq}{call gnewpg.ui.faq}{param no:4 /}{param showTitle:true /}{/call}{/let}
+				{if $ij.req.session.user}
+	<p id="keyserver-note">{_('Configure your local PGP application to use gnewpg as a keyserver. Your individual keyserver URL is %s, it is connected to your user account and you should keep it secret.', '<strong>'+$keyserverEsc+'</strong>')|noAutoescape} {$keyserverFaq|noAutoescape}</p>
+	<script type="text/javascript">
+		$("#keyserver-note").html('{_('Configure your local PGP application to use gnewpg as a keyserver. %sClick here%s to show your indivitual keyserver URL, it is connected to your user account and you should keep it secret.', '<a href="#" id="keyserver-note-popup">', '</a>')|escapeJsString} {$keyserverFaq|escapeJsString}');
+		$("#keyserver-note-popup").popover({lb}
+			placement: 'bottom',
+			title: '{_('Your personal keyserver URL')}',
+			content: '<strong>{$keyserverEsc}</strong>',
+			html: true
+		{rb});
+		$(document).click(function(e) {lb}
+			if($(e.target).closest(".popover,#keyserver-note-popup").size() == 0)
+				$("#keyserver-note a").popover("hide");
+		{rb});
+	</script>
+				{else}
+	<p id="keyserver-note">{_('Configure your local PGP application to use gnewpg as a keyserver. The public keyserver URL is %s. Log in to get an individual key server URL that keeps track of your uploaded keys.', '<strong>'+$keyserverEsc+'</strong>')|noAutoescape} {$keyserverFaq|noAutoescape}</p>
+				{/if}
+			{/if}
 </div>
 		{/param}
 	{/call}
