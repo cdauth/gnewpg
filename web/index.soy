@@ -8,6 +8,8 @@
 		{param searchengines: true /}
 		{param title:'Welcome' /}
 		{param content}
+<p class="lead">{_('gnewpg is a PGP key server that aims to make PGP more secure.')}<br /><small>{call gnewpg.ui.faq}{param no:3 /}{param showTitle:true /}{/call}</small> <small>{call gnewpg.ui.faq}{param no:5 /}{param showTitle:true /}{/call}</small></p>
+<hr />
 <div class="span6 offset3">
 	<ul class="thumbnails index-links {if $ij.req.session.user == null}not{/if}loggedin">
 		<li class="span3 search">
@@ -33,7 +35,7 @@
 		</li>
 		<li class="span3 settings">
 			<div class="thumbnail">
-				<h4><a href="settings">{_('Account settings')}</a></h4>
+				<h4>{_('Groups')}</h4>
 			</div>
 		</li>
 			{/if}

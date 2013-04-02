@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnewpg\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-31 00:16+0100\n"
-"PO-Revision-Date: 2013-03-31 00:31+0100\n"
+"POT-Creation-Date: 2013-04-02 15:40+0200\n"
+"PO-Revision-Date: 2013-04-02 15:42+0100\n"
 "Last-Translator: Candid Dauth <webmaster@cdauth.de>\n"
 "Language-Team: \n"
 "Language: \n"
@@ -171,22 +171,29 @@ msgstr "Why do I have to upload a key in order to get new signatures?"
 #: fixedStrings.tmp.js:37
 msgid "[FAQ_3]"
 msgstr ""
-"gnewpg is a PGP key server that aims to make PGP more secure.\n"
-"\n"
-"### What is PGP? ###\n"
-"\n"
 "PGP (“pretty good privacy”) ([on Wikipedia](http://en.wikipedia.org/wiki/Pretty_Good_Privacy)) is a standard for encrypting and signing messages. Every person using PGP posesses a pair of a private and a public key. The public key you can send to everyone you want to exchange messages with, the private key, which is encrypted with a password, you keep safe. When you send a message to someone else, you can encrypt it using their public key, but it can only be decrypted by the person who posesses the private key belonging to that public key. This way, everyone can encrypt messages addressed to a specific person, but only the person themselves can decrypt it.\n"
 "\n"
 "You can also sign a message with your private key, and everyone can verify with your public key that the message has been signed by you. This way, it can be verified that the author of a message is the actual person they claim to be, as only they who posess the private key can make a signature with it.\n"
 "\n"
 "As everyone can create PGP keys with any name and e-mail address they like, PGP uses the so-called “Web of Trust” to verify that a key actually belongs to the person you want to communicate with. Everyone can sign someone elses key when they are sure (by meeting them in person and possibly checking their government-issued ID card) that the name and e-mail address set in the key are correct. This way, a “chain of trust” can be built: When you have signed a friend’s key and this friend has signed another person’s key, you can be pretty sure that that other person’s key can be trusted.\n"
 "\n"
-"### What is a PGP key server? ###\n"
-"\n"
-"A PGP key server is a website where people can upload their public keys. This makes it easy for people to encrypt messages they send to them, as they can search the key online, and it is not necessary for the recipient to manually send their public key to everyone they want to receive messages from. Also, a key server aggregates key signatures that people upload, which can increase the trustworthiness of keys, as a key is more trustworthy the more keys have signed it that you trust. Without a key server, this amount of trust could only be achieved by re-sending your key to everyone you have given it to every time someone new signs it. This is particularly important for so-called “revocation signatures”. When for example your laptop is stolen, there is a probability that someone has access to your private key, so it is not safe to use it anymore. When you revoke the key and upload the revocation signature to a key server, everyone who wants to send a message to you will see that it is not safe to encrypt it with that key.\n"
-"\n"
-"### What advantages does gnewpg have over other keyservers? ###\n"
-"\n"
+"A PGP key server is a website where people can upload their public keys. This makes it easy for people to encrypt messages they send to them, as they can search the key online, and it is not necessary for the recipient to manually send their public key to everyone they want to receive messages from. Also, a key server aggregates key signatures that people upload, which can increase the trustworthiness of keys, as a key is more trustworthy the more keys have signed it that you trust. Without a key server, this amount of trust could only be achieved by re-sending your key to everyone you have given it to every time someone new signs it. This is particularly important for so-called “revocation signatures”. When for example your laptop is stolen, there is a probability that someone has access to your private key, so it is not safe to use it anymore. When you revoke the key and upload the revocation signature to a key server, everyone who wants to send a message to you will see that it is not safe to encrypt it with that key."
+
+#: fixedStrings.tmp.js:38
+msgid "[FAQ_3_TITLE]"
+msgstr "What is a PGP key server?"
+
+#: fixedStrings.tmp.js:39
+msgid "[FAQ_4]"
+msgstr "In order to use the gnewpg key server, you have to configure your PGP client to trust the [CAcert root certificate](http://www.cacert.org/certs/root.crt). See [CAcert’s manual](http://wiki.cacert.org/FAQ/ImportRootCert) on how to do this. Alternatively, you might disable encryption by replacing `hkps://` with `hkp://` in the keyserver URL. Note that this is **insecure**, as other people might spoof your keyring, especially if you are on a wireless connection."
+
+#: fixedStrings.tmp.js:40
+msgid "[FAQ_4_TITLE]"
+msgstr "Common problems configuring the keyserver"
+
+#: fixedStrings.tmp.js:41
+msgid "[FAQ_5]"
+msgstr ""
 "#### Key privacy settings ####\n"
 "\n"
 "On a traditional key server, everyone can upload any key they like, including all signatures on that key. Some people don’t like it when everyone can see who has signed their key, as this might reveal sensitive information about social connections. This has the effect that among people where privacy is important, key servers are often not used, which decreases security as it gets more difficult to spread new signatures, which is particularly important for revocation signatures. On gnewpg, newly uploaded keys are automatically marked as private, which means that only people who already posess the key will be able to receive new signatures for it. People can prove that they posess a key by uploading it. The privacy settings of a key can be changed by its verified owner.\n"
@@ -201,17 +208,9 @@ msgstr ""
 "\n"
 "You can create groups of keys on gnewpg. Each group is accessed by a specific URL, and everyone who posesses this URL can access the group. Depending on what settings the creator of the group makes, either everyone or only specific people can add keys to the group. You can for example create a group for your organisation and give its URL to all members. This way, all members of your organisation can see the keys of all other members, without those keys having to be visible to the whole world."
 
-#: fixedStrings.tmp.js:38
-msgid "[FAQ_3_TITLE]"
-msgstr "What is gnewpg?"
-
-#: fixedStrings.tmp.js:39
-msgid "[FAQ_4]"
-msgstr "In order to use the gnewpg key server, you have to configure your PGP client to trust the [CAcert root certificate](http://www.cacert.org/certs/root.crt). See [CAcert’s manual](http://wiki.cacert.org/FAQ/ImportRootCert) on how to do this. Alternatively, you might disable encryption by replacing `hkps://` with `hkp://` in the keyserver URL. Note that this is **insecure**, as other people might spoof your keyring, especially if you are on a wireless connection."
-
-#: fixedStrings.tmp.js:40
-msgid "[FAQ_4_TITLE]"
-msgstr "Common problems configuring the keyserver"
+#: fixedStrings.tmp.js:42
+msgid "[FAQ_5_TITLE]"
+msgstr "What advantages does gnewpg have over other keyservers?"
 
 #: ../i18n.js:17
 msgid "isoUtcDateTime"
@@ -336,37 +335,41 @@ msgstr "Unknown token."
 msgid "You are about to verify yourself as the owner of the key %s. An encrypted e-mail will be sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to verify that the key belongs to you."
 msgstr "You are about to verify yourself as the owner of the key %s. An encrypted e-mail will be sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to verify that the key belongs to you."
 
-#: ../web/index.soy:15
-#, python-format
-msgid "Configure your local PGP application to use gnewpg as a keyserver. Your individual keyserver URL is %s, it is connected to your user account and you should keep it secret."
-msgstr "Configure your local PGP application to use gnewpg as a keyserver. Your individual keyserver URL is %s, it is connected to your user account and you should keep it secret."
+#: ../web/index.soy:12
+msgid "gnewpg is a PGP key server that aims to make PGP more secure."
+msgstr "gnewpg is a PGP key server that aims to make PGP more secure."
 
-#: ../web/index.soy:30
-#, python-format
-msgid "Configure your local PGP application to use gnewpg as a keyserver. The public keyserver URL is %s. Log in to get an individual key server URL that keeps track of your uploaded keys."
-msgstr "Configure your local PGP application to use gnewpg as a keyserver. The public keyserver URL is %s. Log in to get an individual key server URL that keeps track of your uploaded keys."
-
-#: ../web/index.soy:35
+#: ../web/index.soy:16
 msgid "Search for a key"
 msgstr "Search for a key"
 
-#: ../web/index.soy:43
+#: ../web/index.soy:24
 #: ../web/upload.soy:11
 msgid "Upload a key"
 msgstr "Upload a key"
 
-#: ../web/index.soy:44
+#: ../web/index.soy:25
 msgid "To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it."
 msgstr "To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it."
 
-#: ../web/index.soy:51
+#: ../web/index.soy:32
 #: ../web/keyring.soy:9
 msgid "Your keyring"
 msgstr "Your keyring"
 
-#: ../web/index.soy:56
-msgid "Account settings"
-msgstr "Account settings"
+#: ../web/index.soy:37
+msgid "Groups"
+msgstr "Groups"
+
+#: ../web/index.soy:45
+#, python-format
+msgid "Configure your local PGP application to use gnewpg as a keyserver. Your individual keyserver URL is %s, it is connected to your user account and you should keep it secret."
+msgstr "Configure your local PGP application to use gnewpg as a keyserver. Your individual keyserver URL is %s, it is connected to your user account and you should keep it secret."
+
+#: ../web/index.soy:60
+#, python-format
+msgid "Configure your local PGP application to use gnewpg as a keyserver. The public keyserver URL is %s. Log in to get an individual key server URL that keeps track of your uploaded keys."
+msgstr "Configure your local PGP application to use gnewpg as a keyserver. The public keyserver URL is %s. Log in to get an individual key server URL that keeps track of your uploaded keys."
 
 #: ../web/keyring.soy:12
 msgid "Your keyring is empty."
@@ -732,7 +735,7 @@ msgid "OpenID"
 msgstr "OpenID"
 
 #: ../web/register.soy:12
-#: ../web/ui.soy:49
+#: ../web/ui.soy:54
 msgid "Register"
 msgstr "Register"
 
@@ -787,20 +790,24 @@ msgstr "None"
 msgid "Language"
 msgstr "Language"
 
-#: ../web/ui.soy:47
+#: ../web/ui.soy:50
+msgid "Account settings"
+msgstr "Account settings"
+
+#: ../web/ui.soy:50
 #, python-format
 msgid "Logged in as %s"
 msgstr "Logged in as %s"
 
-#: ../web/ui.soy:49
+#: ../web/ui.soy:54
 msgid "Not logged in."
 msgstr "Not logged in."
 
-#: ../web/ui.soy:109
+#: ../web/ui.soy:115
 msgid "PGP ASCII-armored format (.asc)"
 msgstr "PGP ASCII-armored format (.asc)"
 
-#: ../web/ui.soy:110
+#: ../web/ui.soy:116
 msgid "PGP binary format (.bexpk)"
 msgstr "PGP binary format (.bexpk)"
 

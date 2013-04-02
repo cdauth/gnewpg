@@ -38,15 +38,15 @@
 		<script src="{$ij.config.baseurl}/static/scripts.js"></script>
 		<div class="container">
 		<div class="row">
-			<div class="span3">
+			<div class="span6">
 				<h1><a href="{$ij.config.baseurl}/"><img src="{$ij.config.baseurl}/static/logo.svg" alt="gnewpg" style="width:3.7em;" /></a></h1>
-			</div>
-			<div class="span3">
-				{call gnewpg.ui.faq}{param no:3 /}{param showTitle:true /}{param noPopup:true /}{/call}
 			</div>
 			<div id="login-bar" class="span6 text-right">
 {if $ij.req.session.user}
-				<form action="{$ij.config.baseurl}/logout{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" method="post" class="logout form-inline">{_('Logged in as %s', '<strong class="username">'+$ij.req.session.user.id+'</strong>')|noAutoescape}. <input type="submit" value="{_('Logout')}" class="btn" /></form>
+				<form action="{$ij.config.baseurl}/logout{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" method="post" class="logout form-inline">
+					{_('Logged in as %s', '<a href="'+$ij.config.baseurl+'/settings" title="'+_('Account settings')+'"><strong class="username">'+$ij.req.session.user.id+'</strong></a>')|noAutoescape}.{sp}
+					<input type="submit" value="{_('Logout')}" class="btn" />
+				</form>
 {else}
 				{_('Not logged in.')} <a href="{$ij.config.baseurl}/login{if $login_noreferer != true}?referer={$ij.req.url|escapeUri}{/if}" class="login btn">Login</a> <a href="{$ij.config.baseurl}/register" class="register btn">{_('Register')}</a>
 {/if}

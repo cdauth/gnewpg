@@ -4,14 +4,14 @@
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #: ../web/faq.soy:9 ../web/key.soy:92 ../web/key.soy:170 ../web/key.soy:264
-#: ../web/key.soy:282 ../web/key.soy:302 ../web/ui.soy:101 ../web/ui.soy:130
+#: ../web/key.soy:282 ../web/key.soy:302 ../web/ui.soy:107 ../web/ui.soy:136
 #: ../web/upload.soy:99
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-31 00:16+0100\n"
+"POT-Creation-Date: 2013-04-02 15:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -181,6 +181,14 @@ msgstr ""
 msgid "[FAQ_4_TITLE]"
 msgstr ""
 
+#: fixedStrings.tmp.js:41
+msgid "[FAQ_5]"
+msgstr ""
+
+#: fixedStrings.tmp.js:42
+msgid "[FAQ_5_TITLE]"
+msgstr ""
+
 #: ../i18n.js:17
 msgid "isoUtcDateTime"
 msgstr ""
@@ -299,7 +307,33 @@ msgid ""
 "confirmation link in that e-mail to verify that the key belongs to you."
 msgstr ""
 
-#: ../web/index.soy:15
+#: ../web/index.soy:12
+msgid "gnewpg is a PGP key server that aims to make PGP more secure."
+msgstr ""
+
+#: ../web/index.soy:16
+msgid "Search for a key"
+msgstr ""
+
+#: ../web/index.soy:24 ../web/upload.soy:11
+msgid "Upload a key"
+msgstr ""
+
+#: ../web/index.soy:25
+msgid ""
+"To receive new signatures for a key that is not publicly searchable, upload "
+"the public key to prove that you posess it."
+msgstr ""
+
+#: ../web/index.soy:32 ../web/keyring.soy:9
+msgid "Your keyring"
+msgstr ""
+
+#: ../web/index.soy:37
+msgid "Groups"
+msgstr ""
+
+#: ../web/index.soy:45
 #, python-format
 msgid ""
 "Configure your local PGP application to use gnewpg as a keyserver. Your "
@@ -307,34 +341,12 @@ msgid ""
 "should keep it secret."
 msgstr ""
 
-#: ../web/index.soy:30
+#: ../web/index.soy:60
 #, python-format
 msgid ""
 "Configure your local PGP application to use gnewpg as a keyserver. The "
 "public keyserver URL is %s. Log in to get an individual key server URL that "
 "keeps track of your uploaded keys."
-msgstr ""
-
-#: ../web/index.soy:35
-msgid "Search for a key"
-msgstr ""
-
-#: ../web/index.soy:43 ../web/upload.soy:11
-msgid "Upload a key"
-msgstr ""
-
-#: ../web/index.soy:44
-msgid ""
-"To receive new signatures for a key that is not publicly searchable, upload "
-"the public key to prove that you posess it."
-msgstr ""
-
-#: ../web/index.soy:51 ../web/keyring.soy:9
-msgid "Your keyring"
-msgstr ""
-
-#: ../web/index.soy:56
-msgid "Account settings"
 msgstr ""
 
 #: ../web/keyring.soy:12
@@ -685,7 +697,7 @@ msgstr ""
 msgid "OpenID"
 msgstr ""
 
-#: ../web/register.soy:12 ../web/ui.soy:49
+#: ../web/register.soy:12 ../web/ui.soy:54
 msgid "Register"
 msgstr ""
 
@@ -738,20 +750,24 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-#: ../web/ui.soy:47
+#: ../web/ui.soy:50
+msgid "Account settings"
+msgstr ""
+
+#: ../web/ui.soy:50
 #, python-format
 msgid "Logged in as %s"
 msgstr ""
 
-#: ../web/ui.soy:49
+#: ../web/ui.soy:54
 msgid "Not logged in."
 msgstr ""
 
-#: ../web/ui.soy:109
+#: ../web/ui.soy:115
 msgid "PGP ASCII-armored format (.asc)"
 msgstr ""
 
-#: ../web/ui.soy:110
+#: ../web/ui.soy:116
 msgid "PGP binary format (.bexpk)"
 msgstr ""
 

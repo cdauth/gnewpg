@@ -13,3 +13,5 @@
 .identityList li { font-size:1.3em; line-height:2em; }
 
 .popover { max-width:none; }
+
+body { padding-top:0.7em; }
