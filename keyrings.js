@@ -470,9 +470,29 @@ pgp.utils.extend(GroupKeyring.prototype, {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+function getKeyring(cl) {
+	var args = pgp.utils.toProperArray(arguments).slice(1);
+	var callback = args.pop();
+
+	db.getConnection(function(err, con) {
+		if(err)
+			return callback(err);
+
+		var cl2 = cl.bind.apply(cl, [ null, con ].concat(args));
+		callback(null, new cl2());
+	});
+}
+
 exports.UnfilteredKeyring = UnfilteredKeyring;
 exports.AnonymousKeyring = AnonymousKeyring;
 exports.SearchEngineKeyring = SearchEngineKeyring;
 exports.TemporaryUploadKeyring = TemporaryUploadKeyring;
 exports.UserKeyring = UserKeyring;
 exports.GroupKeyring = GroupKeyring;
+
+exports.getUnfilteredKeyring = getKeyring.bind(null, UnfilteredKeyring);
+exports.getAnonymousKeyring = getKeyring.bind(null, AnonymousKeyring);
+exports.getSearchEngineKeyring = getKeyring.bind(null, SearchEngineKeyring);
+exports.getTemporaryUploadKeyring = getKeyring.bind(null, TemporaryUploadKeyring);
+exports.getUserKeyring = getKeyring.bind(null, UserKeyring);
+exports.getGroupKeyring = getKeyring.bind(null, GroupKeyring);
