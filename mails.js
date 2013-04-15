@@ -93,8 +93,6 @@ function cleanInactiveTokens() {
 	con.query('DELETE FROM "users_ownership_verification" WHERE $1 - "date" > $2', [ new Date(), config.tokenTimeout ], function(err) {
 		if(err)
 			console.warn("Error cleaning inactive tokens", err);
-
-		con.end();
 	});
 }
 

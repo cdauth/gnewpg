@@ -20,7 +20,7 @@ function initialise(callback) {
 						return callback(err);
 
 					pgKeyringStructure._createStructure(con, queries, function(err) {
-						con.end();
+						con.done();
 						next(err);
 					});
 				});
@@ -42,7 +42,7 @@ function middleware(req, res, next) {
 
 		var endBkp = res.end;
 		res.end = function() {
-			con.end();
+			con.done();
 
 			endBkp.apply(this, arguments);
 		};
