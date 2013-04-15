@@ -51,7 +51,9 @@ pgp.utils.extend(FilteredKeyring.prototype, {
 
 	getKeys : __filterGetMultiple("getKeys", "_maySeeKey", 0),
 	getIdentities : __filterGetMultiple("getIdentities", "_maySeeIdentity", 1),
+	getSelfSignedIdentities : __filterGetMultiple("getSelfSignedIdentities", "_maySeeIdentity", 1),
 	getAttributes : __filterGetMultiple("getAttributes", "_maySeeAttribute", 1),
+	getSelfSignedAttributes : __filterGetMultiple("getSelfSignedAttributes", "_maySeeAttribute", 1),
 
 	keyExists : __filterExists("keyExists", "_maySeeKey", 1),
 	identityExists : __filterExists("identityExists", "_maySeeIdentity", 2),
@@ -59,7 +61,9 @@ pgp.utils.extend(FilteredKeyring.prototype, {
 
 	getKey : __filterGetSingle("getKey", "_maySeeKey", 1),
 	getIdentity : __filterGetSingle("getIdentity", "_maySeeIdentity", 2),
+	getSelfSignedIdentity : __filterGetSingle("getSelfSignedIdentity", "_maySeeIdentity", 2),
 	getAttribute : __filterGetSingle("getAttribute", "_maySeeAttribute", 2),
+	getSelfSignedAttribute : __filterGetSingle("getSelfSignedAttribute", "_maySeeAttribute", 2),
 
 	addKey : __filterAdd("addKey", "_onAddKey", 1),
 	addIdentity : __filterAdd("addIdentity", "_onAddIdentity", 2),
