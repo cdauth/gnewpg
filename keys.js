@@ -50,7 +50,7 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 							return next(err);
 
 						if(detailed >= 1)
-							handleSignatures(subkeyInfo, keyring.getSubkeySignatures(keyId, subkeyInfo.id), next);
+							handleSignatures(subkeyInfo, keyring.getSubkeySignatures(keyId, subkeyInfo.id, null, signatureFields), next);
 						else
 							next();
 					});
@@ -65,7 +65,7 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 							return next(err);
 
 						if(detailed >= 1)
-							handleSignatures(identityInfo, keyring.getIdentitySignatures(keyId, identityInfo.id), next);
+							handleSignatures(identityInfo, keyring.getIdentitySignatures(keyId, identityInfo.id, null, signatureFields), next);
 						else
 							next();
 					});
@@ -80,7 +80,7 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 							return next(err);
 
 						if(detailed >= 1)
-							handleSignatures(attributeInfo, keyring.getAttributeSignatures(keyId, attributeInfo.id), next);
+							handleSignatures(attributeInfo, keyring.getAttributeSignatures(keyId, attributeInfo.id, null, signatureFields), next);
 						else
 							next();
 					});
