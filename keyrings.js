@@ -66,8 +66,22 @@ pgp.utils.extend(FilteredKeyring.prototype, {
 	getSelfSignedAttribute : __filterGetSingle("getSelfSignedAttribute", "_maySeeAttribute", 2),
 
 	addKey : __filterAdd("addKey", "_onAddKey", 1),
+	addSubkey : __unfiltered("addSubkey"),
 	addIdentity : __filterAdd("addIdentity", "_onAddIdentity", 2),
 	addAttribute : __filterAdd("addAttribute", "_onAddAttribute", 2),
+	addKeySignature : __unfiltered("addKeySignature"),
+	addSubkeySignature : __unfiltered("addSubkeySignature"),
+	addIdentitySignature : __unfiltered("addIdentitySignature"),
+	addAttributeSignature : __unfiltered("addAttributeSignature"),
+
+	removeKey : __unfiltered("removeKey"),
+	removeSubkey : __unfiltered("removeSubkey"),
+	removeIdentity : __unfiltered("removeIdentity"),
+	removeAttribute : __unfiltered("removeAttribute"),
+	removeKeySignature : __unfiltered("removeKeySignature"),
+	removeSubkeySignature : __unfiltered("removeSubkeySignature"),
+	removeIdentitySignature : __unfiltered("removeIdentitySignature"),
+	removeAttributeSignature : __unfiltered("removeAttributeSignature"),
 
 	searchIdentities : function(searchString) {
 		var ret = FilteredKeyring.super_.prototype.searchIdentities.apply(this, arguments);
@@ -145,15 +159,13 @@ function __filterExists(existsFuncName, mayFuncName, argNo) {
 	return function() {
 		var t = this;
 		var args = pgp.utils.toProperArray(arguments);
-		var _isTryingToAdd = args[argNo+1]; // Hack: If the exists function is called from the add() function to prevent
-		                                    // duplicate addition, we ignore our restrictions
 
 		FilteredKeyring.super_.prototype[existsFuncName].apply(t, args.slice(0, argNo).concat([ function(err, exists) {
-			if(err || !exists || _isTryingToAdd)
+			if(err || !exists)
 				return args[argNo](err, exists);
 
 			t[mayFuncName].apply(t, args);
-		}]), _isTryingToAdd);
+		}], args[argNo+1]));
 	};
 }
 
@@ -183,13 +195,24 @@ function __filterAdd(addFuncName, handlerFuncName, argNo) {
 		var t = this;
 		var args = pgp.utils.toProperArray(arguments);
 
-		FilteredKeyring.super_.prototype[addFuncName].apply(this, args.slice(0, argNo).concat([ function(err) {
+		__unfiltered(addFuncName).apply(t, args.slice(0, argNo).concat([ function(err) {
 			if(err)
 				return args[argNo](err);
 
 			t[handlerFuncName].apply(t, args);
 		}]));
 	}
+}
+
+function __unfiltered(funcName) {
+	// Applying on unfiltered keyring for two reasons:
+	// 1. So that the *Exists functions return correct unfiltered values and no duplicates are added to the database
+	// 2. So that signature issuers can be fetched for signature verification
+
+	return function() {
+		var unfilteredKeyring = new UnfilteredKeyring(this._con);
+		unfilteredKeyring[funcName].apply(unfilteredKeyring, arguments);
+	};
 }
 
 ///////////////////////////////////////////////////////////////////////////////
