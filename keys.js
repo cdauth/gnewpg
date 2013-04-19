@@ -247,17 +247,29 @@ function trustKeys(callback) {
 		if(err)
 			return callback(err);
 
-		async.forEachSeries(config.trustedKeys, function(it, next) {
-			keyring.trustKey(it, next);
+		db.fifoQuery(keyring._con, 'SELECT "key" FROM "ownertrust" WHERE array_length("keyPath", 1) IS NULL').forEachSeries(function(trustRecord, next) {
+			if(config.trustedKeys.indexOf(trustRecord.key) == -1)
+				keyring.untrustKey(trustRecord.key, next);
+			else
+				next();
 		}, function(err) {
 			if(err) {
 				keyring.done();
 				return callback(err);
 			}
 
-			keyring.saveChanges(function(err) {
-				keyring.done();
-				callback(err);
+			async.forEachSeries(config.trustedKeys, function(it, next) {
+				keyring.trustKey(it, next);
+			}, function(err) {
+				if(err) {
+					keyring.done();
+					return callback(err);
+				}
+
+				keyring.saveChanges(function(err) {
+					keyring.done();
+					callback(err);
+				});
 			});
 		});
 	});
