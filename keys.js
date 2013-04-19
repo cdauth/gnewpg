@@ -3,13 +3,16 @@ var db = require("./database");
 var async = require("async");
 var i18n = require("./i18n");
 var utils = require("./utils");
+var keyrings = require("./keyrings");
+var config = require("./config");
 
 function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 	var keyFields = [ "id", "fingerprint", "security", "date", "expires", "revoked" ].concat(detailed == 2 ? [ "versionSecurity", "version", "pkalgo", "sizeSecurity", "size" ] : [ ]);
 	var signatureFields = [ "id", "expires", "revoked", "security", "sigtype", "verified", "issuer", "date" ].concat(detailed == 2 ? [ "version", "hashalgoSecurity", "hashalgo", "hashedSubPackets" ] : [ ]);
 	var subkeyFields = [ "id", "revoked", "expires", "security" ].concat(detailed == 2 ? [ "versionSecurity", "version", "sizeSecurity", "size", "pkalgo" ] : [ ]);
-	var identityFields = [ "id", "name", "email", "comment", "revoked", "expires", "security" ];
-	var attributeFields = [ "id", "revoked", "expires", "subPackets" ];
+	var identityFields = [ "id", "name", "email", "comment", "revoked", "expires", "security", "nameTrust", "emailTrust" ];
+	var primaryIdentityFields = [ "id", "name", "email", "comment", "nameTrust", "emailTrust" ];
+	var attributeFields = [ "id", "revoked", "expires", "subPackets", "trust" ];
 
 	keyring.getKey(keyId, function(err, keyInfo) {
 		if(err)
@@ -28,9 +31,9 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 					if(err)
 						return next(err);
 
-					keyInfo.primary_identity = identityInfo ? identityInfo.id : null;
+					keyInfo.primary_identity = identityInfo;
 					next();
-				}, [ "id" ]);
+				}, primaryIdentityFields);
 			},
 			function(next) {
 				resolveRevokedBy(keyInfo, next);
@@ -123,9 +126,9 @@ function getKeyWithSubobjects(keyring, keyId, detailed, callback) {
 				if(err || identityInfo == null)
 					return callback(err);
 
-				keyInfo.primary_identity = identityInfo.id;
+				keyInfo.primary_identity = identityInfo;
 				callback();
-			}, [ "id" ]);
+			}, primaryIdentityFields);
 		}, [ "revoked", "expires" ])
 	}
 	
@@ -155,7 +158,7 @@ function resolveKeyList(keyring, list) {
 			keyInfo.expired = (keyInfo.expires && keyInfo.expires.getTime() <= (new Date()).getTime());
 
 			keyring.getPrimaryIdentity(keyId, function(err, identityInfo) {
-				keyInfo.primary_identity = identityInfo ? identityInfo.id : null;
+				keyInfo.primary_identity = identityInfo;
 
 				/*getKeySettings(keyring._con, keyId, function(err, keySettings) {
 					if(err)
@@ -165,7 +168,7 @@ function resolveKeyList(keyring, list) {
 
 					cb(null, keyInfo);
 				/*});*/
-			}, [ "id" ]);
+			}, [ "id", "name", "email", "comment", "nameTrust", "emailTrust" ]);
 		}, [ "id", "revoked", "expires" ]);
 	});
 }
@@ -239,6 +242,27 @@ function updateAttributeSettings(con, keyId, attributeId, fields, callback) {
 	});
 }
 
+function trustKeys(callback) {
+	keyrings.getUnfilteredKeyring(function(err, keyring) {
+		if(err)
+			return callback(err);
+
+		async.forEachSeries(config.trustedKeys, function(it, next) {
+			keyring.trustKey(it, next);
+		}, function(err) {
+			if(err) {
+				keyring.done();
+				return callback(err);
+			}
+
+			keyring.saveChanges(function(err) {
+				keyring.done();
+				callback(err);
+			});
+		});
+	});
+}
+
 exports.getKeyWithSubobjects = getKeyWithSubobjects;
 exports.resolveKeyList = resolveKeyList;
 exports.getKeysOfUser = getKeysOfUser;
@@ -248,3 +272,4 @@ exports.getIdentitySettings = getIdentitySettings;
 exports.updateIdentitySettings = updateIdentitySettings;
 exports.getAttributeSettings = getAttributeSettings;
 exports.updateAttributeSettings = updateAttributeSettings;
+exports.trustKeys = trustKeys;

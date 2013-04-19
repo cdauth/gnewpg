@@ -132,3 +132,67 @@
 {template .security}
 <span class="security security-{$security}"{if $content or $title != null} title="{if $title != null}{$title}{else}{_(''+'[SECURITY_'+$security+']')}{/if}"{/if}>{if $content}{$content|noAutoescape}{else}{_(''+'[SECURITY_'+$security+']')}{/if}</span>
 {/template}
+
+/**
+ * @param trust
+ * @param content
+ * @param title
+*/
+{template .trustSecurity}
+{let $security}{if $trust >= 1.0}3{elseif $trust >= 0.25}2{else}1{/if}{/let}
+{call .security}
+	{param security:$security/}
+	{param content:$content/}
+	{param title:$title/}
+{/call}
+{/template}
+
+/**
+ * @param identity
+*/
+{template .identity}
+{let $nameTitle}
+	{if $identity.nameTrust >= 1.0}{_('%s is the verified owner of this key.', $identity.name)|noAutoescape}
+	{elseif $identity.nameTrust >= 0.25}{_('It is not quite sure whether a person called %s is the owner of this key.', $identity.name)|noAutoescape}
+	{else}{_('It is unknown whether this key belongs to a person called %s.', $identity.name)|noAutoescape}{/if}
+{/let}
+{let $emailTitle}
+	{if $identity.emailTrust >= 1.0}{_('It is verified that the owner of this key owns the e-mail address %s.', $identity.email)|noAutoescape}
+	{elseif $identity.emailTrust >= 0.25}{_('It is not quite sure whether the owner of this key owns the e-mail address %s.', $identity.email)|noAutoescape}
+	{else}{_('It is unverified whether the owner of this key owns the e-mail address %s.', $identity.email)|noAutoescape}{/if}
+{/let}
+{call .trustSecurity}
+	{param trust:$identity.nameTrust/}
+	{param title:$nameTitle/}
+	{param content}{$identity.name}{/param}
+{/call}
+{if $identity.email}
+	{sp}&lt;
+	{call .trustSecurity}
+		{param trust:$identity.emailTrust/}
+		{param title:$emailTitle/}
+		{param content}{$identity.email}{/param}
+	{/call}
+	&gt;
+{/if}
+{if $identity.comment}
+	{sp}({$identity.comment})
+{/if}
+{/template}
+
+/**
+ * @param attribute
+ * @param content
+*/
+{template .attribute}
+{let $title}
+	{if $attribute.trust >= 1.0}{_('It is verified that this picture shows the owner of this key.')|noAutoescape}
+	{elseif $attribute.trust >= 0.25}{_('It is not quite sure whether this picture shows the owner of this key.')|noAutoescape}
+	{else}{_('It is unknown whether this picture shows the owner of this key.')|noAutoescape}{/if}
+{/let}
+{call .trustSecurity}
+	{param trust:$attribute.trust/}
+	{param title:$title/}
+	{param content:$content/}
+{/call}
+{/template}

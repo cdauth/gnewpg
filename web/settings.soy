@@ -58,7 +58,7 @@
 			<select id="i-mainkey" name="mainkey">
 				<option value=""{if not $settings.mainkey} selected="selected"{/if}>{_('None')}</option>
 			{foreach $key in $ownKeys}
-				<option value="{$key.id}"{if $key.id == $settings.mainkey} selected="selected"{/if}>{formatKeyId($key.id)}{if $key.primary_identity} ({$key.primary_identity}){/if}</option>
+				<option value="{$key.id}"{if $key.id == $settings.mainkey} selected="selected"{/if}>{formatKeyId($key.id)}{if $key.primary_identity} ({$key.primary_identity.id}){/if}</option>
 			{/foreach}
 			</select>
 		</div>

@@ -11,7 +11,7 @@
 {template .key}
 	{call gnewpg.ui.html}
 		{param searchengines: $searchengines /}
-		{param title:$keyDetails and $keyDetails.primary_identity ? _('Key %s (%s)', formatKeyId($keyId), $keyDetails.primary_identity) : _('Key %s', $keyId) /}
+		{param title:$keyDetails and $keyDetails.primary_identity ? _('Key %s (%s)', formatKeyId($keyId), $keyDetails.primary_identity.id) : _('Key %s', $keyId) /}
 		{param content}
 			{if $keyDetails == null}
 {call gnewpg.ui.error}{param message:_('Key %s not found.', $keyId)/}{/call}
@@ -27,7 +27,7 @@
 		<li>
 			<div class="thumbnail">
 				<img src="{$picture.src|noAutoescape}" alt="" style="width:{$picture.width}px; height:{$picture.height}px;" />
-				<p class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}">{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether this key really belongs to the person shown on this picture.', 'unknown')/}{param content}{_('Picture #%d', $picture.idx)}{/param}{/call}</p>
+				<p class="{if $picture.attr.expired}expired{/if} {if $picture.attr.revoked}revoked{/if}">{call gnewpg.ui.attribute}{param attribute:$picture.attr/}{param content}{_('Picture #%d', $picture.idx)}{/param}{/call}</p>
 			</div>
 		</li>
 					{/foreach}
@@ -100,15 +100,9 @@
 	<ul class="unstyled identityList">
 					{foreach $identity in $keyDetails.identities}
 		<li>
-			{if $identity.id == $keyDetails.primary_identity}<strong>{/if}
-			{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether this key really belongs to a person called %s.', _('unknown'), $identity.name)/}{param content}{$identity.name}{/param}{/call}
-			{if $identity.email}
-				{sp}&lt;{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether the owner of this key really owns the e-mail address %s.', _('unknown'), $identity.email)/}{param content}{$identity.email}{/param}{/call}&gt;
-			{/if}
-			{if $identity.comment}
-				{sp}({$identity.comment})
-			{/if}
-			{if $identity.id == $keyDetails.primary_identity}</strong>{/if}
+			{if $identity.id == $keyDetails.primary_identity.id}<strong>{/if}
+			{call gnewpg.ui.identity}{param identity:$identity/}{/call}
+			{if $identity.id == $keyDetails.primary_identity.id}</strong>{/if}
 		</li>
 					{/foreach}
 	</ul>
@@ -190,16 +184,7 @@
 					{if $details == 2}
 			<td class="c-checkbox"><input type="checkbox" name="identities" value="{$identity.id}" checked="checked" /></td>
 					{/if}
-			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $identity.revoked} revoked{/if}{if $identity.expired} expired{/if}"><h4>
-				{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether this key really belongs to a person called %s.', _('unknown'), $identity.name)/}{param content}{$identity.name}{/param}{/call}
-				{if $identity.email}
-					{sp}&lt;{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether the owner of this key really owns the e-mail address %s.', _('unknown'), $identity.email)/}{param content}{$identity.email}{/param}{/call}&gt;
-				{/if}
-				{if $identity.comment}
-					{sp}({$identity.comment})
-				{/if}
-				{if $identity.id == $keyDetails.primary_identity} <small>({_('primary')})</small>{/if}
-			</h4></td>
+			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $identity.revoked} revoked{/if}{if $identity.expired} expired{/if}"><h4>{call gnewpg.ui.identity}{param identity:$identity/}{/call}{if $identity.id == $keyDetails.primary_identity.id} <small>({_('primary')})</small>{/if}</h4></td>
 		</tr>
 		{call .signatures}{param sigs:$identity.signatures/}{param details:$details/}{/call}
 				{/foreach}
@@ -219,7 +204,7 @@
 					{if $details == 2}
 			<td class="c-checkbox"><input type="checkbox" name="attributes" value="{$attribute.id}" checked="checked" /></td>
 					{/if}
-			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $attribute.revoked} revoked{/if}{if $attribute.expired} expired{/if}"><h4>{call gnewpg.ui.security}{param security:1/}{param title:_('It is %s whether this key really belongs to the person shown on this picture.', 'unknown')/}{param content}{_('Attribute')}{/param}{/call}{if $attribute.pictures} <small>({_('picture')} {$attribute.pictures})</small>{/if}</h4></td>
+			<td colspan="{if $details == 2}6{else}5{/if}" class="c-object{if $attribute.revoked} revoked{/if}{if $attribute.expired} expired{/if}"><h4>{call gnewpg.ui.attribute}{param attribute:$attribute/}{param content}{_('Attribute')}{/param}{/call}{if $attribute.pictures} <small>({_('picture')} {$attribute.pictures})</small>{/if}</h4></td>
 		</tr>
 		{call .signatures}{param sigs:$attribute.signatures/}{param details:$details/}{/call}
 				{/foreach}
@@ -264,9 +249,9 @@
 	<td class="c-signature{if $sig.revoked} revoked{/if}{if $sig.expired} expired{/if}">{call gnewpg.ui.security}{param security:$sig.security/}{param content}{_(''+'[SIG_'+$sig.sigtype+']')}{/param}{/call}</td>
 	<td class="c-issuer{if $sig.issuerRecord and $sig.issuerRecord.revoked} revoked{/if}{if $sig.issuerRecord and $sig.issuerRecord.expired} expired{/if}">
 	{if $sig.verified == false}
-		{call gnewpg.ui.security}{param security:-1/}{param content}<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}</a>{if $sig.issuerRecord and $sig.issuerRecord.primary_identity}<br />({$sig.issuerRecord.primary_identity}){/if}<br /><strong>({_('unverified')})</strong>{/param}{/call}
+		{call gnewpg.ui.security}{param security:-1/}{param content}<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}</a>{if $sig.issuerRecord and $sig.issuerRecord.primary_identity}<br />({call gnewpg.ui.identity}{param identity:$sig.issuerRecord.primary_identity/}{/call}){/if}<br /><strong>({_('unverified')})</strong>{/param}{/call}
 	{else}
-		<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}</a><br />{if $sig.issuerRecord and $sig.issuerRecord.primary_identity} ({$sig.issuerRecord.primary_identity}){/if}
+		<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}</a><br />{if $sig.issuerRecord and $sig.issuerRecord.primary_identity} ({call gnewpg.ui.identity}{param identity:$sig.issuerRecord.primary_identity/}{/call}){/if}
 	{/if}
 	</td>
 	<td class="c-date">{_($sig.date)}</td>
@@ -316,10 +301,10 @@
 	{_('by')}{sp}
 	<span class="{if $sig.issuerRecord and $sig.issuerRecord.revoked} revoked{/if}{if $sig.issuerRecord and $sig.issuerRecord.expired} expired{/if}">
 	{if $sig.verified == false}
-		{call gnewpg.ui.security}{param security:-1/}{param content}<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}</a>{if $sig.issuerRecord and $sig.issuerRecord.primary_identity}<br />({$sig.issuerRecord.primary_identity}){/if}
+		{call gnewpg.ui.security}{param security:-1/}{param content}<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}</a>{if $sig.issuerRecord and $sig.issuerRecord.primary_identity}<br />({call gnewpg.ui.identity}{param identity:$sig.issuerRecord.primary_identity/}{/call}){/if}
 		</span><br /><strong>({_('unverified')})</strong>{/param}{/call}
 	{else}
-		<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}</a>{if $sig.issuerRecord and $sig.issuerRecord.primary_identity}<br />({$sig.issuerRecord.primary_identity}){/if}
+		<a href="{$sig.issuer}">{formatKeyId($sig.issuer)}</a>{if $sig.issuerRecord and $sig.issuerRecord.primary_identity}<br />({call gnewpg.ui.identity}{param identity:$sig.issuerRecord.primary_identity/}{/call}){/if}
 		</span>
 	{/if}
 {/template}

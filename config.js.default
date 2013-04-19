@@ -91,7 +91,12 @@ module.exports = {
 	 * unique for each user account, so each user has a personal HKP server reachable under a secret
 	 * URL.
 	*/
-	"personalHkpHostname" : "%s.keyserver.gnewpg.org"
+	"personalHkpHostname" : "%s.keyserver.gnewpg.org",
+
+	/**
+	 * Signatues (including trust signatures) by these keys will be trusted.
+	*/
+	"trustedKeys" : [ "1DFA47EF9D395D02" ]
 };
 
 require("node-pgp").config.tmpDir = module.exports.tmpDir;

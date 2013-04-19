@@ -9,6 +9,7 @@ var hkp = require("node-pgp-hkp-server");
 var keyrings = require("./keyrings");
 var users = require("./users");
 var utils = require("./utils");
+var keys = require("./keys");
 
 if(!fs.existsSync(config.tmpDir))
 	fs.mkdirSync(config.tmpDir, 0700);
@@ -23,6 +24,7 @@ async.series([
 		mails.loadPrivateKey(next);
 	},
 	db.initialise,
+	keys.trustKeys,
 	webserver.startServer,
 	function(next) {
 		if(!config.hkpHostname)
