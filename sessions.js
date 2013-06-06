@@ -2,6 +2,8 @@ var db = require("./database");
 var config = require("./config");
 var keyrings = require("./keyrings");
 var users = require("./users");
+var groups = require("./groups");
+var async = require("async");
 
 var COOKIE_NAME = "gnewpg_sid";
 
@@ -82,21 +84,31 @@ function scheduleInactiveSessionCleaning() {
 }
 
 function sessionMiddleware(req, res, next) {
-	var cb = function(err, session) {
-		if(err)
-			next(err);
-		else
-		{
-			req.session = session || { };
-			req.keyring = req.session.user ? new keyrings.UserKeyring(req.dbCon, req.session.user.id) : new keyrings.TemporaryUploadKeyring(req.dbCon);
+	async.auto({
+		session : function(next) {
+			if(!req.cookies[COOKIE_NAME])
+				return next();
+
+			getSession(req.dbCon, req.cookies[COOKIE_NAME], next);
+		},
+		group : function(next) {
+			if(!req.query.groupToken)
+				return next();
+
+			groups.getGroupByToken(req.query.groupToken, next);
+		},
+		keyring : [ "session", "group", function(next, d) {
+			req.session = d.session || { };
+			if(req.session.user)
+				req.keyring = new keyrings.UserKeyring(req.dbCon, req.session.user.id);
+			else if(d.group)
+				req.keyring = new keyrings.GroupKeyring(req.dbCon, d.group.id, true);
+			else
+				req.keyring = new keyrings.TemporaryUploadKeyring(req.dbCon);
+
 			next();
-		}
-	};
-	
-	if(req.cookies[COOKIE_NAME])
-		getSession(req.dbCon, req.cookies[COOKIE_NAME], cb);
-	else
-		cb();
+		}]
+	}, next);
 }
 
 function startSession(req, res, user, persistent, callback) {

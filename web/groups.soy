@@ -1,0 +1,27 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param userGroups
+*/
+{template .groups}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title:_('Groups') /}
+		{param content}
+<p>{call gnewpg.ui.faq}{param no:6 /}{param showTitle:true /}{/call}</p>
+			{if $userGroups.length == 0}
+<p><em>{_('You are not a member of any groups.')}</em></p>
+			{else}
+<p>{_('You are a member of the following groups:')}</p>
+<ul>
+				{foreach $userGroup in $userGroups}
+	<li><a href="group/{$userGroup.id}">{$userGroup.title}</a></li>
+				{/foreach}
+</ul>
+			{/if}
+<form action="groups/create" method="post">
+	<p><input type="submit" value="{_('Create group')}" class="btn" /></p>
+</form>
+		{/param}
+	{/call}
+{/template}

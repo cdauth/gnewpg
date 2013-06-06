@@ -1,0 +1,58 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param group
+ * @param keys
+ * @param membership
+ * @param? error
+*/
+{template .group}
+	{call gnewpg.ui.html}
+		{param searchengines: $group and $group.perm_searchengines /}
+		{param title:$group ? $group.title : _('Group') /}
+		{param content}
+			{if $error}
+{call gnewpg.ui.error}{param message:$error/}{/call}
+			{else}
+<div class="form-inline">
+				{if $keys.length > 0}
+	{call gnewpg.ui.exportButton}{param label:_('Export the selected keys')/}{/call}
+				{/if}
+				{if $group.perm_addkeys or $membership.perm_addkeys}
+	<div class="btn-group"><a href="{$group.id}/upload" class="btn">{_('Add/remove keys')}</a></div>
+				{/if}
+				{if $membership.perm_admin}
+	<div class="btn-group"><a href="{$group.id}/settings" class="btn">{_('Group settings')}</a></div>
+				{/if}
+				{if $membership}
+	<div class="btn-group"><input value="{_('Leave this group')}" class="btn btn-danger" /></div>
+				{elseif $ij.req.session.user}
+	<div class="btn-group"><input value="{_('Join this group')}" class="btn btn-success" /></div>
+				{/if}
+</div>
+				{if $keys.length == 0}
+<p><em>{_('No keys have been added to this group yet.')}</em></p>
+				{else}
+<table class="keyring table table-condensed table-checkbox table-with-filter">
+	<thead>
+		<tr>
+			<th class="c-select">&nbsp;</th>
+			<th class="c-key">{_('Key')}</th>
+			<th class="c-userid">{_('User ID')}</th>
+		</tr>
+	</thead>
+	<tbody>
+			{foreach $key in $keys}
+		<tr class="{if $key.expired}expired{/if} {if $key.revoked}revoked{/if}">
+			<td class="c-select"><input type="checkbox" name="key" value="{$key.id}" /></td>
+			<td class="c-key"><a href="key/{$key.id}{if $ij.req.session.user == null}?groupToken={$group.token}{/if}">{formatKeyId($key.id)}</a></td>
+			<td class="c-userid">(TODO)</td>
+		</tr>
+			{/foreach}
+	</tbody>
+</table>
+				{/if}
+			{/if}
+		{/param}
+	{/call}
+{/template}

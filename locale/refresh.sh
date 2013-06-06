@@ -1,6 +1,6 @@
 cd "$(dirname "$0")"
 
-FAQNUMBER=5
+FAQNUMBER=6
 
 cat << EOF | xargs -n1 -I{} echo '_("[{}]");' >> fixedStrings.tmp.js
 SIG_16

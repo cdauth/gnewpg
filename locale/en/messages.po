@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnewpg\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-04-02 15:40+0200\n"
-"PO-Revision-Date: 2013-04-02 15:42+0100\n"
+"POT-Creation-Date: 2013-06-05 17:02+0200\n"
+"PO-Revision-Date: 2013-06-05 17:14+0100\n"
 "Last-Translator: Candid Dauth <webmaster@cdauth.de>\n"
 "Language-Team: \n"
 "Language: \n"
@@ -212,6 +212,14 @@ msgstr ""
 msgid "[FAQ_5_TITLE]"
 msgstr "What advantages does gnewpg have over other keyservers?"
 
+#: fixedStrings.tmp.js:43
+msgid "[FAQ_6]"
+msgstr "You can create groups of keys on gnewpg. Each group is accessed by a specific URL, and everyone who posesses this URL can access the group. Depending on what settings the creator of the group makes, either everyone or only specific people can add keys to the group. You can for example create a group for your organisation and give its URL to all members. This way, all members of your organisation can see the keys of all other members, without those keys having to be visible to the whole world."
+
+#: fixedStrings.tmp.js:44
+msgid "[FAQ_6_TITLE]"
+msgstr "What are groups?"
+
 #: ../i18n.js:17
 msgid "isoUtcDateTime"
 msgstr "isoUtcDateTime"
@@ -335,38 +343,52 @@ msgstr "Unknown token."
 msgid "You are about to verify yourself as the owner of the key %s. An encrypted e-mail will be sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to verify that the key belongs to you."
 msgstr "You are about to verify yourself as the owner of the key %s. An encrypted e-mail will be sent to the primary e-mail address of the key. Click the confirmation link in that e-mail to verify that the key belongs to you."
 
+#: ../web/createGroup.soy:8
+#: ../web/groups.soy:22
+msgid "Create group"
+msgstr "Create group"
+
+#: ../web/groups.soy:9
+#: ../web/index.soy:40
+msgid "Groups"
+msgstr "Groups"
+
+#: ../web/groups.soy:13
+msgid "You are not a member of any groups."
+msgstr "You are not a member of any groups."
+
+#: ../web/groups.soy:15
+msgid "You are a member of the following groups:"
+msgstr "You are a member of the following groups:"
+
 #: ../web/index.soy:12
 msgid "gnewpg is a PGP key server that aims to make PGP more secure."
 msgstr "gnewpg is a PGP key server that aims to make PGP more secure."
 
-#: ../web/index.soy:16
+#: ../web/index.soy:19
 msgid "Search for a key"
 msgstr "Search for a key"
 
-#: ../web/index.soy:24
+#: ../web/index.soy:27
 #: ../web/upload.soy:11
 msgid "Upload a key"
 msgstr "Upload a key"
 
-#: ../web/index.soy:25
+#: ../web/index.soy:28
 msgid "To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it."
 msgstr "To receive new signatures for a key that is not publicly searchable, upload the public key to prove that you posess it."
 
-#: ../web/index.soy:32
+#: ../web/index.soy:35
 #: ../web/keyring.soy:9
 msgid "Your keyring"
 msgstr "Your keyring"
 
-#: ../web/index.soy:37
-msgid "Groups"
-msgstr "Groups"
-
-#: ../web/index.soy:45
+#: ../web/index.soy:49
 #, python-format
 msgid "Configure your local PGP application to use gnewpg as a keyserver. Your individual keyserver URL is %s, it is connected to your user account and you should keep it secret."
 msgstr "Configure your local PGP application to use gnewpg as a keyserver. Your individual keyserver URL is %s, it is connected to your user account and you should keep it secret."
 
-#: ../web/index.soy:60
+#: ../web/index.soy:64
 #, python-format
 msgid "Configure your local PGP application to use gnewpg as a keyserver. The public keyserver URL is %s. Log in to get an individual key server URL that keeps track of your uploaded keys."
 msgstr "Configure your local PGP application to use gnewpg as a keyserver. The public keyserver URL is %s. Log in to get an individual key server URL that keeps track of your uploaded keys."
@@ -447,7 +469,7 @@ msgid "The key may be found by searching for this identity’s e-mail address."
 msgstr "The key may be found by searching for this identity’s e-mail address."
 
 #: ../web/keySettings.soy:55
-#: ../web/key.soy:222
+#: ../web/key.soy:207
 #: ../web/upload.soy:111
 msgid "Attribute"
 msgstr "Attribute"
@@ -471,12 +493,6 @@ msgid "Key %s not found."
 msgstr "Key %s not found."
 
 #: ../web/key.soy:30
-#: ../web/key.soy:222
-#, python-format
-msgid "It is %s whether this key really belongs to the person shown on this picture."
-msgstr "It is %s whether this key really belongs to the person shown on this picture."
-
-#: ../web/key.soy:30
 #, python-format
 msgid "Picture #%d"
 msgstr "Picture #%d"
@@ -498,7 +514,7 @@ msgid "This key belongs to me!"
 msgstr "This key belongs to me!"
 
 #: ../web/key.soy:58
-#: ../web/key.soy:129
+#: ../web/key.soy:123
 msgid "Details"
 msgstr "Details"
 
@@ -538,8 +554,8 @@ msgid "Expiration date"
 msgstr "Expiration date"
 
 #: ../web/key.soy:82
-#: ../web/key.soy:166
-#: ../web/key.soy:277
+#: ../web/key.soy:160
+#: ../web/key.soy:262
 msgid "never"
 msgstr "never"
 
@@ -569,139 +585,120 @@ msgid "%d bits"
 msgstr "%d bits"
 
 #: ../web/key.soy:99
-#: ../web/key.soy:182
+#: ../web/key.soy:176
 msgid "Identities"
 msgstr "Identities"
 
-#: ../web/key.soy:104
-#: ../web/key.soy:106
-#: ../web/key.soy:194
-#: ../web/key.soy:196
-msgid "unknown"
-msgstr "unknown"
-
-#: ../web/key.soy:104
-#: ../web/key.soy:194
-#, python-format
-msgid "It is %s whether this key really belongs to a person called %s."
-msgstr "It is %s whether this key really belongs to a person called %s."
-
-#: ../web/key.soy:106
-#: ../web/key.soy:196
-#, python-format
-msgid "It is %s whether the owner of this key really owns the e-mail address %s."
-msgstr "It is %s whether the owner of this key really owns the e-mail address %s."
-
-#: ../web/key.soy:124
+#: ../web/key.soy:118
 #: ../web/upload.soy:99
 msgid "Signature"
 msgstr "Signature"
 
-#: ../web/key.soy:125
+#: ../web/key.soy:119
 msgid "Issued by"
 msgstr "Issued by"
 
-#: ../web/key.soy:126
+#: ../web/key.soy:120
 msgid "Date"
 msgstr "Date"
 
-#: ../web/key.soy:127
+#: ../web/key.soy:121
 msgid "Expires/revoked"
 msgstr "Expires/revoked"
 
-#: ../web/key.soy:139
+#: ../web/key.soy:133
 msgid "Key signatures"
 msgstr "Key signatures"
 
-#: ../web/key.soy:141
+#: ../web/key.soy:135
 msgid "No key signatures."
 msgstr "No key signatures."
 
-#: ../web/key.soy:154
+#: ../web/key.soy:148
 msgid "Subkeys"
 msgstr "Subkeys"
 
-#: ../web/key.soy:156
+#: ../web/key.soy:150
 msgid "No subkeys."
 msgstr "No subkeys."
 
-#: ../web/key.soy:165
+#: ../web/key.soy:159
 #: ../web/upload.soy:34
 msgid "Subkey"
 msgstr "Subkey"
 
-#: ../web/key.soy:169
-#: ../web/key.soy:282
+#: ../web/key.soy:163
+#: ../web/key.soy:267
 msgid "version"
 msgstr "version"
 
-#: ../web/key.soy:170
+#: ../web/key.soy:164
 #, python-format
 msgid "%d bit"
 msgstr "%d bit"
 
-#: ../web/key.soy:184
+#: ../web/key.soy:178
 msgid "No identities."
 msgstr "No identities."
 
-#: ../web/key.soy:201
+#: ../web/key.soy:187
 msgid "primary"
 msgstr "primary"
 
-#: ../web/key.soy:211
+#: ../web/key.soy:196
 msgid "Attributes"
 msgstr "Attributes"
 
-#: ../web/key.soy:213
+#: ../web/key.soy:198
 msgid "No attributes."
 msgstr "No attributes."
 
-#: ../web/key.soy:222
+#: ../web/key.soy:207
 msgid "picture"
 msgstr "picture"
 
-#: ../web/key.soy:244
+#: ../web/key.soy:229
 msgid "No signatures."
 msgstr "No signatures."
 
-#: ../web/key.soy:267
-#: ../web/key.soy:320
+#: ../web/key.soy:252
+#: ../web/key.soy:305
 msgid "unverified"
 msgstr "unverified"
 
-#: ../web/key.soy:286
+#: ../web/key.soy:271
 msgid "Partial trust"
 msgstr "Partial trust"
 
-#: ../web/key.soy:288
+#: ../web/key.soy:273
 msgid "Complete trust"
 msgstr "Complete trust"
 
-#: ../web/key.soy:290
+#: ../web/key.soy:275
 #, python-format
 msgid "%d level"
 msgid_plural "%d levels"
 msgstr[0] "%d level"
 msgstr[1] "%d levels"
 
-#: ../web/key.soy:292
+#: ../web/key.soy:277
 msgid "regexp"
 msgstr "regexp"
 
-#: ../web/key.soy:296
+#: ../web/key.soy:281
 msgid "non-revocable"
 msgstr "non-revocable"
 
-#: ../web/key.soy:302
+#: ../web/key.soy:287
 msgid "Reason for revocation"
 msgstr "Reason for revocation"
 
-#: ../web/key.soy:304
+#: ../web/key.soy:289
 #, python-format
 msgid "“%s”"
 msgstr "“%s”"
 
-#: ../web/key.soy:316
+#: ../web/key.soy:301
 msgid "by"
 msgstr "by"
 
@@ -735,7 +732,7 @@ msgid "OpenID"
 msgstr "OpenID"
 
 #: ../web/register.soy:12
-#: ../web/ui.soy:54
+#: ../web/ui.soy:51
 msgid "Register"
 msgstr "Register"
 
@@ -790,26 +787,68 @@ msgstr "None"
 msgid "Language"
 msgstr "Language"
 
-#: ../web/ui.soy:50
+#: ../web/ui.soy:47
 msgid "Account settings"
 msgstr "Account settings"
 
-#: ../web/ui.soy:50
+#: ../web/ui.soy:47
 #, python-format
 msgid "Logged in as %s"
 msgstr "Logged in as %s"
 
-#: ../web/ui.soy:54
+#: ../web/ui.soy:51
 msgid "Not logged in."
 msgstr "Not logged in."
 
-#: ../web/ui.soy:115
+#: ../web/ui.soy:112
 msgid "PGP ASCII-armored format (.asc)"
 msgstr "PGP ASCII-armored format (.asc)"
 
-#: ../web/ui.soy:116
+#: ../web/ui.soy:113
 msgid "PGP binary format (.bexpk)"
 msgstr "PGP binary format (.bexpk)"
+
+#: ../web/ui.soy:155
+#, python-format
+msgid "%s is the verified owner of this key."
+msgstr "%s is the verified owner of this key."
+
+#: ../web/ui.soy:156
+#, python-format
+msgid "It is not quite sure whether a person called %s is the owner of this key."
+msgstr "It is not quite sure whether a person called %s is the owner of this key."
+
+#: ../web/ui.soy:157
+#, python-format
+msgid "It is unknown whether this key belongs to a person called %s."
+msgstr "It is unknown whether this key belongs to a person called %s."
+
+#: ../web/ui.soy:160
+#, python-format
+msgid "It is verified that the owner of this key owns the e-mail address %s."
+msgstr "It is verified that the owner of this key owns the e-mail address %s."
+
+#: ../web/ui.soy:161
+#, python-format
+msgid "It is not quite sure whether the owner of this key owns the e-mail address %s."
+msgstr "It is not quite sure whether the owner of this key owns the e-mail address %s."
+
+#: ../web/ui.soy:162
+#, python-format
+msgid "It is unverified whether the owner of this key owns the e-mail address %s."
+msgstr "It is unverified whether the owner of this key owns the e-mail address %s."
+
+#: ../web/ui.soy:189
+msgid "It is verified that this picture shows the owner of this key."
+msgstr "It is verified that this picture shows the owner of this key."
+
+#: ../web/ui.soy:190
+msgid "It is not quite sure whether this picture shows the owner of this key."
+msgstr "It is not quite sure whether this picture shows the owner of this key."
+
+#: ../web/ui.soy:191
+msgid "It is unknown whether this picture shows the owner of this key."
+msgstr "It is unknown whether this picture shows the owner of this key."
 
 #: ../web/upload.soy:15
 msgid "Internal errors occurred while uploading the keys."
@@ -859,6 +898,16 @@ msgstr "Public subkey"
 #, python-format
 msgid "Packet type %d"
 msgstr "Packet type %d"
+
+#~ msgid ""
+#~ "It is %s whether this key really belongs to the person shown on this "
+#~ "picture."
+#~ msgstr ""
+#~ "It is %s whether this key really belongs to the person shown on this "
+#~ "picture."
+
+#~ msgid "unknown"
+#~ msgstr "unknown"
 
 #~ msgid "Key %s does not exist."
 #~ msgstr "Key %s does not exist."

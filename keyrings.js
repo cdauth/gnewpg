@@ -12,6 +12,12 @@ function UnfilteredKeyring(con) {
 
 util.inherits(UnfilteredKeyring, keyringPg._KeyringPostgres);
 
+pgp.utils.extend(UnfilteredKeyring.prototype, {
+	maySeeGroup : function(groupId, callback) {
+		callback(null, false);
+	}
+});
+
 ///////////////////////////////////////////////////////////////////////////////
 
 function FilteredKeyring(con) {
@@ -441,15 +447,20 @@ pgp.utils.extend(UserKeyring.prototype, {
 				db.remove(this._con, "users_keyrings_keys", { user: this._user, key: ids }, next);
 			}.bind(this)
 		], callback);
+	},
+
+	maySeeGroup : function(groupId, callback) {
+		db.entryExists(this._con, "groups_users", { group: groupId, user: this._user }, callback);
 	}
 });
 
 ///////////////////////////////////////////////////////////////////////////////
 
-function GroupKeyring(con, group) {
+function GroupKeyring(con, group, noUpload) {
 	GroupKeyring.super_.call(this, con);
 
 	this._group = group;
+	this._noUpload = !!noUpload;
 }
 
 util.inherits(GroupKeyring, AnonymousKeyring);
@@ -468,15 +479,21 @@ pgp.utils.extend(GroupKeyring.prototype, {
 	},
 
 	_onAddKey : function(keyInfo, callback) {
+		if(this._noUpload)
+			return callback();
+
 		this._containsKey(keyInfo.id, function(err, contains) {
 			if(err || contains)
 				return callback(err);
 
-			db.insert(this._con, "groups_keyrings_keys", { group: this._group, key: keyInfo.id }, next);
+			db.insert(this._con, "groups_keyrings_keys", { group: this._group, key: keyInfo.id }, callback);
 		});
 	},
 
 	_onAddIdentity : function(keyId, identityInfo, callback) {
+		if(this._noUpload)
+			return callback();
+
 		this._containsIdentity(keyId, identityInfo.id, function(err, contains) {
 			if(err || contains)
 				return callback(err);
@@ -485,13 +502,20 @@ pgp.utils.extend(GroupKeyring.prototype, {
 		});
 	},
 
-	addAttribute : function(keyId, attributeInfo, callback) {
+	_onAddAttribute : function(keyId, attributeInfo, callback) {
+		if(this._noUpload)
+			return callback();
+
 		this._containsAttribute(keyId, attributeInfo.id, function(err, contains) {
 			if(err || contains)
 				return callback(err);
 
 			db.insert(this._con, "groups_keyrings_attributes", { group: this._group, attributeKey: keyId, attribute: attributeInfo.id }, callback);
 		});
+	},
+
+	maySeeGroup : function(groupId, callback) {
+		callback(null, groupId == this._group);
 	}
 });
 

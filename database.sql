@@ -61,7 +61,7 @@ CREATE TABLE "users_ownership_verification" (
 
 
 CREATE TABLE "groups" (
-	"id" BIGSERIAL PRIMARY KEY,
+	"id" CHAR(8) PRIMARY KEY,
 	"token" CHAR(43) UNIQUE,
 	"title" TEXT,
 	"perm_searchengines" BOOLEAN NOT NULL, -- Whether the group should be findable by search engines
@@ -69,13 +69,13 @@ CREATE TABLE "groups" (
 );
 
 CREATE TABLE "groups_keyrings_keys" (
-	"group" BIGINT REFERENCES "groups"("id"),
+	"group" CHAR(8) REFERENCES "groups"("id"),
 	"key" CHAR(16) REFERENCES "keys"("id"),
 	PRIMARY KEY("group", "key")
 );
 
 CREATE TABLE "groups_keyrings_identities" (
-	"group" BIGINT REFERENCES "groups"("id"),
+	"group" CHAR(8) REFERENCES "groups"("id"),
 	"identity" TEXT,
 	"identityKey" CHAR(16),
 	PRIMARY KEY ("group", "identity", "identityKey" ),
@@ -83,7 +83,7 @@ CREATE TABLE "groups_keyrings_identities" (
 );
 
 CREATE TABLE "groups_keyrings_attributes" (
-	"group" BIGINT REFERENCES "groups"("id"),
+	"group" CHAR(8) REFERENCES "groups"("id"),
 	"attribute" CHAR(27),
 	"attributeKey" CHAR(16),
 	PRIMARY KEY ("group", "attribute", "attributeKey" ),
@@ -91,11 +91,14 @@ CREATE TABLE "groups_keyrings_attributes" (
 );
 
 CREATE TABLE "groups_users" (
-	"group" BIGINT REFERENCES "groups"("id"),
+	"group" CHAR(8) REFERENCES "groups"("id"),
 	"user" TEXT REFERENCES "users"("id") ON UPDATE CASCADE,
 	"perm_admin" BOOLEAN NOT NULL, -- Whether the user is allowed to change the group settings
 	"perm_addkeys" BOOLEAN NOT NULL -- Whether the user is allowed to add keys to the group
 );
+
+CREATE VIEW "groups_users_with_groups" AS
+	SELECT "groups"."id", "groups"."token", "groups"."title", "groups"."perm_searchengines", "groups"."perm_addkeys" OR "groups_users"."perm_addkeys" AS "perm_addkeys", "groups_users"."perm_admin", "groups_users"."user" FROM "groups_users", "groups" WHERE "groups_users"."group" = "groups"."id";
 
 CREATE VIEW "users_keyrings_with_groups_keys" AS
 	SELECT "user", "key" FROM "users_keyrings_keys"
@@ -114,7 +117,6 @@ CREATE VIEW "users_keyrings_with_groups_attributes" AS
 	UNION SELECT "users"."id" AS "user", "groups_keyrings_attributes"."attribute" AS "attribute", "groups_keyrings_attributes"."attributeKey" AS "attributeKey"
 		FROM "users", "groups_users", "groups_keyrings_attributes"
 		WHERE "users"."id" = "groups_users"."user" AND "groups_users"."group" = "groups_keyrings_attributes"."group";
-
 
 -----------------------------------------------------
 -----------------------------------------------------

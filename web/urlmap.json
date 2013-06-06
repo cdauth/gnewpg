@@ -12,7 +12,11 @@
 		"/keyring" : "keyring",
 		"/keyring/export" : "exportKey",
 		"/claimkey/:keyId" : "claimkey",
-		"/settings" : "settings"
+		"/settings" : "settings",
+		"/groups" : "groups",
+		"/group/:id" : "group",
+		"/group/:id/upload" : "groupUpload",
+		"/group/:id/settings" : "groupSettings"
 	},
 	"post" : {
 		"/login": "login",
@@ -21,6 +25,7 @@
 		"/upload": "upload",
 		"/key/:keyId/settings" : "keySettings",
 		"/claimkey/:keyId" : "claimkey",
-		"/settings" : "settings"
+		"/settings" : "settings",
+		"/groups/create" : "createGroup"
 	}
 }
