@@ -3,15 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#: ../web/faq.soy:9 ../web/key.soy:92 ../web/key.soy:164 ../web/key.soy:249
-#: ../web/key.soy:267 ../web/key.soy:287 ../web/ui.soy:104 ../web/ui.soy:133
-#: ../web/upload.soy:99
+#: ../web/soy/faq.soy:9 ../web/soy/key.soy:92 ../web/soy/key.soy:164
+#: ../web/soy/key.soy:249 ../web/soy/key.soy:267 ../web/soy/key.soy:287
+#: ../web/soy/ui.soy:104 ../web/soy/ui.soy:133 ../web/soy/upload.soy:99
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-05 17:02+0200\n"
+"POT-Creation-Date: 2013-06-07 14:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -197,6 +197,14 @@ msgstr ""
 msgid "[FAQ_6_TITLE]"
 msgstr ""
 
+#: fixedStrings.tmp.js:45
+msgid "[FAQ_7]"
+msgstr ""
+
+#: fixedStrings.tmp.js:46
+msgid "[FAQ_7_TITLE]"
+msgstr ""
+
 #: ../i18n.js:17
 msgid "isoUtcDateTime"
 msgstr ""
@@ -219,95 +227,104 @@ msgstr ""
 msgid "[ownership_mail keyId=%s username=%s link=%s]"
 msgstr ""
 
-#: ../web/login.js:29 ../web/login.js:60
+#: ../web/actions/group.js:63 ../web/actions/group.js:84
+#, python-format
+msgid "Group %s not found."
+msgstr ""
+
+#: ../web/actions/group.js:104 ../web/actions/group.js:121
+msgid "No access."
+msgstr ""
+
+#: ../web/actions/search.js:18
+msgid "The search string is too short."
+msgstr ""
+
+#: ../web/actions/user.js:44 ../web/actions/user.js:75
 msgid "There is no user account with this OpenID."
 msgstr ""
 
-#: ../web/login.js:38 ../web/settings.js:128
+#: ../web/actions/user.js:53 ../web/actions/user.js:286
 #, python-format
 msgid "OpenID authentication failed: %s"
 msgstr ""
 
-#: ../web/login.js:40 ../web/settings.js:130
+#: ../web/actions/user.js:55 ../web/actions/user.js:288
 msgid "OpenID authentication failed."
 msgstr ""
 
-#: ../web/login.js:51 ../web/settings.js:55
+#: ../web/actions/user.js:66 ../web/actions/user.js:213
 #, python-format
 msgid "Error verifying openid: %s"
 msgstr ""
 
-#: ../web/login.js:53 ../web/settings.js:57
+#: ../web/actions/user.js:68 ../web/actions/user.js:215
 msgid "Error verifying openid."
 msgstr ""
 
-#: ../web/login.js:79
+#: ../web/actions/user.js:94
 msgid "Login failed."
 msgstr ""
 
-#: ../web/register.js:15
+#: ../web/actions/user.js:131
 #, python-format
 msgid "The username has to be at least %d character long."
 msgid_plural "The username has to be at least %d characters long."
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../web/register.js:17
+#: ../web/actions/user.js:133
 #, python-format
 msgid "The username may be at most %d character long."
 msgid_plural "The username may be at most %d characters long."
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../web/register.js:25
+#: ../web/actions/user.js:141
 msgid "This username is already taken."
 msgstr ""
 
-#: ../web/register.js:27 ../web/settings.js:34
+#: ../web/actions/user.js:143 ../web/actions/user.js:192
 #, python-format
 msgid "The password has to be at least %d character long."
 msgid_plural "The password has to be at least %d characters long."
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../web/register.js:29 ../web/settings.js:36
+#: ../web/actions/user.js:145 ../web/actions/user.js:194
 msgid "The two passwords do not match."
 msgstr ""
 
-#: ../web/search.js:12
-msgid "The search string is too short."
-msgstr ""
-
-#: ../web/settings.js:83
+#: ../web/actions/user.js:241
 msgid "This OpenID is used by another account already."
 msgstr ""
 
-#: ../web/claimkey.soy:11
+#: ../web/soy/claimkey.soy:11
 #, python-format
 msgid "Claim key %s"
 msgstr ""
 
-#: ../web/claimkey.soy:13 ../web/keySettings.soy:14
+#: ../web/soy/claimkey.soy:13 ../web/soy/keySettings.soy:14
 #, python-format
 msgid "Back to key %s"
 msgstr ""
 
-#: ../web/claimkey.soy:15
+#: ../web/soy/claimkey.soy:15
 msgid ""
 "An encrypted e-mail has been sent to the primary e-mail address of the key. "
 "Click the confirmation link in that e-mail to add yourself as the owner of "
 "the key."
 msgstr ""
 
-#: ../web/claimkey.soy:18
+#: ../web/soy/claimkey.soy:18
 msgid "You are now the owner of this key."
 msgstr ""
 
-#: ../web/claimkey.soy:20
+#: ../web/soy/claimkey.soy:20
 msgid "Unknown token."
 msgstr ""
 
-#: ../web/claimkey.soy:23
+#: ../web/soy/claimkey.soy:23
 #, python-format
 msgid ""
 "You are about to verify yourself as the owner of the key %s. An encrypted e-"
@@ -315,45 +332,111 @@ msgid ""
 "confirmation link in that e-mail to verify that the key belongs to you."
 msgstr ""
 
-#: ../web/createGroup.soy:8 ../web/groups.soy:22
-msgid "Create group"
+#: ../web/soy/groupSettings.soy:9
+msgid "Settings"
 msgstr ""
 
-#: ../web/groups.soy:9 ../web/index.soy:40
+#: ../web/soy/groupSettings.soy:9 ../web/soy/groupSettings.soy:11
+#: ../web/soy/group.soy:12 ../web/soy/groups.soy:18
+msgid "Unnamed group"
+msgstr ""
+
+#: ../web/soy/groupSettings.soy:11
+#, python-format
+msgid "Back to group %s"
+msgstr ""
+
+#: ../web/soy/groupSettings.soy:14
+msgid "Group name"
+msgstr ""
+
+#: ../web/soy/groupSettings.soy:23
+msgid "Group may be found in search engines"
+msgstr ""
+
+#: ../web/soy/groupSettings.soy:26
+msgid "All users may add keys to the group"
+msgstr ""
+
+#: ../web/soy/groupSettings.soy:29
+msgid "All users may remove keys from the group"
+msgstr ""
+
+#: ../web/soy/groupSettings.soy:36
+#, python-format
+msgid ""
+"Here you can add members to the group and change their privileges. If you "
+"would like non-members to be able to access the group, send them the "
+"following URL: %s"
+msgstr ""
+
+#: ../web/soy/group.soy:23 ../web/soy/keyring.soy:36
+msgid "Export the selected keys"
+msgstr ""
+
+#: ../web/soy/group.soy:28
+msgid "Add/remove keys"
+msgstr ""
+
+#: ../web/soy/group.soy:30
+msgid "Add keys"
+msgstr ""
+
+#: ../web/soy/group.soy:32
+msgid "Manage keys"
+msgstr ""
+
+#: ../web/soy/group.soy:37
+msgid "Group settings"
+msgstr ""
+
+#: ../web/soy/group.soy:46
+msgid "No keys have been added to this group yet."
+msgstr ""
+
+#: ../web/soy/group.soy:52 ../web/soy/keyring.soy:20 ../web/soy/search.soy:21
+msgid "Key"
+msgstr ""
+
+#: ../web/soy/group.soy:53 ../web/soy/keyring.soy:21 ../web/soy/upload.soy:105
+msgid "User ID"
+msgstr ""
+
+#: ../web/soy/groups.soy:9 ../web/soy/index.soy:40
 msgid "Groups"
 msgstr ""
 
-#: ../web/groups.soy:13
+#: ../web/soy/groups.soy:13
 msgid "You are not a member of any groups."
 msgstr ""
 
-#: ../web/groups.soy:15
+#: ../web/soy/groups.soy:15
 msgid "You are a member of the following groups:"
 msgstr ""
 
-#: ../web/index.soy:12
+#: ../web/soy/index.soy:12
 msgid "gnewpg is a PGP key server that aims to make PGP more secure."
 msgstr ""
 
-#: ../web/index.soy:19
+#: ../web/soy/index.soy:19
 msgid "Search for a key"
 msgstr ""
 
-#: ../web/index.soy:27 ../web/upload.soy:11
+#: ../web/soy/index.soy:27 ../web/soy/upload.soy:11
 msgid "Upload a key"
 msgstr ""
 
-#: ../web/index.soy:28
+#: ../web/soy/index.soy:28
 msgid ""
 "To receive new signatures for a key that is not publicly searchable, upload "
 "the public key to prove that you posess it."
 msgstr ""
 
-#: ../web/index.soy:35 ../web/keyring.soy:9
+#: ../web/soy/index.soy:35 ../web/soy/keyring.soy:9
 msgid "Your keyring"
 msgstr ""
 
-#: ../web/index.soy:49
+#: ../web/soy/index.soy:49
 #, python-format
 msgid ""
 "Configure your local PGP application to use gnewpg as a keyserver. Your "
@@ -361,7 +444,7 @@ msgid ""
 "should keep it secret."
 msgstr ""
 
-#: ../web/index.soy:64
+#: ../web/soy/index.soy:64
 #, python-format
 msgid ""
 "Configure your local PGP application to use gnewpg as a keyserver. The "
@@ -369,32 +452,20 @@ msgid ""
 "keeps track of your uploaded keys."
 msgstr ""
 
-#: ../web/keyring.soy:12
+#: ../web/soy/keyring.soy:13
 msgid "Your keyring is empty."
 msgstr ""
 
-#: ../web/keyring.soy:19 ../web/search.soy:21
-msgid "Key"
-msgstr ""
-
-#: ../web/keyring.soy:20 ../web/upload.soy:105
-msgid "User ID"
-msgstr ""
-
-#: ../web/keyring.soy:35
-msgid "Export the selected keys"
-msgstr ""
-
-#: ../web/keySettings.soy:12
+#: ../web/soy/keySettings.soy:12
 #, python-format
 msgid "Privacy settings for key %s"
 msgstr ""
 
-#: ../web/keySettings.soy:17 ../web/settings.soy:18
+#: ../web/soy/keySettings.soy:17 ../web/soy/settings.soy:18
 msgid "Settings successfully saved."
 msgstr ""
 
-#: ../web/keySettings.soy:19
+#: ../web/soy/keySettings.soy:19
 msgid ""
 "By default, only those may access the key who have uploaded it once before "
 "and have thus proven that they already posess it. People who have access to "
@@ -402,7 +473,7 @@ msgid ""
 "revocation signatures."
 msgstr ""
 
-#: ../web/keySettings.soy:20
+#: ../web/soy/keySettings.soy:20
 msgid ""
 "The permissions for the identities and attributes are handled independently. "
 "By default, people who have permission to a key will only see those "
@@ -412,439 +483,441 @@ msgid ""
 "social connections to some extent."
 msgstr ""
 
-#: ../web/keySettings.soy:21 ../web/key.soy:14
+#: ../web/soy/keySettings.soy:21 ../web/soy/key.soy:14
 #, python-format
 msgid "Key %s"
 msgstr ""
 
-#: ../web/keySettings.soy:25
+#: ../web/soy/keySettings.soy:25
 msgid "Key may be seen by people who already have it in their keyring"
 msgstr ""
 
-#: ../web/keySettings.soy:28
+#: ../web/soy/keySettings.soy:28
 msgid ""
 "Key can be found by everyone, by searching for its ID or by clicking a link"
 msgstr ""
 
-#: ../web/keySettings.soy:31
+#: ../web/soy/keySettings.soy:31
 msgid "The page of this key may be indexed by search engines"
 msgstr ""
 
-#: ../web/keySettings.soy:36
+#: ../web/soy/keySettings.soy:36
 #, python-format
 msgid "Identity %s"
 msgstr ""
 
-#: ../web/keySettings.soy:40
+#: ../web/soy/keySettings.soy:40
 msgid "Identity may be seen by people who already have it in their keyring"
 msgstr ""
 
-#: ../web/keySettings.soy:43
+#: ../web/soy/keySettings.soy:43
 msgid "Identity may be seen by everyone who can access the key."
 msgstr ""
 
-#: ../web/keySettings.soy:46
+#: ../web/soy/keySettings.soy:46
 msgid "The key may be found by searching for this identity’s name."
 msgstr ""
 
-#: ../web/keySettings.soy:49
+#: ../web/soy/keySettings.soy:49
 msgid "The key may be found by searching for this identity’s e-mail address."
 msgstr ""
 
-#: ../web/keySettings.soy:55 ../web/key.soy:207 ../web/upload.soy:111
+#: ../web/soy/keySettings.soy:55 ../web/soy/key.soy:207
+#: ../web/soy/upload.soy:111
 msgid "Attribute"
 msgstr ""
 
-#: ../web/keySettings.soy:63
+#: ../web/soy/keySettings.soy:63
 msgid "Attribute may be seen by people who already have it in their keyring"
 msgstr ""
 
-#: ../web/keySettings.soy:66
+#: ../web/soy/keySettings.soy:66
 msgid "Attribute may be seen by everyone who can access the key."
 msgstr ""
 
-#: ../web/key.soy:14
+#: ../web/soy/key.soy:14
 #, python-format
 msgid "Key %s (%s)"
 msgstr ""
 
-#: ../web/key.soy:17
+#: ../web/soy/key.soy:17
 #, python-format
 msgid "Key %s not found."
 msgstr ""
 
-#: ../web/key.soy:30
+#: ../web/soy/key.soy:30
 #, python-format
 msgid "Picture #%d"
 msgstr ""
 
-#: ../web/key.soy:38
+#: ../web/soy/key.soy:38
 msgid "You are the verified owner of this key."
 msgstr ""
 
-#: ../web/key.soy:41
+#: ../web/soy/key.soy:41
 msgid "Export this key"
 msgstr ""
 
-#: ../web/key.soy:44
+#: ../web/soy/key.soy:44
 msgid "Edit privacy settings"
 msgstr ""
 
-#: ../web/key.soy:47
+#: ../web/soy/key.soy:47
 msgid "This key belongs to me!"
 msgstr ""
 
-#: ../web/key.soy:58 ../web/key.soy:123
+#: ../web/soy/key.soy:58 ../web/soy/key.soy:123
 msgid "Details"
 msgstr ""
 
-#: ../web/key.soy:58 ../web/key.soy:62
+#: ../web/soy/key.soy:58 ../web/soy/key.soy:62
 msgid "expert"
 msgstr ""
 
-#: ../web/key.soy:58 ../web/key.soy:61
+#: ../web/soy/key.soy:58 ../web/soy/key.soy:61
 msgid "on"
 msgstr ""
 
-#: ../web/key.soy:58 ../web/key.soy:60
+#: ../web/soy/key.soy:58 ../web/soy/key.soy:60
 msgid "off"
 msgstr ""
 
-#: ../web/key.soy:67
+#: ../web/soy/key.soy:67
 msgid "Do not trust any information marked as red!"
 msgstr ""
 
-#: ../web/key.soy:70
+#: ../web/soy/key.soy:70
 msgid "Fingerprint"
 msgstr ""
 
-#: ../web/key.soy:74
+#: ../web/soy/key.soy:74
 msgid "Security"
 msgstr ""
 
-#: ../web/key.soy:78
+#: ../web/soy/key.soy:78
 msgid "Creation date"
 msgstr ""
 
-#: ../web/key.soy:81
+#: ../web/soy/key.soy:81
 msgid "Expiration date"
 msgstr ""
 
-#: ../web/key.soy:82 ../web/key.soy:160 ../web/key.soy:262
+#: ../web/soy/key.soy:82 ../web/soy/key.soy:160 ../web/soy/key.soy:262
 msgid "never"
 msgstr ""
 
-#: ../web/key.soy:84
+#: ../web/soy/key.soy:84
 msgid "Revoked"
 msgstr ""
 
-#: ../web/key.soy:85
+#: ../web/soy/key.soy:85
 msgid "no"
 msgstr ""
 
-#: ../web/key.soy:88
+#: ../web/soy/key.soy:88
 msgid "Key version"
 msgstr ""
 
-#: ../web/key.soy:91
+#: ../web/soy/key.soy:91
 msgid "Public key algorithm"
 msgstr ""
 
-#: ../web/key.soy:94
+#: ../web/soy/key.soy:94
 msgid "Key size"
 msgstr ""
 
-#: ../web/key.soy:95
+#: ../web/soy/key.soy:95
 #, python-format
 msgid "%d bits"
 msgstr ""
 
-#: ../web/key.soy:99 ../web/key.soy:176
+#: ../web/soy/key.soy:99 ../web/soy/key.soy:176
 msgid "Identities"
 msgstr ""
 
-#: ../web/key.soy:118 ../web/upload.soy:99
+#: ../web/soy/key.soy:118 ../web/soy/upload.soy:99
 msgid "Signature"
 msgstr ""
 
-#: ../web/key.soy:119
+#: ../web/soy/key.soy:119
 msgid "Issued by"
 msgstr ""
 
-#: ../web/key.soy:120
+#: ../web/soy/key.soy:120
 msgid "Date"
 msgstr ""
 
-#: ../web/key.soy:121
+#: ../web/soy/key.soy:121
 msgid "Expires/revoked"
 msgstr ""
 
-#: ../web/key.soy:133
+#: ../web/soy/key.soy:133
 msgid "Key signatures"
 msgstr ""
 
-#: ../web/key.soy:135
+#: ../web/soy/key.soy:135
 msgid "No key signatures."
 msgstr ""
 
-#: ../web/key.soy:148
+#: ../web/soy/key.soy:148
 msgid "Subkeys"
 msgstr ""
 
-#: ../web/key.soy:150
+#: ../web/soy/key.soy:150
 msgid "No subkeys."
 msgstr ""
 
-#: ../web/key.soy:159 ../web/upload.soy:34
+#: ../web/soy/key.soy:159 ../web/soy/upload.soy:34
 msgid "Subkey"
 msgstr ""
 
-#: ../web/key.soy:163 ../web/key.soy:267
+#: ../web/soy/key.soy:163 ../web/soy/key.soy:267
 msgid "version"
 msgstr ""
 
-#: ../web/key.soy:164
+#: ../web/soy/key.soy:164
 #, python-format
 msgid "%d bit"
 msgstr ""
 
-#: ../web/key.soy:178
+#: ../web/soy/key.soy:178
 msgid "No identities."
 msgstr ""
 
-#: ../web/key.soy:187
+#: ../web/soy/key.soy:187
 msgid "primary"
 msgstr ""
 
-#: ../web/key.soy:196
+#: ../web/soy/key.soy:196
 msgid "Attributes"
 msgstr ""
 
-#: ../web/key.soy:198
+#: ../web/soy/key.soy:198
 msgid "No attributes."
 msgstr ""
 
-#: ../web/key.soy:207
+#: ../web/soy/key.soy:207
 msgid "picture"
 msgstr ""
 
-#: ../web/key.soy:229
+#: ../web/soy/key.soy:229
 msgid "No signatures."
 msgstr ""
 
-#: ../web/key.soy:252 ../web/key.soy:305
+#: ../web/soy/key.soy:252 ../web/soy/key.soy:305
 msgid "unverified"
 msgstr ""
 
-#: ../web/key.soy:271
+#: ../web/soy/key.soy:271
 msgid "Partial trust"
 msgstr ""
 
-#: ../web/key.soy:273
+#: ../web/soy/key.soy:273
 msgid "Complete trust"
 msgstr ""
 
-#: ../web/key.soy:275
+#: ../web/soy/key.soy:275
 #, python-format
 msgid "%d level"
 msgid_plural "%d levels"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../web/key.soy:277
+#: ../web/soy/key.soy:277
 msgid "regexp"
 msgstr ""
 
-#: ../web/key.soy:281
+#: ../web/soy/key.soy:281
 msgid "non-revocable"
 msgstr ""
 
-#: ../web/key.soy:287
+#: ../web/soy/key.soy:287
 msgid "Reason for revocation"
 msgstr ""
 
-#: ../web/key.soy:289
+#: ../web/soy/key.soy:289
 #, python-format
 msgid "“%s”"
 msgstr ""
 
-#: ../web/key.soy:301
+#: ../web/soy/key.soy:301
 msgid "by"
 msgstr ""
 
-#: ../web/login.soy:13
+#: ../web/soy/login.soy:13
 msgid "Login"
 msgstr ""
 
-#: ../web/login.soy:19 ../web/settings.soy:21
+#: ../web/soy/login.soy:19 ../web/soy/settings.soy:21
 msgid "Username"
 msgstr ""
 
-#: ../web/login.soy:26 ../web/register.soy:28 ../web/settings.soy:28
+#: ../web/soy/login.soy:26 ../web/soy/register.soy:28
+#: ../web/soy/settings.soy:28
 msgid "Password"
 msgstr ""
 
-#: ../web/login.soy:35 ../web/login.soy:54
+#: ../web/soy/login.soy:35 ../web/soy/login.soy:54
 msgid "Stay logged in"
 msgstr ""
 
-#: ../web/login.soy:41
+#: ../web/soy/login.soy:41
 msgid "Login via OpenID"
 msgstr ""
 
-#: ../web/login.soy:45 ../web/settings.soy:42
+#: ../web/soy/login.soy:45 ../web/soy/settings.soy:42
 msgid "OpenID"
 msgstr ""
 
-#: ../web/register.soy:12 ../web/ui.soy:51
+#: ../web/soy/register.soy:12 ../web/soy/ui.soy:51
 msgid "Register"
 msgstr ""
 
-#: ../web/register.soy:16
+#: ../web/soy/register.soy:16
 msgid "You have successfully registered. You can now log in."
 msgstr ""
 
-#: ../web/register.soy:21
+#: ../web/soy/register.soy:21
 msgid "Desired username"
 msgstr ""
 
-#: ../web/register.soy:35 ../web/settings.soy:35
+#: ../web/soy/register.soy:35 ../web/soy/settings.soy:35
 msgid "Repeat password"
 msgstr ""
 
-#: ../web/register.soy:42 ../web/settings.soy:49
+#: ../web/soy/register.soy:42 ../web/soy/settings.soy:49
 msgid "E-mail address"
 msgstr ""
 
-#: ../web/search.soy:11
+#: ../web/soy/search.soy:11
 #, python-format
 msgid "Search: %s"
 msgstr ""
 
-#: ../web/search.soy:17
+#: ../web/soy/search.soy:17
 msgid "No keys have been found."
 msgstr ""
 
-#: ../web/search.soy:21
+#: ../web/soy/search.soy:21
 msgid "revoked"
 msgstr ""
 
-#: ../web/search.soy:21
+#: ../web/soy/search.soy:21
 msgid "expired"
 msgstr ""
 
-#: ../web/search.soy:21
+#: ../web/soy/search.soy:21
 msgid "subkey"
 msgstr ""
 
-#: ../web/settings.soy:56
+#: ../web/soy/settings.soy:56
 msgid "Encryption key for e-mail notifications"
 msgstr ""
 
-#: ../web/settings.soy:59
+#: ../web/soy/settings.soy:59
 msgid "None"
 msgstr ""
 
-#: ../web/settings.soy:68
+#: ../web/soy/settings.soy:68
 msgid "Language"
 msgstr ""
 
-#: ../web/ui.soy:47
+#: ../web/soy/ui.soy:47
 msgid "Account settings"
 msgstr ""
 
-#: ../web/ui.soy:47
+#: ../web/soy/ui.soy:47
 #, python-format
 msgid "Logged in as %s"
 msgstr ""
 
-#: ../web/ui.soy:51
+#: ../web/soy/ui.soy:51
 msgid "Not logged in."
 msgstr ""
 
-#: ../web/ui.soy:112
+#: ../web/soy/ui.soy:112
 msgid "PGP ASCII-armored format (.asc)"
 msgstr ""
 
-#: ../web/ui.soy:113
+#: ../web/soy/ui.soy:113
 msgid "PGP binary format (.bexpk)"
 msgstr ""
 
-#: ../web/ui.soy:155
+#: ../web/soy/ui.soy:155
 #, python-format
 msgid "%s is the verified owner of this key."
 msgstr ""
 
-#: ../web/ui.soy:156
+#: ../web/soy/ui.soy:156
 #, python-format
 msgid ""
 "It is not quite sure whether a person called %s is the owner of this key."
 msgstr ""
 
-#: ../web/ui.soy:157
+#: ../web/soy/ui.soy:157
 #, python-format
 msgid "It is unknown whether this key belongs to a person called %s."
 msgstr ""
 
-#: ../web/ui.soy:160
+#: ../web/soy/ui.soy:160
 #, python-format
 msgid "It is verified that the owner of this key owns the e-mail address %s."
 msgstr ""
 
-#: ../web/ui.soy:161
+#: ../web/soy/ui.soy:161
 #, python-format
 msgid ""
 "It is not quite sure whether the owner of this key owns the e-mail address "
 "%s."
 msgstr ""
 
-#: ../web/ui.soy:162
+#: ../web/soy/ui.soy:162
 #, python-format
 msgid ""
 "It is unverified whether the owner of this key owns the e-mail address %s."
 msgstr ""
 
-#: ../web/ui.soy:189
+#: ../web/soy/ui.soy:189
 msgid "It is verified that this picture shows the owner of this key."
 msgstr ""
 
-#: ../web/ui.soy:190
+#: ../web/soy/ui.soy:190
 msgid "It is not quite sure whether this picture shows the owner of this key."
 msgstr ""
 
-#: ../web/ui.soy:191
+#: ../web/soy/ui.soy:191
 msgid "It is unknown whether this picture shows the owner of this key."
 msgstr ""
 
-#: ../web/upload.soy:15
+#: ../web/soy/upload.soy:15
 msgid "Internal errors occurred while uploading the keys."
 msgstr ""
 
-#: ../web/upload.soy:18
+#: ../web/soy/upload.soy:18
 msgid "The following errors occurred:"
 msgstr ""
 
-#: ../web/upload.soy:26
+#: ../web/soy/upload.soy:26
 msgid "The following keys were successfully uploaded:"
 msgstr ""
 
-#: ../web/upload.soy:45
+#: ../web/soy/upload.soy:45
 msgid "No keys were successfully uploaded."
 msgstr ""
 
-#: ../web/upload.soy:50
+#: ../web/soy/upload.soy:50
 msgid "Upload a file"
 msgstr ""
 
-#: ../web/upload.soy:57
+#: ../web/soy/upload.soy:57
 msgid "or paste a key"
 msgstr ""
 
-#: ../web/upload.soy:67
+#: ../web/soy/upload.soy:67
 msgid "Download keys with updated signatures after uploading as"
 msgstr ""
 
-#: ../web/upload.soy:74
+#: ../web/soy/upload.soy:74
 msgid ""
 "If the key does not exist on the keyserver yet, it will be added to the "
 "keyserver with the highest privacy settings, so only people who prove that "
@@ -853,19 +926,19 @@ msgid ""
 "permission to access the key."
 msgstr ""
 
-#: ../web/upload.soy:76
+#: ../web/soy/upload.soy:76
 msgid "Do not save anything on the server, only download updated keys"
 msgstr ""
 
-#: ../web/upload.soy:102
+#: ../web/soy/upload.soy:102
 msgid "Public key"
 msgstr ""
 
-#: ../web/upload.soy:108
+#: ../web/soy/upload.soy:108
 msgid "Public subkey"
 msgstr ""
 
-#: ../web/upload.soy:114
+#: ../web/soy/upload.soy:114
 #, python-format
 msgid "Packet type %d"
 msgstr ""

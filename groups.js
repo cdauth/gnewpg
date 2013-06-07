@@ -5,7 +5,7 @@ function getGroupsByUser(userId) {
 	var ret = new pgp.Fifo();
 	db.getConnection(function(err, con) {
 		if(err)
-			return callback(err);
+			return ret._end(err);
 
 		ret._add(db.getEntries(con, "groups_users_with_groups", "*", { user: userId }));
 		ret._end();
@@ -14,7 +14,7 @@ function getGroupsByUser(userId) {
 	return ret.recursive();
 }
 
-function createGroup(title, callback) {
+function createGroup(callback) {
 	db.getConnection(function(err, con) {
 		if(err)
 			return callback(err);
@@ -34,9 +34,10 @@ function createGroup(title, callback) {
 				var options = { };
 				options.id = id;
 				options.token = token;
-				options.title = title;
+				options.title = "";
 				options.perm_searchengines = false;
 				options.perm_addkeys = false;
+				options.perm_removekeys = false;
 
 				db.insert(con, "groups", options, function(err) {
 					con.done();
@@ -52,7 +53,7 @@ function addUserToGroup(groupId, userId, callback, admin) {
 		if(err)
 			return callback(err);
 
-		db.insert(con, "groups_users", { group: groupId, user: userId, perm_admin: !!admin, perm_addkeys: !!admin }, callback);
+		db.insert(con, "groups_users", { group: groupId, user: userId, perm_admin: !!admin, perm_addkeys: !!admin, perm_removekeys: !!admin }, callback);
 		con.done();
 	});
 }
@@ -77,44 +78,84 @@ function getGroup(id, callback) {
 	});
 }
 
-function getKeysOfGroup(id, callback) {
-	var ret = new pgp.Fifo();
+function updateGroup(id, fields, callback) {
 	db.getConnection(function(err, con) {
 		if(err)
 			return callback(err);
 
-		// TODO: Optimise this
-		ret._add(db.getEntries(con, "groups_keyrings_keys", [ "key" ], { group: id }).map(function(it, next) {
-			it = { id: it.key };
-			db.getEntries(con, "groups_keyrings_identites", [ "identity" ], { group: id, identityKey: it.key }).map(function(it, next) { next(it.identity); }).toArraySingle(function(err, identities) {
-				it.identities = identities;
-				db.getEntries(con, "groups_keyrings_attributes", [ "attribute" ], { group: id, attributeKey: it.key }).map(function(it, next) { next(it.attribute); }).toArraySingle(function(err, attributes) {
-					it.attributes = attributes;
-					next(null, it);
-				});
-			});
-		}));
-		ret._end();
-
-		// TODO: con.done()
+		db.update(con, "groups", fields, { id: id }, callback);
+		con.done();
 	});
-	return ret.recursive();
 }
+
+/*function getKeysOfGroup(id) {
+	var ret = new pgp.Fifo();
+	db.getConnection(function(err, con) {
+		if(err)
+			return ret._end(err);
+
+		var now = (new Date()).getTime();
+		var current = null;
+		db.getEntries(con, "groups_keyrings_keys_with_sub", "*", { group: id }, 'ORDER BY "key"').forEachSeries(function(it, next) {
+			if(current == null || current.id != it.key) {
+				if(current != null)
+					ret._add(__fixPrimaryIdentity(current));
+
+				current = { id: it.key, identities: { }, attributes: { } };
+			}
+
+			if(current.type == "key")
+				pgp.utils.extend(current, { primary_identity: it.id, expired: it.expires && it.expires.getTime() <= now, revoked: it.revoked });
+			else if(current.type == "identity")
+				current.identities.push({ id: it.id, expired: it.expires && it.expires.getTime() <= now, revoked: it.revoked, nameTrust: it.nameTrust, emailTrust: it.emailTrust });
+			else if(current.type == "attribute")
+				current.attributes.push({ id: it.id, expired: it.expires && it.expires.getTime() <= now, revoked: it.revoked, trust: it.nameTrust });
+
+			next();
+		}, function(err) {
+			con.done();
+
+			if(err)
+				return ret._end(err);
+
+			if(current != null)
+				ret._add(__fixPrimaryIdentity(current));
+			ret._end();
+		});
+	});
+	return ret;
+}*/
 
 function getMemberSettings(groupId, userId, callback) {
 	db.getConnection(function(err, con) {
 		if(err)
 			return callback(err);
 
-		db.getEntry(con, "groups_users", [ "perm_admin", "perm_addkeys" ], { group: groupId, user: userId }, callback);
+		db.getEntry(con, "groups_users", [ "perm_admin", "perm_addkeys", "perm_removekeys" ], { group: groupId, user: userId }, callback);
 		con.done();
 	});
 }
+
+/*function __fixPrimaryIdentity(keyInfo) {
+	if(keyInfo.primary_identity == null)
+		return keyInfo;
+
+	var newIdentity = null;
+	for(var i=keyInfo.identities.length-1; i>=0; i--) {
+		if(keyInfo.identities[i].id == keyInfo.primary_identity)
+			return keyInfo;
+		if(!keyInfo.identities[i].revoked && !keyInfo.identities[i].expired)
+			newIdentity = keyInfo.identities[i].id;
+	}
+	keyInfo.primary_identity = newIdentity;
+	return keyInfo;
+}*/
 
 exports.getGroupsByUser = getGroupsByUser;
 exports.createGroup = createGroup;
 exports.addUserToGroup = addUserToGroup;
 exports.getGroupByToken = getGroupByToken;
 exports.getGroup = getGroup;
-exports.getKeysOfGroup = getKeysOfGroup;
+exports.updateGroup = updateGroup;
+//exports.getKeysOfGroup = getKeysOfGroup;
 exports.getMemberSettings = getMemberSettings;

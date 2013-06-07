@@ -8,6 +8,7 @@
 		{param searchengines: false /}
 		{param title:_('Your keyring') /}
 		{param content}
+<p>{call gnewpg.ui.faq}{param no:7/}{param showTitle:true/}{/call}</p>
 			{if $keys.length == 0}
 <p class="nothingtodo"><em>{_('Your keyring is empty.')}</em></p>
 			{else}

@@ -44,10 +44,10 @@
 		<div class="btn-group"><a href="{$keyId}/settings" class="btn btn-success">{_('Edit privacy settings')}</a></div>
 					{else}
 						{if not $keySettings.user}
-		<div class="btn-group"><a href="../claimkey/{$keyId}" class="btn btn-success">{_('This key belongs to me!')}</a></div>
+		<div class="btn-group"><a href="{$keyId}/claim" class="btn btn-success">{_('This key belongs to me!')}</a></div>
 						{/if}
 						{if $keyDetails.inKeyring}
-		<div class="btn-group"><input type="submit" name="remove" class="btn btn-danger" value="{_('Remove from keyring')}" onclick="return confirm('{_('Are you sure that you want to remove the selected keys from your keyring? If they are marked as private, you will not be able to access them anymore.')}');" /></div>
+		<div class="btn-group"><input type="submit" name="removeKey" class="btn btn-danger" value="{_('Remove from keyring')}" onclick="return confirm('{_('Are you sure that you want to remove the selected keys from your keyring? If they are marked as private, you will not be able to access them anymore.')}');" /></div>
 						{else}
 		<div class="btn-group"><input type="submit" name="addKey" class="btn btn-success" value="{_('Add to keyring')}" /></div>
 						{/if}

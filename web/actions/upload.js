@@ -1,41 +1,53 @@
-var keys = require("../keys");
+var keys = require("../../keys");
 var fs = require("fs");
-var keyrings = require("../keyrings");
+var keyrings = require("../../keyrings");
 var async = require("async");
-var utils = require("../utils");
+var utils = require("../../utils");
 var pgp = require("node-pgp");
 
-module.exports.post = function(req, res, next) {
+module.exports = function(app) {
+	app.get("/upload", _showUploadForm);
+	app.post("/upload", _doUpload);
+};
+
+function _showUploadForm(req, res, next) {
+	res.soy("upload");
+}
+
+function _doUpload(req, res, next) {
 	var f = req.files.file;
 	if(!f)
 		f = [ ];
 	else if(!Array.isArray(f))
 		f = [ f ];
-	
-	var uploadedKeys = [ ];
-	var errors = [ ];
-	var failed = [ ];
+
+	var params = {
+		uploadedKeys : [ ],
+		errors : [ ],
+		failed : [ ]
+	};
 
 	async.series([
 		function(cb) {
+			// Import uploaded files
 			async.forEachSeries(f, function(it, cb2) {
 				req.keyring.importKeys(fs.createReadStream(it.path), function(err, uploaded) {
 					if(err)
 					{
 						console.warn("Error while uploading key", err);
-						errors.push(err);
+						params.errors.push(err);
 					}
 					else
 					{
-						uploadedKeys = uploadedKeys.concat(uploaded.keys);
-						failed = failed.concat(uploaded.failed);
+						params.uploadedKeys = params.uploadedKeys.concat(uploaded.keys);
+						params.failed = params.failed.concat(uploaded.failed);
 					}
 					
 					fs.unlink(it.path, function(err) {
 						if(err)
 						{
 							console.warn("Error removing uploaded key file", err);
-							errors.push(err);
+							params.errors.push(err);
 						}
 						cb2();
 					});
@@ -43,21 +55,18 @@ module.exports.post = function(req, res, next) {
 			}, cb);
 		},
 		function(cb) {
+			// Import pasted keys
 			req.keyring.importKeys(req.body.paste || "", function(err, uploaded) {
 				if(err)
 				{
 					console.warn("Error while uploading key", err);
-					errors.push(err);
+					params.errors.push(err);
 				}
 				else
 				{
-					uploadedKeys = uploadedKeys.concat(uploaded.keys);
-					failed = failed.concat(uploaded.failed);
+					params.uploadedKeys = params.uploadedKeys.concat(uploaded.keys);
+					params.failed = params.failed.concat(uploaded.failed);
 				}
-				
-				req.params.uploadedKeys = uploadedKeys;
-				req.params.failed = failed;
-				req.params.errors = errors;
 				
 				cb();
 			});
@@ -66,11 +75,11 @@ module.exports.post = function(req, res, next) {
 		if(err)
 			return end(err);
 
-		for(var i=0; i<req.params.failed.length; i++)
+		for(var i=0; i<params.failed.length; i++)
 		{
-			if(req.params.failed[i].type == pgp.consts.PKT.RING_TRUST)
+			if(params.failed[i].type == pgp.consts.PKT.RING_TRUST)
 			{
-				req.params.failed = req.params.failed.slice(0, i).concat(req.params.failed.slice(i+1));
+				params.failed = params.failed.slice(0, i).concat(params.failed.slice(i+1));
 				i--;
 			}
 		}
@@ -82,7 +91,7 @@ module.exports.post = function(req, res, next) {
 			res.type(formatInfo.mimetype);
 
 			var all = new pgp.BufferedStream();
-			async.forEachSeries(uploadedKeys, function(it, cb) {
+			async.forEachSeries(params.uploadedKeys, function(it, cb) {
 				req.keyring.exportKey(it.id).whilst(function(data, cb2) {
 					all._sendData(data);
 					cb2();
@@ -110,8 +119,10 @@ module.exports.post = function(req, res, next) {
 		else
 		{
 			req.keyring[req.body.donotpublish ? "revertChanges" : "saveChanges"](function(err2) {
-				if(err2 || !req.body.downloadupdated)
+				if(err2)
 					next(err2);
+				else if(!req.body.downloadupdated)
+					res.soy("upload", params);
 				else
 					res.end();
 			});

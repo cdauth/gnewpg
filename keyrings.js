@@ -426,7 +426,10 @@ pgp.utils.extend(UserKeyring.prototype, {
 
 	addToKeyring : function(ids, callback) {
 		ids = [ ].concat(ids);
-		db.getEntries(this._con, "users_keyrings_keys", [ "key" ], { user: this._user, key: ids }).map(function(it, cb) { cb(it.key); }).toArraySingle(function(err, existingIds) {
+		db.getEntries(this._con, "users_keyrings_keys", [ "key" ], { user: this._user, key: ids }).map(function(it, cb) { cb(null, it.key); }).toArraySingle(function(err, existingIds) {
+			if(err)
+				return callback(err);
+
 			async.forEachSeries(ids, function(id, next) {
 				if(existingIds.indexOf(id) != -1)
 					return next();
@@ -516,6 +519,34 @@ pgp.utils.extend(GroupKeyring.prototype, {
 
 	maySeeGroup : function(groupId, callback) {
 		callback(null, groupId == this._group);
+	},
+
+	listKeyring : function() {
+		return db.getEntries(this._con, "groups_keyrings_keys", [ "key" ], { group: this._group }).map(function(it, cb) {
+			cb(null, it.key);
+		});
+	}
+});
+
+///////////////////////////////////////////////////////////////////////////////
+
+function GroupOnlyKeyring(con, group) {
+	GroupOnlyKeyring.super_.call(this, con, group);
+}
+
+util.inherits(GroupOnlyKeyring, GroupKeyring);
+
+pgp.utils.extend(GroupOnlyKeyring.prototype, {
+	_maySeeKey : function(keyId, callback) {
+		this._containsKey(keyId, callback);
+	},
+
+	_maySeeIdentity : function(keyId, identityId, callback) {
+		this._containsIdentity(keyId, identityId, callback);
+	},
+
+	_maySeeAttribute : function(keyId, attributeId, callback) {
+		this._containsAttribute(keyId, attributeId, callback);
 	}
 });
 

@@ -15,7 +15,7 @@
 <p>{_('You are a member of the following groups:')}</p>
 <ul>
 				{foreach $userGroup in $userGroups}
-	<li><a href="group/{$userGroup.id}">{$userGroup.title}</a></li>
+	<li><a href="group/{$userGroup.id}">{$userGroup.title ? $userGroup.title : _('Unnamed group')}</a></li>
 				{/foreach}
 </ul>
 			{/if}

@@ -1,0 +1,52 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param group
+*/
+{template .groupSettings}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title:_('Settings')+': '+($group.title or _('Unnamed group')) /}
+		{param content}
+<p><a href="{$ij.config.baseurl}/group/{$group.id}"><i class="icon-backward"></i> {_('Back to group %s', $group.title or _('Unnamed group'))}</a></p>
+<form action="" method="post" class="form-horizontal">
+	<div class="control-group">
+		<label class="control-label" for="i-title">{_('Group name')}</label>
+		<div class="controls">
+			<input id="i-title" name="title" type="text" value="{$group.title}" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<div class="controls">
+			<label class="checkbox">
+				<input name="perm_searchengines" type="checkbox"{if $group.perm_searchengines} checked="checked"{/if} /> {_('Group may be found in search engines')}
+			</label>
+			<label class="checkbox">
+				<input name="perm_addkeys" type="checkbox"{if $group.perm_addkeys} checked="checked"{/if} /> {_('All users may add keys to the group')}
+			</label>
+			<label class="checkbox">
+				<input name="perm_removekeys" type="checkbox"{if $group.perm_removekeys} checked="checked"{/if} /> {_('All users may remove keys from the group')}
+			</label>
+			<input type="submit" value="{_('Save')}" class="btn" />
+		</div>
+	</div>
+</form>
+{let $tokenLinkEsc}{$ij.config.baseurl}/group/{$group.id}?groupToken={$group.token}{/let}
+<p id="token-note">{_('Here you can add members to the group and change their privileges. If you would like non-members to be able to access the group, send them the following URL: %s', '<strong>'+$tokenLinkEsc+'</strong>')|noAutoescape}</p>
+<script type="text/javascript">
+	$("#token-note").html('{_('Here you can add members to the group and change their privileges. If you would like non-members to be able to access the group, %sclick here%s to get a URL that you can shere with them.', '<a href="#" id="token-note-popup">', '</a>')|escapeJsString}');
+	$("#token-note-popup").popover({lb}
+		placement: 'bottom',
+		title: '{_('Public group URL')}',
+		content: '<strong>{$tokenLinkEsc|noAutoescape}</strong>',
+		html: true
+	{rb});
+	$(document).click(function(e) {lb}
+		if($(e.target).closest(".popover,#token-note-popup").size() == 0)
+			$("#token-note a").popover("hide");
+	{rb});
+</script>
+		{/param}
+	{/call}
+{/template}

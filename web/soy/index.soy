@@ -52,7 +52,7 @@
 		$("#keyserver-note-popup").popover({lb}
 			placement: 'bottom',
 			title: '{_('Your personal keyserver URL')}',
-			content: '<strong>{$keyserverEsc}</strong>',
+			content: '<strong>{$keyserverEsc|noAutoescape}</strong>',
 			html: true
 		{rb});
 		$(document).click(function(e) {lb}

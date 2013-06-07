@@ -65,7 +65,8 @@ CREATE TABLE "groups" (
 	"token" CHAR(43) UNIQUE,
 	"title" TEXT,
 	"perm_searchengines" BOOLEAN NOT NULL, -- Whether the group should be findable by search engines
-	"perm_addkeys" BOOLEAN NOT NULL -- Whether all users should be allowed to add keys
+	"perm_addkeys" BOOLEAN NOT NULL, -- Whether all users should be allowed to add keys
+	"perm_removekeys" BOOLEAN NOT NULL -- Whether all users should be allowed to remove keys
 );
 
 CREATE TABLE "groups_keyrings_keys" (
@@ -94,11 +95,17 @@ CREATE TABLE "groups_users" (
 	"group" CHAR(8) REFERENCES "groups"("id"),
 	"user" TEXT REFERENCES "users"("id") ON UPDATE CASCADE,
 	"perm_admin" BOOLEAN NOT NULL, -- Whether the user is allowed to change the group settings
-	"perm_addkeys" BOOLEAN NOT NULL -- Whether the user is allowed to add keys to the group
+	"perm_addkeys" BOOLEAN NOT NULL, -- Whether the user is allowed to add keys to the group
+	"perm_removekeys" BOOLEAN NOT NULL -- Whether the user is allowed to remove keys from the group
 );
 
 CREATE VIEW "groups_users_with_groups" AS
 	SELECT "groups"."id", "groups"."token", "groups"."title", "groups"."perm_searchengines", "groups"."perm_addkeys" OR "groups_users"."perm_addkeys" AS "perm_addkeys", "groups_users"."perm_admin", "groups_users"."user" FROM "groups_users", "groups" WHERE "groups_users"."group" = "groups"."id";
+
+CREATE VIEW "groups_keyrings_keys_with_sub" AS
+	SELECT "a"."group", "a"."key", "b"."primary_identity" AS "id", 'key' AS "type", "b"."expires", "b"."revoked", NULL::REAL AS "nameTrust", NULL::REAL AS "emailTrust" FROM "groups_keyrings_keys" AS "a", "keys" AS "b" WHERE "a"."key" = "b"."id"
+	UNION SELECT "a"."group", "a"."identityKey" AS "key", "a"."identity" AS "id", 'identity' AS "type", "b"."expires", "b"."revoked", "b"."nameTrust", "b"."emailTrust" FROM "groups_keyrings_identities" AS "a", "keys_identities_selfsigned" AS "b" WHERE "a"."identityKey" = "b"."key" AND "a"."identity" = "b"."id"
+	UNION SELECT "a"."group", "a"."attributeKey" AS "key", "a"."attribute" AS "id", 'attribute' AS "type", "b"."expires", "b"."revoked", "b"."trust" AS "nameTrust", NULL::REAL AS "emailTrust" FROM "groups_keyrings_attributes" AS "a", "keys_attributes_selfsigned" AS "b" WHERE "a"."attributeKey" = "b"."key" AND "a"."attribute" = "b"."id";
 
 CREATE VIEW "users_keyrings_with_groups_keys" AS
 	SELECT "user", "key" FROM "users_keyrings_keys"
