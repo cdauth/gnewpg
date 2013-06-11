@@ -1,0 +1,159 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param group
+ * @param addkeys
+ * @param removekeys
+ * @param userKeyring
+ * @param groupKeyring
+*/
+{template .groupUpload}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title:($group.title or _('Unnamed group'))+': '+_('Upload') /}
+		{param content}
+<p><a href="{$ij.config.baseurl}/group/{$group.id}"><i class="icon-backward"></i> {_('Back to group %s', $group.title or _('Unnamed group'))}</a></p>
+			{if $addkeys}
+<form action="" method="post" class="upload form-horizontal" enctype="multipart/form-data">
+	<div class="control-group">
+		<label class="control-label" for="i-file">{_('Upload a file')}</label>
+		<div class="controls">
+			<input id="i-file" name="file" type="file" multiple="multiple" />
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label" for="i-paste">{_('or paste a key')}</label>
+		<div class="controls">
+			<textarea id="i-paste" name="paste" class="input-block-level" rows="5"></textarea>
+			<span class="help-block">{call gnewpg.ui.faq}{param no:1/}{param showTitle:true/}{/call}</span>
+		</div>
+	</div>
+
+	<div class="control-group">
+		<label class="control-label">{_('or select keys from your keyring')}</label>
+		<div class="controls">
+			<div class="keyring-control uneditable-input input-block-level">
+				{call .showKeyringControl}
+					{param keyring:$userKeyring /}
+					{param inputName:'keyring' /}
+				{/call}
+			</div>
+		</div>
+	</div>
+
+	<div class="control-group">
+		<div class="controls">
+			<input type="submit" value="{_('Upload')}" class="btn" />
+		</div>
+	</div>
+</form>
+			{/if}
+			{if $removekeys}
+				{if $addkeys}
+<hr />
+				{/if}
+<h3>{_('Remove keys')}</h3>
+<form action="" method="post">
+	{call .showKeyringControl}
+		{param keyring:$groupKeyring /}
+		{param inputName:'remove' /}
+	{/call}
+	<div><input type="submit" value="{_('Remove')}" class="btn btn-danger" onclick="return confirm('{_('Do you really want to remove these keys from the group?')}')" /></div>
+</form>
+			{/if}
+		{/param}
+	{/call}
+{/template}
+
+/**
+ * @param group
+ * @param uploadedKeys
+ * @param failed
+ * @param errors
+*/
+{template .groupUploaded}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title:($group.title or _('Unnamed group'))+': '+_('Upload') /}
+		{param content}
+<p><a href="{$ij.config.baseurl}/group/{$group.id}"><i class="icon-backward"></i> {_('Back to group %s', $group.title or _('Unnamed group'))}</a></p>
+			{if $errors.length > 0}
+{call gnewpg.ui.error}{param message:_('Internal errors occurred while uploading the keys.') /}{/call}
+			{/if}
+			{if $failed.length > 0}
+{call gnewpg.ui.error}{param message:_('The following errors occurred:') /}{/call}
+<ul>
+				{foreach $obj in $failed}
+{call .printErrObj}{param obj:$obj /}{/call}
+				{/foreach}
+</ul>
+			{/if}
+			{if $uploadedKeys.length > 0}
+{call gnewpg.ui.success}{param message:_('The following keys were successfully uploaded:') /}{/call}
+<ul class="thumbnails">
+				{foreach $key in $uploadedKeys}
+	<li class="span4">
+		<div class="thumbnail">
+			<h3><a href="key/{$key.id}">{formatKeyId($key.id)}</a></h3>
+			<ul class="unstyled">
+					{foreach $identity in $key.identities}
+				<li>{$identity.id}</li>
+					{/foreach}
+					{foreach $attribute in $key.attributes}
+				<li>{_('Attribute')}</li>
+					{/foreach}
+			</ul>
+		</div>
+	</li>
+				{/foreach}
+</ul>
+			{else}
+{call gnewpg.ui.error}{param message:_('No keys were successfully uploaded.') /}{/call}
+			{/if}
+		{/param}
+	{/call}
+{/template}
+
+/**
+ * @param keyring
+ * @param inputName
+*/
+{template .showKeyringControl}
+<table class="table table-condensed table-with-filter">
+	<thead>
+		<tr>
+			<th class="c-key">{_('Key')}</th>
+			<th class="c-userid">{_('User IDs')}</th>
+		</tr>
+	</thead>
+	<tbody>
+	{foreach $key in $keyring}
+		<tr class="{if $key.expired}expired{/if} {if $key.revoked}revoked{/if}">
+			<td class="c-key">
+				<input type="checkbox" name="{$inputName}-keys" value="{$key.id}" />
+				{sp}<a href="../../key/{$key.id}">{formatKeyId($key.id)}</a></td>
+			<td class="c-userid">
+				<ul class="unstyled">
+		{foreach $identity in $key.identities}
+					<li><label>
+						<input type="checkbox" name="{$inputName}-identities-{$key.id}" value="{$identity.id}" />
+						{sp}{call gnewpg.ui.identity}{param identity:$identity/}{/call}
+					</label></li>
+		{/foreach}
+		{foreach $attribute in $key.attributes}
+					<li><label>
+						<input type="checkbox" name="{$inputName}-attributes-{$key.id}" value="{$attribute.id}" />
+						{sp}{call gnewpg.ui.attribute}{param attribute:$attribute/}{param content:_('Attribute')/}{/call}
+			{foreach $img in $attribute}
+						{sp}<img src="{$img}" alt="" />
+			{/foreach}
+					</label></li>
+		{/foreach}
+				</ul>
+			</td>
+		</tr>
+	{/foreach}
+	</tbody>
+</table>
+{/template}

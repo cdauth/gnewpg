@@ -1,0 +1,14 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param message
+*/
+{template .error}
+{call gnewpg.ui.html}
+	{param searchengines: false /}
+	{param title:_('Error') /}
+	{param content}
+{call gnewpg.ui.error}{param message:$message /}{/call}
+	{/param}
+{/call}
+{/template}

@@ -48,12 +48,12 @@ function createGroup(callback) {
 	});
 }
 
-function addUserToGroup(groupId, userId, callback, admin) {
+function addUserToGroup(groupId, userId, settings, callback) {
 	db.getConnection(function(err, con) {
 		if(err)
 			return callback(err);
 
-		db.insert(con, "groups_users", { group: groupId, user: userId, perm_admin: !!admin, perm_addkeys: !!admin, perm_removekeys: !!admin }, callback);
+		db.insert(con, "groups_users", pgp.utils.extend({ }, settings, { group: groupId, user: userId }), callback);
 		con.done();
 	});
 }
@@ -131,9 +131,32 @@ function getMemberSettings(groupId, userId, callback) {
 		if(err)
 			return callback(err);
 
-		db.getEntry(con, "groups_users", [ "perm_admin", "perm_addkeys", "perm_removekeys" ], { group: groupId, user: userId }, callback);
+		db.getEntry(con, "groups_users", [ "perm_admin", "perm_addkeys", "perm_removekeys", "list" ], { group: groupId, user: userId }, callback);
 		con.done();
 	});
+}
+
+function updateMemberSettings(groupId, userId, settings, callback) {
+	db.getConnection(function(err, con) {
+		if(err)
+			return callback(err);
+
+		db.update(con, "groups_users", settings, { group: groupId, user: userId }, callback);
+		con.done();
+	});
+}
+
+function getMembers(groupId, filter) {
+	var ret = new pgp.Fifo();
+	db.getConnection(function(err, con) {
+		if(err)
+			return ret._end(err);
+
+		ret._add(db.getEntries(con, "groups_users", [ "user", "perm_admin", "perm_addkeys", "perm_removekeys" ], pgp.utils.extend({ }, filter, { group: groupId })));
+		ret._end();
+		con.done();
+	});
+	return ret.recursive();
 }
 
 /*function __fixPrimaryIdentity(keyInfo) {
@@ -159,3 +182,5 @@ exports.getGroup = getGroup;
 exports.updateGroup = updateGroup;
 //exports.getKeysOfGroup = getKeysOfGroup;
 exports.getMemberSettings = getMemberSettings;
+exports.getMembers = getMembers;
+exports.updateMemberSettings = updateMemberSettings;

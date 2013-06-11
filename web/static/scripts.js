@@ -11,7 +11,7 @@ $(document).ready(function() {
 	});
 
 	$(".table-with-filter").each(function() {
-		var t = $(this);
+		var t = $(this).wrap('<div class="table-with-filter-wrapper" />');
 
 		var form = $('<form class="form-search"><input type="text" class="search-query" autocomplete="off" /></form>').insertBefore(t);
 		$("input", form).attr("placeholder", i18n["Filter"]).bind("keyup click change", function() {
@@ -79,6 +79,14 @@ $(document).ready(function() {
 
 			return false;
 		});
+	});
+
+	$(".keyring-control tbody .c-key input[type=checkbox]").click(function() {
+		$(this).closest("tr").find(".c-userid input[type=checkbox]").prop("checked", this.checked);
+	});
+	$(".keyring-control tbody .c-userid input[type=checkbox]").click(function() {
+		if(this.checked)
+			$(this).closest("tr").find(".c-key input[type=checkbox]").prop("checked", true);
 	});
 });
 

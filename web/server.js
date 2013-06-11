@@ -29,6 +29,10 @@ function startServer(callback) {
 		res.redirectLogin = function() {
 			res.redirect(303, config.baseurl + "/login?referer=" + encodeURIComponent(req.url))
 		};
+		res.sendError = function(code, message) {
+			res.status(code);
+			res.soy("error", { message: message });
+		};
 
 		if(req.method == "GET" || req.method == "HEAD")
 			return next();

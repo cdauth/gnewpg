@@ -15,3 +15,8 @@
 .popover { max-width:none; }
 
 body { padding-top:0.7em; }
+
+.table-with-filter-wrapper { position:relative; }
+.table-with-filter-wrapper .form-search { position:absolute; top:5px; right:25px; }
+
+.keyring-control { height:15em; overflow:auto; }

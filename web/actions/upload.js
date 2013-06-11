@@ -45,10 +45,8 @@ function _doUpload(req, res, next) {
 					
 					fs.unlink(it.path, function(err) {
 						if(err)
-						{
 							console.warn("Error removing uploaded key file", err);
-							params.errors.push(err);
-						}
+
 						cb2();
 					});
 				});

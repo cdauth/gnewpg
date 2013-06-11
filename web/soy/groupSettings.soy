@@ -2,6 +2,8 @@
 
 /**
  * @param group
+ * @param members
+ * @param memberErrors
 */
 {template .groupSettings}
 	{call gnewpg.ui.html}
@@ -32,10 +34,11 @@
 		</div>
 	</div>
 </form>
+<hr />
 {let $tokenLinkEsc}{$ij.config.baseurl}/group/{$group.id}?groupToken={$group.token}{/let}
 <p id="token-note">{_('Here you can add members to the group and change their privileges. If you would like non-members to be able to access the group, send them the following URL: %s', '<strong>'+$tokenLinkEsc+'</strong>')|noAutoescape}</p>
 <script type="text/javascript">
-	$("#token-note").html('{_('Here you can add members to the group and change their privileges. If you would like non-members to be able to access the group, %sclick here%s to get a URL that you can shere with them.', '<a href="#" id="token-note-popup">', '</a>')|escapeJsString}');
+	$("#token-note").html('{_('Here you can add members to the group and change their privileges. If you would like non-members to be able to access the group, %sclick here%s to get a URL that you can share with them.', '<a href="#" id="token-note-popup">', '</a>')|escapeJsString}');
 	$("#token-note-popup").popover({lb}
 		placement: 'bottom',
 		title: '{_('Public group URL')}',
@@ -47,6 +50,45 @@
 			$("#token-note a").popover("hide");
 	{rb});
 </script>
+<form action="#memberForm" method="post" id="memberForm">
+			{if $memberErrors.length > 0}
+	{call gnewpg.ui.errors}{param errors:$memberErrors/}{/call}
+			{/if}
+	<table class="table table-condensed">
+		<thead>
+			<tr>
+				<th>{_('Username')}</th>
+				<th>{_('Admin')}</th>
+				<th>{_('May add keys')}</th>
+				<th>{_('May remove keys')}</th>
+				<th>{_('Remove')}</th>
+			</tr>
+		</thead>
+		<tbody>
+			{foreach $member in $members}
+			<tr>
+				<td>{$member.user}<input type="hidden" name="updateMember" value="{$member.userEncoded}" /></td>
+				<td><input type="checkbox" name="perm_admin-{$member.userEncoded}"{if $member.perm_admin} checked="checked"{/if}{if $member.user == $ij.req.session.user.id} disabled="disabled"{/if} /></td>
+				<td><input type="checkbox" name="perm_addkeys-{$member.userEncoded}"{if $member.perm_addkeys} checked="checked"{/if} /></td>
+				<td><input type="checkbox" name="perm_removekeys-{$member.userEncoded}"{if $member.perm_removekeys} checked="checked"{/if} /></td>
+				<td>{if $member.user != $ij.req.session.user.id}<input type="checkbox" class="remove-member" name="remove-{$member.userEncoded}" />{/if}</td>
+			</tr>
+			{/foreach}
+		</tbody>
+		<tfoot>
+			<tr>
+				<td><input type="text" name="addMember" placeholder="{_('Add member')}" /></td>
+				<td><input type="checkbox" name="addMember_perm_admin" /></td>
+				<td><input type="checkbox" name="addMember_perm_addkeys" /></td>
+				<td><input type="checkbox" name="addMember_perm_removekeys" /></td>
+				<td></td>
+			</tr>
+		</tfoot>
+	</table>
+	<div>
+		<input type="submit" value="{_('Save')}" class="btn" />
+    </div>
+</form>
 		{/param}
 	{/call}
 {/template}

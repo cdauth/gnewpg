@@ -96,7 +96,8 @@ CREATE TABLE "groups_users" (
 	"user" TEXT REFERENCES "users"("id") ON UPDATE CASCADE,
 	"perm_admin" BOOLEAN NOT NULL, -- Whether the user is allowed to change the group settings
 	"perm_addkeys" BOOLEAN NOT NULL, -- Whether the user is allowed to add keys to the group
-	"perm_removekeys" BOOLEAN NOT NULL -- Whether the user is allowed to remove keys from the group
+	"perm_removekeys" BOOLEAN NOT NULL, -- Whether the user is allowed to remove keys from the group
+	"list" BOOLEAN NOT NULL -- Whether this member should be listed in the group settings
 );
 
 CREATE VIEW "groups_users_with_groups" AS

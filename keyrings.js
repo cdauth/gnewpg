@@ -483,38 +483,72 @@ pgp.utils.extend(GroupKeyring.prototype, {
 
 	_onAddKey : function(keyInfo, callback) {
 		if(this._noUpload)
-			return callback();
+			callback();
+		else
+			this.addKeyToKeyring(keyInfo.id, callback);
+	},
 
-		this._containsKey(keyInfo.id, function(err, contains) {
+	addKeyToKeyring : function(keyId, callback) {
+		this._containsKey(keyId, function(err, contains) {
 			if(err || contains)
 				return callback(err);
 
-			db.insert(this._con, "groups_keyrings_keys", { group: this._group, key: keyInfo.id }, callback);
-		});
+			db.insert(this._con, "groups_keyrings_keys", { group: this._group, key: keyId }, callback);
+		}.bind(this));
+	},
+
+	removeKeyFromKeyring : function(keyId, callback) {
+		async.parallel([
+			function(next) {
+				db.remove(this._con, "groups_keyrings_keys", { group: this._group, key: keyId }, next);
+			}.bind(this),
+			function(next) {
+				db.remove(this._con, "groups_keyrings_identities", { group: this._group, identityKey: keyId }, next);
+			}.bind(this),
+			function(next) {
+				db.remove(this._con, "groups_keyrings_attributes", { group: this._group, attributeKey: keyId }, next);
+			}.bind(this)
+		], callback);
 	},
 
 	_onAddIdentity : function(keyId, identityInfo, callback) {
 		if(this._noUpload)
-			return callback();
+			callback();
+		else
+			this.addIdentityToKeyring(keyId, identityInfo.id, callback);
+	},
 
-		this._containsIdentity(keyId, identityInfo.id, function(err, contains) {
+	addIdentityToKeyring : function(keyId, identityId, callback) {
+		this._containsIdentity(keyId, identityId, function(err, contains) {
 			if(err || contains)
 				return callback(err);
 
-			db.insert(this._con, "groups_keyrings_identities", { group: this._group, identityKey: keyId, identity: identityInfo.id }, callback);
-		});
+			db.insert(this._con, "groups_keyrings_identities", { group: this._group, identityKey: keyId, identity: identityId }, callback);
+		}.bind(this));
+	},
+
+	removeIdentityFromKeyring : function(keyId, identityId, callback) {
+		db.remove(this._con, "groups_keyrings_identities", { group: this._group, identityKey: keyId, identity: identityId }, callback);
 	},
 
 	_onAddAttribute : function(keyId, attributeInfo, callback) {
 		if(this._noUpload)
-			return callback();
+			callback();
+		else
+			this.addAttributeToKeyring(keyId, attributeInfo.id, callback);
+	},
 
-		this._containsAttribute(keyId, attributeInfo.id, function(err, contains) {
+	addAttributeToKeyring : function(keyId, attributeId, callback) {
+		this._containsAttribute(keyId, attributeId, function(err, contains) {
 			if(err || contains)
 				return callback(err);
 
-			db.insert(this._con, "groups_keyrings_attributes", { group: this._group, attributeKey: keyId, attribute: attributeInfo.id }, callback);
-		});
+			db.insert(this._con, "groups_keyrings_attributes", { group: this._group, attributeKey: keyId, attribute: attributeId }, callback);
+		}.bind(this));
+	},
+
+	removeAttributeFromKeyring : function(keyId, attributeId, callback) {
+		db.remove(this._con, "groups_keyrings_attributes", { group: this._group, attributeKey: keyId, attribute: attributeId }, callback);
 	},
 
 	maySeeGroup : function(groupId, callback) {
@@ -571,6 +605,7 @@ exports.SearchEngineKeyring = SearchEngineKeyring;
 exports.TemporaryUploadKeyring = TemporaryUploadKeyring;
 exports.UserKeyring = UserKeyring;
 exports.GroupKeyring = GroupKeyring;
+exports.GroupOnlyKeyring = GroupOnlyKeyring;
 
 exports.getUnfilteredKeyring = getKeyring.bind(null, UnfilteredKeyring);
 exports.getAnonymousKeyring = getKeyring.bind(null, AnonymousKeyring);
@@ -578,3 +613,4 @@ exports.getSearchEngineKeyring = getKeyring.bind(null, SearchEngineKeyring);
 exports.getTemporaryUploadKeyring = getKeyring.bind(null, TemporaryUploadKeyring);
 exports.getUserKeyring = getKeyring.bind(null, UserKeyring);
 exports.getGroupKeyring = getKeyring.bind(null, GroupKeyring);
+exports.getGroupOnlyKeyring = getKeyring.bind(null, GroupOnlyKeyring);

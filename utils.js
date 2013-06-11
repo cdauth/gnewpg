@@ -72,7 +72,7 @@ function scaleImage(imgData, maxWidth, maxHeight, callback) {
 			return callback(null, imgData, newWidth, newHeight);
 
 		imagemagick.resize({ srcData: imgData, width: newWidth, height: newHeight }, function(err, resized) {
-			callback(err, resized, newWidth, newHeight);
+			callback(err, new Buffer(resized, "binary"), newWidth, newHeight);
 		});
 	});
 }
@@ -91,6 +91,13 @@ function checkReferrer(req, res, next) {
 	res.send(403, "Invalid referrer.");
 }
 
+function normaliseArrayParam(param) {
+	var ret = param ? Array.isArray(param) ? param : [ param ] : [ ];
+	for(var i=0; i<ret.length; i++)
+		ret[i] = ""+ret[i];
+	return ret;
+}
+
 exports.extend = pgp.utils.extend;
 exports.encodePassword = encodePassword;
 exports.encodeToFormat = encodeToFormat;
@@ -100,3 +107,4 @@ exports.formatKeyId = formatKeyId;
 exports.scaleImage = scaleImage;
 exports.quoteRegexp = quoteRegexp;
 exports.checkReferrer = checkReferrer;
+exports.normaliseArrayParam = normaliseArrayParam;
