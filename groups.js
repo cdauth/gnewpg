@@ -1,5 +1,6 @@
 var db = require("./database");
 var pgp = require("node-pgp");
+var async = require("async");
 
 function getGroupsByUser(userId) {
 	var ret = new pgp.Fifo();
@@ -174,6 +175,34 @@ function getMembers(groupId, filter) {
 	return keyInfo;
 }*/
 
+function removeGroup(groupId, callback) {
+	db.getConnection(function(err, con) {
+		if(err)
+			return callback(con);
+
+		async.parallel([
+			function(next) {
+				db.remove(con, "groups_keyrings_identities", { group: groupId }, next);
+			},
+			function(next) {
+				db.remove(con, "groups_keyrings_attributes", { group: groupId }, next);
+			},
+			function(next) {
+				db.remove(con, "groups_keyrings_keys", { group: groupId }, next);
+			},
+			function(next) {
+				db.remove(con, "groups_users", { group: groupId }, next);
+			},
+			function(next) {
+				db.remove(con, "groups", { id: groupId }, next);
+			}
+		], function(err) {
+			con.done();
+			callback(err);
+		});
+	});
+}
+
 exports.getGroupsByUser = getGroupsByUser;
 exports.createGroup = createGroup;
 exports.addUserToGroup = addUserToGroup;
@@ -184,3 +213,4 @@ exports.updateGroup = updateGroup;
 exports.getMemberSettings = getMemberSettings;
 exports.getMembers = getMembers;
 exports.updateMemberSettings = updateMemberSettings;
+exports.removeGroup = removeGroup;

@@ -109,7 +109,17 @@ function _saveSettings(req, res, next) {
 		group : function(next) {
 			__getGroupAndCheckPermission(req, res, true, next);
 		},
-		saveSettings : [ "group", function(next) {
+		removeGroup : [ "group", function(next) {
+			if(!req.body.removeGroup)
+				return next();
+
+			groups.removeGroup(groupId, function(err) {
+				if(err)
+					return next(err);
+				res.redirect(303, config.baseurl+"/groups");
+			});
+		} ],
+		saveSettings : [ "group", "removeGroup", function(next) {
 			if(req.body.title == null) // Other Save button has been pressed
 				return next();
 
@@ -120,7 +130,7 @@ function _saveSettings(req, res, next) {
 				perm_removekeys: req.body.perm_removekeys != null
 			}, next);
 		} ],
-		saveMembers : [ "group", function(next) {
+		saveMembers : [ "group", "removeGroup", function(next) {
 			var update = Array.isArray(req.body.updateMember) ? req.body.updateMember : req.body.updateMember ? [ req.body.updateMember ] : [ ];
 
 			var addName = Array.isArray(req.body.addMember) ? req.body.addMember : req.body.addMember ? [ req.body.addMember ] :  [ ];
@@ -165,7 +175,7 @@ function _saveSettings(req, res, next) {
 				}, next);
 			}, next);
 		} ],
-		render : [ "saveSettings", "saveMembers", function(next, d) {
+		render : [ "saveSettings", "saveMembers", "removeGroup", function(next, d) {
 			_showSettings(req, res, next, errors);
 		} ]
 	}, next);

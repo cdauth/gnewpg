@@ -89,6 +89,10 @@
 		<input type="submit" value="{_('Save')}" class="btn" />
     </div>
 </form>
+<hr />
+<form action="" method="post">
+	<div><input type="submit" name="removeGroup" value="{_('Delete group')}" class="btn btn-danger" onclick="return confirm('{_('Do you really want to delete the group %s?', $group.title or _('Unnamed group'))|escapeJsString}')" /></div>
+</form>
 		{/param}
 	{/call}
 {/template}
