@@ -16,12 +16,6 @@ function startServer(callback) {
 	if(config.trustProxy)
 		app.enable("trust proxy");
 
-	app.use(express.bodyParser({ uploadDir: config.tmpDir+"/upload", maxFieldsSize: config.maxUploadSize })); // For POST requests
-	app.use(express.cookieParser());
-	app.use(db.middleware);
-	app.use(sessions.sessionMiddleware);
-	app.use("/static", express.static(__dirname+"/static"));
-	app.use(i18n.middleware);
 	app.use(function(req, res, next) {
 		res.soy = function(template, params) {
 			_renderSoy(req, res, template, params);
@@ -34,6 +28,19 @@ function startServer(callback) {
 			res.soy("error", { message: message });
 		};
 
+		next();
+	});
+
+	// Initialise debug actions before opening database connection etc.
+	require("./actions/debug")(app);
+
+	app.use(express.bodyParser({ uploadDir: config.tmpDir+"/upload", maxFieldsSize: config.maxUploadSize })); // For POST requests
+	app.use(express.cookieParser());
+	app.use(db.middleware);
+	app.use(sessions.sessionMiddleware);
+	app.use("/static", express.static(__dirname+"/static"));
+	app.use(i18n.middleware);
+	app.use(function(req, res, next) {
 		if(req.method == "GET" || req.method == "HEAD")
 			return next();
 

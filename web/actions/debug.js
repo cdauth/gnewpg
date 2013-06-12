@@ -5,7 +5,7 @@ module.exports = function(app) {
 	if(!config.debug)
 		return;
 
-	app.get("/debug", _showDebug);
+	app.use("/debug", _showDebug);
 };
 
 function _showDebug(req, res, next) {

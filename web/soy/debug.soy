@@ -4,22 +4,21 @@
  * @param connections
 */
 {template .debug}
-	{call gnewpg.ui.html}
-		{param searchengines: false /}
-		{param title:'Debug' /}
-		{param content}
-<h3>Database connections</h3>
-<ul class="thumbnails">
-{foreach $connection in $connections}
-	<li class="span12">
-		<div class="thumbnail">
-			<pre>
-{$connection}
-			</pre>
-		</div>
-	</li>
-{/foreach}
-</ul>
-		{/param}
-	{/call}
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="robots" content="noindex,nofollow" />
+		<title>Debug – gnewpg</title>
+	</head>
+	<body>
+		<h1>Database connections</h1>
+	{foreach $connection in $connections}
+		<pre>
+			{$connection}
+		</pre>
+		<br />
+	{/foreach}
+	</body>
+</html>
 {/template}
