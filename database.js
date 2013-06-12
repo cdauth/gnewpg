@@ -33,6 +33,10 @@ function getConnection(callback) {
 	pgKeyringDatabase.getConnection(config.db, callback);
 }
 
+function _getConnections() {
+	return pgKeyringDatabase._getConnections();
+}
+
 function middleware(req, res, next) {
 	getConnection(function(err, con) {
 		if(err)
@@ -68,3 +72,4 @@ module.exports.initialise = initialise;
 module.exports.getConnection = getConnection;
 module.exports.middleware = middleware;
 module.exports.getUniqueRandomString = getUniqueRandomString;
+module.exports._getConnections = _getConnections;

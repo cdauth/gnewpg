@@ -96,10 +96,16 @@ module.exports = {
 	/**
 	 * Signatues (including trust signatures) by these keys will be trusted.
 	*/
-	"trustedKeys" : [ "1DFA47EF9D395D02" ]
+	"trustedKeys" : [ "1DFA47EF9D395D02" ],
+
+	/**
+	 * Enables the /debug page.
+	*/
+	"debug" : false
 };
 
 require("node-pgp").config.tmpDir = module.exports.tmpDir;
+require("node-pgp-postgres/lib/database").DEBUG = module.exports.debug;
 
 var hkpConfig = require("node-pgp-hkp-server/config");
 hkpConfig.maxUploadSize = module.exports.maxUploadSize;

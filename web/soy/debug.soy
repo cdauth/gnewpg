@@ -1,0 +1,25 @@
+{namespace gnewpg.pages}
+
+/**
+ * @param connections
+*/
+{template .debug}
+	{call gnewpg.ui.html}
+		{param searchengines: false /}
+		{param title:'Debug' /}
+		{param content}
+<h3>Database connections</h3>
+<ul class="thumbnails">
+{foreach $connection in $connections}
+	<li class="span12">
+		<div class="thumbnail">
+			<pre>
+{$connection}
+			</pre>
+		</div>
+	</li>
+{/foreach}
+</ul>
+		{/param}
+	{/call}
+{/template}
