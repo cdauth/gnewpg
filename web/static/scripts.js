@@ -1,4 +1,12 @@
 $(document).ready(function() {
+	$(".table-checkbox").each(function() {
+		var t = $(this);
+		$('<input type="checkbox" />').prependTo(t.find("thead tr:first-child > :first-child")).click(function() {
+			t.find("tbody tr").removeClass("success");
+			t.find("tbody input[type=checkbox]").prop("checked", this.checked);
+			t.find("tbody tr:has(:checked)").addClass("success");
+		});
+	});
 	$(".table-checkbox tbody tr:has(:checked)").addClass("success");
 
 	$(".table-checkbox tbody td").click(function(e) {
