@@ -105,6 +105,9 @@ function _exportKeys(req, res, next) {
 			__getGroupAndCheckPermission(req, res, false, next);
 		},
 		export: [ "group", function(next, d) {
+			if(!req.query.key)
+				return res.redirect(303, config.baseurl+"/group/"+encodeURIComponent(req.params.id));
+
 			var groupOnlyKeyring = new keyrings.GroupOnlyKeyring(req.dbCon, req.params.id);
 			require("./key").exportKeys(groupOnlyKeyring, req.query.key, d.group.group.title, req, res, next);
 		}]

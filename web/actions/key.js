@@ -289,8 +289,10 @@ function _exportKey(req, res, next) {
 }
 
 function exportKeys(keyring, keys, filename, req, res, next) {
-	if(!Array.isArray(keys))
-		keys = [ keys ];
+	keys = utils.normaliseArrayParam(keys);
+
+	if(keys.length == 0)
+		return next();
 
 	var formatInfo = utils.getInfoForFormat(req.query.exportFormat);
 	if(filename)
