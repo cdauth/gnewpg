@@ -459,11 +459,10 @@ pgp.utils.extend(UserKeyring.prototype, {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-function GroupKeyring(con, group, noUpload) {
+function GroupKeyring(con, group) {
 	GroupKeyring.super_.call(this, con);
 
 	this._group = group;
-	this._noUpload = !!noUpload;
 }
 
 util.inherits(GroupKeyring, AnonymousKeyring);
@@ -482,10 +481,7 @@ pgp.utils.extend(GroupKeyring.prototype, {
 	},
 
 	_onAddKey : function(keyInfo, callback) {
-		if(this._noUpload)
-			callback();
-		else
-			this.addKeyToKeyring(keyInfo.id, callback);
+		this.addKeyToKeyring(keyInfo.id, callback);
 	},
 
 	addKeyToKeyring : function(keyId, callback) {
@@ -512,10 +508,7 @@ pgp.utils.extend(GroupKeyring.prototype, {
 	},
 
 	_onAddIdentity : function(keyId, identityInfo, callback) {
-		if(this._noUpload)
-			callback();
-		else
-			this.addIdentityToKeyring(keyId, identityInfo.id, callback);
+		this.addIdentityToKeyring(keyId, identityInfo.id, callback);
 	},
 
 	addIdentityToKeyring : function(keyId, identityId, callback) {
@@ -532,10 +525,7 @@ pgp.utils.extend(GroupKeyring.prototype, {
 	},
 
 	_onAddAttribute : function(keyId, attributeInfo, callback) {
-		if(this._noUpload)
-			callback();
-		else
-			this.addAttributeToKeyring(keyId, attributeInfo.id, callback);
+		this.addAttributeToKeyring(keyId, attributeInfo.id, callback);
 	},
 
 	addAttributeToKeyring : function(keyId, attributeId, callback) {
@@ -599,6 +589,85 @@ function getKeyring(cl) {
 	});
 }
 
+function CombinedKeyring(keyring1, keyring2) {
+	pgp.utils.extend(this, keyring1);
+
+	var keyrings = pgp.utils.toProperArray(arguments);
+	var noAddHandlers = false;
+	if(typeof keyrings[keyrings.length-1] == "boolean") {
+		noAddHandlers = keyrings[keyrings.length-1];
+		keyrings = keyrings.slice(0, keyrings.length-1);
+	}
+
+	this._maySeeKey = function(keyId, callback) {
+		var may = false;
+		async.forEach(keyrings, function(keyring, next) {
+			keyring._maySeeKey(keyId, function(err, thisMay) {
+				may = may || thisMay;
+				next(err);
+			});
+		}, function(err) {
+			callback(err, may);
+		});
+	};
+
+	this._maySeeIdentity = function(keyId, identityId, callback) {
+		var may = [ false, false, false ];
+		async.forEach(keyrings, function(keyring, next) {
+			keyring._maySeeIdentity(keyId, identityId, function(err, may1, may2, may3) {
+				may = [ may[0] || may1, may[1] || may2, may[2] || may3 ];
+				next(err);
+			});
+		}, function(err) {
+			callback(err, may[0], may[1], may[2]);
+		});
+	};
+
+	this._maySeeAttribute = function(keyId, attributeId, callback) {
+		var may = false;
+		async.forEach(keyrings, function(keyring, next) {
+			keyring._maySeeAttribute(keyId, attributeId, function(err, thisMay) {
+				may = may || thisMay;
+				next(err);
+			});
+		}, function(err) {
+			callback(err, may);
+		});
+	};
+
+	this.maySeeGroup = function(groupId, callback) {
+		var may = false;
+		async.forEach(keyrings, function(keyring, next) {
+			keyring.maySeeGroup(groupId, function(err, thisMay) {
+				may = may || thisMay;
+				next(err);
+			});
+		}, function(err) {
+			callback(err, may);
+		});
+	};
+
+	if(!noAddHandlers) {
+		this._onAddKey = function(keyInfo, callback) {
+			async.forEach(keyrings, function(keyring, next) {
+				keyring._onAddKey(keyInfo, next);
+			}, callback);
+		};
+
+		this._onAddIdentity = function(keyId, identityInfo, callback) {
+			async.forEach(keyrings, function(keyring, next) {
+				keyring._onAddIdentity(keyId, identityInfo, next);
+			}, callback);
+		};
+
+		this._onAddAttribute = function(keyId, attributeInfo, callback) {
+			async.forEach(keyrings, function(keyring, next) {
+				keyring._onAddAttribute(keyId, attributeInfo, next);
+			}, callback);
+		};
+	}
+}
+
 exports.UnfilteredKeyring = UnfilteredKeyring;
 exports.AnonymousKeyring = AnonymousKeyring;
 exports.SearchEngineKeyring = SearchEngineKeyring;
@@ -606,6 +675,7 @@ exports.TemporaryUploadKeyring = TemporaryUploadKeyring;
 exports.UserKeyring = UserKeyring;
 exports.GroupKeyring = GroupKeyring;
 exports.GroupOnlyKeyring = GroupOnlyKeyring;
+exports.CombinedKeyring = CombinedKeyring;
 
 exports.getUnfilteredKeyring = getKeyring.bind(null, UnfilteredKeyring);
 exports.getAnonymousKeyring = getKeyring.bind(null, AnonymousKeyring);

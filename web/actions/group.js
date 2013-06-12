@@ -13,7 +13,8 @@ var ATTR_MAX_HEIGHT = 50;
 var ATTR_MAX_WIDTH = 200;
 
 module.exports = function(app) {
-	app.get("/group/:id", function(req, res, next) {
+	app.get("/group/:id", _showGroupPage);
+	app.get("/group/:id/export", function(req, res, next) {
 		if(req.query.join || req.query.leave) {
 			utils.checkReferrer(req, res, function(err) {
 				if(req.query.join)
@@ -23,10 +24,8 @@ module.exports = function(app) {
 			});
 		}
 		else
-			_showGroupPage(req, res, next);
+			_exportKeys(req, res, next);
 	});
-
-	app.get("/group/:id/export", _exportKeys);
 	app.get("/group/:id/settings", _showSettings);
 	app.post("/group/:id/settings", _saveSettings);
 	app.get("/group/:id/upload", _showUpload);
@@ -36,11 +35,40 @@ module.exports = function(app) {
 };
 
 function _joinGroup(req, res, next) {
+	async.auto({
+		group: function(next) {
+			__getGroupAndCheckPermission(req, res, false, next);
+		},
+		join: [ "group", function(next, d) {
+			if(!req.session.user || d.group.membership)
+				return next();
 
+			groups.addMember(req.params.id, req.session.user.id, { perm_admin: false, perm_addkeys: false, perm_removekeys: false, list: false }, next);
+		} ],
+		redirect: [ "join", function(next) {
+			res.redirect(303, config.baseurl+"/group/"+encodeURIComponent(req.params.id));
+		}]
+	}, next);
 }
 
 function _leaveGroup(req, res, next) {
-
+	async.auto({
+		mayLeaveGroup: function(next) {
+			if(req.session.user)
+				__mayLeaveGroup(req.params.id, req.session.user.id, next);
+			else
+				next(null, false);
+		},
+		leave: [ "mayLeaveGroup", function(next, d) {
+			if(d.mayLeaveGroup)
+				groups.removeMember(req.params.id, req.session.user.id, next);
+			else
+				res.redirect(303, config.baseurl+"/group/"+encodeURIComponent(req.params.id));
+		}],
+		redirect: [ "leave", function(next) {
+			res.redirect(303, config.baseurl+"/groups");
+		}]
+	}, next);
 }
 
 function _showGroupPage(req, res, next) {
@@ -52,11 +80,18 @@ function _showGroupPage(req, res, next) {
 			var groupOnlyKeyring = new keyrings.GroupOnlyKeyring(req.dbCon, req.params.id);
 			keys.resolveKeyList(groupOnlyKeyring, groupOnlyKeyring.listKeyring()).toArraySingle(next);
 		},
-		render : [ "group", "keys", function(next, d) {
+		mayLeaveGroup : function(next) {
+			if(!req.session.user)
+				next(null, false);
+			else
+				__mayLeaveGroup(req.params.id, req.session.user.id, next);
+		},
+		render : [ "group", "keys", "mayLeaveGroup", function(next, d) {
 			var params = {
 				group : d.group.group,
 				keys : d.keys,
-				membership : d.group.membership
+				membership : d.group.membership,
+				mayLeaveGroup : d.mayLeaveGroup
 			};
 
 			res.soy("group", params);
@@ -69,11 +104,9 @@ function _exportKeys(req, res, next) {
 		group: function(next) {
 			__getGroupAndCheckPermission(req, res, false, next);
 		},
-		keys: function(next) {
-			groups.getKeysOfGroup(req.params.id).toArraySingle(next);
-		},
-		export: [ "group", "keys", function(next, d) {
-			require("./exportKey").exportKeys(req.keyring, req.query.key, d.group.group.title, req, res, next);
+		export: [ "group", function(next, d) {
+			var groupOnlyKeyring = new keyrings.GroupOnlyKeyring(req.dbCon, req.params.id);
+			require("./key").exportKeys(groupOnlyKeyring, req.query.key, d.group.group.title, req, res, next);
 		}]
 	}, next);
 }
@@ -88,16 +121,10 @@ function _showSettings(req, res, next) {
 		members : function(next) {
 			groups.getMembers(req.params.id, { list: true }).toArraySingle(next);
 		},
-		mayLeaveGroup : function(next) {
-			if(!req.session.user)
-				next(null, false);
-			else
-				__mayLeaveGroup(req.params.id, req.session.user.id, next);
-		},
-		render : [ "group", "members", "mayLeaveGroup", function(next, d) {
+		render : [ "group", "members", function(next, d) {
 			for(var i=0; i<d.members.length; i++)
 				d.members[i].userEncoded = __encodeUsername(d.members[i].user);
-			res.soy("groupSettings", { group: d.group.group, members: d.members, memberErrors : memberErrors || [ ], mayLeaveGroup: d.mayLeaveGroup });
+			res.soy("groupSettings", { group: d.group.group, members: d.members, memberErrors : memberErrors || [ ] });
 		}]
 	}, next);
 }
@@ -168,9 +195,9 @@ function _saveSettings(req, res, next) {
 							errors.push(req.gettext("User %s does not exist.", username));
 							next();
 						} else if(!d.isMember)
-							groups.addUserToGroup(groupId, username, settings, next);
+							groups.addMember(groupId, username, settings, next);
 						else
-							groups.updateMemberSettings(groupId, username, settings, next);
+							groups.updateMember(groupId, username, settings, next);
 					} ]
 				}, next);
 			}, next);
@@ -201,7 +228,7 @@ function _createGroup(req, res, next) {
 		if(err)
 			return next(err);
 
-		groups.addUserToGroup(groupOptions.id, req.session.user.id, { perm_admin: true, perm_addkeys: true, perm_removekeys: true, list: true }, function(err) {
+		groups.addMember(groupOptions.id, req.session.user.id, { perm_admin: true, perm_addkeys: true, perm_removekeys: true, list: true }, function(err) {
 			if(err)
 				return next(err);
 
@@ -216,11 +243,14 @@ function _showUpload(req, res, next) {
 			__getGroupAndCheckPermission(req, res, false, next);
 		},
 		permissions : [ "group", function(next, d) {
-			if(!d.group.membership || !d.group.membership.perm_addkeys && !d.group.membership.perm_removekeys)
+			if(!d.group.group.perm_addkeys && !d.group.group.perm_removekeys && (!d.group.membership || !d.group.membership.perm_addkeys && !d.group.membership.perm_removekeys))
 				return res.sendError(403, req.gettext("No permission to add/remove keys"));
 			next();
 		} ],
 		userKeyring : [ "permissions", function(next) {
+			if(!req.session.user)
+				return next(null, null);
+
 			keys.getKeysOfUser(req.dbCon, req.session.user.id).toArraySingle(function(err, ownKeyIds) {
 				if(err)
 					return next(err);
@@ -243,7 +273,13 @@ function _showUpload(req, res, next) {
 			__addSubObjectsToKeyList(groupOnlyKeyring, keys.resolveKeyList(groupOnlyKeyring, groupOnlyKeyring.listKeyring())).toArraySingle(next);
 		} ],
 		render : [ "group", "permissions", "userKeyring", "groupKeyring", function(next, d) {
-			res.soy("groupUpload", { group: d.group.group, addkeys: d.group.membership.perm_addkeys, removekeys: d.group.membership.perm_removekeys, userKeyring: d.userKeyring, groupKeyring: d.groupKeyring });
+			res.soy("groupUpload", {
+				group: d.group.group,
+				addkeys: d.group.group.perm_addkeys || (d.group.membership && d.group.membership.perm_addkeys),
+				removekeys: d.group.group.perm_removekeys || (d.group.membership && d.group.membership.perm_removekeys),
+				userKeyring: d.userKeyring,
+				groupKeyring: d.groupKeyring
+			});
 		} ]
 	}, next);
 }
@@ -415,7 +451,7 @@ function _doUpload(req, res, next) {
 				}
 
 				if(params.failed.length == 0 && params.uploadedKeys.length == 0 && params.errors.length == 0)
-					res.redirect(303, config.baseurl+'/group/'+encodeURIComponent(req.params.id));
+					res.redirect(303, config.baseurl+'/group/'+encodeURIComponent(req.params.id)+(req.query.groupToken ? "?groupToken="+encodeURIComponent(req.query.groupToken) : ""));
 				else
 					res.soy("groupUploaded", params);
 			}
@@ -432,7 +468,7 @@ function __decodeUsername(username) {
 }
 
 function __mayLeaveGroup(groupId, username, callback) {
-	groups.getMembers(groupId, { perm_admin: true, user: pgp.Keyring.Filter.Not(username) }).forEachSeries(function(it, next) {
+	groups.getMembers(groupId, { perm_admin: true, user: new pgp.Keyring.Filter.Not(new pgp.Keyring.Filter.Equals(username)) }).forEachSeries(function(it, next) {
 		callback(null, true);
 	}, function(err) {
 		callback(err, false);

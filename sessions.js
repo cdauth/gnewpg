@@ -99,12 +99,14 @@ function sessionMiddleware(req, res, next) {
 		},
 		keyring : [ "session", "group", function(next, d) {
 			req.session = d.session || { };
+
 			if(req.session.user)
 				req.keyring = new keyrings.UserKeyring(req.dbCon, req.session.user.id);
-			else if(d.group)
-				req.keyring = new keyrings.GroupKeyring(req.dbCon, d.group.id, true);
 			else
 				req.keyring = new keyrings.TemporaryUploadKeyring(req.dbCon);
+
+			if(d.group)
+				req.keyring = new keyrings.CombinedKeyring(req.keyring, new keyrings.GroupKeyring(req.dbCon, d.group.id), true);
 
 			next();
 		}]

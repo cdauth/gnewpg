@@ -15,7 +15,7 @@
 			{if $error}
 {call gnewpg.ui.error}{param message:$error/}{/call}
 			{else}
-<form action="{$group.id}/export{if $membership == null}?groupToken={$group.token}{/if}" method="get">
+<form action="{$group.id}/export{if $ij.req.query.groupToken}?groupToken={$ij.req.query.groupToken}{/if}" method="get">
 				{if $membership == null}
 	<input type="hidden" name="groupToken" value="{$group.token}" />
 				{/if}
@@ -24,7 +24,7 @@
 		{call gnewpg.ui.exportButton}{param label:_('Export the selected keys')/}{/call}
 				{/if}
 				{if $group.perm_addkeys or ($membership and $membership.perm_addkeys) or ($keys.length > 0 and ($group.perm_removekeys or ($membership and $membership.perm_removekeys)))}
-		<div class="btn-group"><a href="{$group.id}/upload{if $membership == null}?groupToken={$group.token}{/if}" class="btn">
+		<div class="btn-group"><a href="{$group.id}/upload{if $ij.req.query.groupToken}?groupToken={$ij.req.query.groupToken}{/if}" class="btn">
 					{if ($group.perm_addkeys or ($membership and $membership.perm_addkeys)) and $keys.length > 0 and ($group.perm_removekeys or ($membership and $membership.perm_removekeys))}
 			{_('Add/remove keys')}
 					{elseif $group.perm_addkeys or ($membership and $membership.perm_addkeys)}
@@ -58,7 +58,7 @@
 					{foreach $key in $keys}
 			<tr class="{if $key.expired}expired{/if} {if $key.revoked}revoked{/if}">
 				<td class="c-select"><input type="checkbox" name="key" value="{$key.id}" /></td>
-				<td class="c-key"><a href="../key/{$key.id}{if $membership == null}?groupToken={$group.token}{/if}">{formatKeyId($key.id)}</a></td>
+				<td class="c-key"><a href="../key/{$key.id}{if $ij.req.query.groupToken}?groupToken={$ij.req.query.groupToken}{/if}">{formatKeyId($key.id)}</a></td>
 				<td class="c-userid">{if $key.primary_identity}{call gnewpg.ui.identity}{param identity:$key.primary_identity/}{/call}{/if}</td>
 			</tr>
 					{/foreach}
