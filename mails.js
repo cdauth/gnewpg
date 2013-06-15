@@ -63,7 +63,7 @@ function sendVerificationMail(keyId, user, callback) {
 		if(err)
 			return callback(err);
 
-		sendEncryptedMail(keyId, i18n.gettext("gnewpg ownership verification for key %s", user.locale, utils.formatKeyId(keyId)), i18n.gettext("[ownership_mail keyId=%s username=%s link=%s]", user.locale, utils.formatKeyId(keyId), user.id, config.baseurl+"/claimkey/"+encodeURIComponent(keyId)+"?token="+encodeURIComponent(token)), callback, true);
+		sendEncryptedMail(keyId, i18n.gettext("gnewpg ownership verification for key %s", user.locale, utils.formatKeyId(keyId)), i18n.gettext("[ownership_mail keyId=%s username=%s link=%s]", user.locale, utils.formatKeyId(keyId), user.id, config.baseurl+"/key/"+encodeURIComponent(keyId)+"/claim?token="+encodeURIComponent(token)), callback, true);
 	});
 }
 
