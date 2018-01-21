@@ -4,7 +4,7 @@ MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 CMD npm start
 EXPOSE 8888
 
-RUN apk --no-cache add git
+RUN apk --no-cache add git openjdk8-jre
 
 RUN adduser -D -h /opt/gnewpg -s /bin/bash gnewpg
 
